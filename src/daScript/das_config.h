@@ -37,7 +37,7 @@ void print_error(const char * format, ...);
 
 #define DAS_FATAL_LOG  print_error
 
-#define DAS_FATAL_ERROR  print_error("Fatal error")
+#define DAS_FATAL_ERROR  print_error
 
 
 namespace das { using namespace std; }

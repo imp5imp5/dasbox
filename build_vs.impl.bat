@@ -1,4 +1,4 @@
-@if [%CMAKE_GEN_TARGET%] == [] (
+@if [%CMAKE_GEN_TARGET: =%] == [] (
   exit/b
 )
 

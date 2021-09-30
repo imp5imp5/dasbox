@@ -1,0 +1,28 @@
+//
+// AUTO-GENERATED FILE - DO NOT EDIT!!
+//
+
+"options indenting = 4\n"
+"options no_unused_block_arguments = false\n"
+"options no_unused_function_arguments = false\n"
+"options no_aot = true\n"
+"\n"
+"module constexpr shared private\n"
+"\n"
+"require ast\n"
+"require daslib/ast_boost\n"
+"require daslib/strings_boost\n"
+"\n"
+"[function_macro(name=constexpr)]\n"
+"class ConstExprAnnotation : AstFunctionAnnotation\n"
+"    def override verifyCall ( var call : smart_ptr<ExprCallFunc>; args,progArgs:"
+"AnnotationArgumentList; var errors : das_string ) : bool\n"
+"        for aa in args\n"
+"            if aa.basicType == Type tBool\n"
+"                for ca,ce in call.func.arguments,call.arguments\n"
+"                    if ca.name==aa.name\n"
+"                        if !ce.__rtti |> starts_with(\"ExprConst\")\n"
+"                            errors := \"{aa.name} is not a constexpr, {describe(c"
+"e)}\"\n"
+"                            return false\n"
+"        return true\n"

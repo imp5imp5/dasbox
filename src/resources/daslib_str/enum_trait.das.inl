@@ -1,0 +1,26 @@
+//
+// AUTO-GENERATED FILE - DO NOT EDIT!!
+//
+
+"options indenting = 4\n"
+"options no_unused_block_arguments = false\n"
+"options no_unused_function_arguments = false\n"
+"options no_aot = true\n"
+"\n"
+"module enum_trait shared private\n"
+"\n"
+"require ast\n"
+"require daslib/ast_boost\n"
+"\n"
+"[typeinfo_macro(name=\"enum_length\")]\n"
+"class TypeInfoGetEnumLength : AstTypeInfoMacro\n"
+"    def override getAstChange ( expr:smart_ptr<ExprTypeInfo>; var errors:das_str"
+"ing ) : ExpressionPtr\n"
+"        if expr.typeexpr != null\n"
+"            if !expr.typeexpr.isEnum\n"
+"                errors := \"expecting enumeration\"\n"
+"                return [[ExpressionPtr]]\n"
+"            let sz = length(expr.typeexpr.enumType.list)\n"
+"            return new [[ExprConstInt() at=expr.at, value=sz]]\n"
+"        errors := \"type is missing or not inferred\"\n"
+"        return [[ExpressionPtr]]\n"

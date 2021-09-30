@@ -1,0 +1,25 @@
+//
+// AUTO-GENERATED FILE - DO NOT EDIT!!
+//
+
+"options indenting = 4\n"
+"options no_unused_block_arguments = false\n"
+"options no_unused_function_arguments = false\n"
+"\n"
+"module algorithm shared public\n"
+"\n"
+"def reverse ( var a:array<auto> )\n"
+"    let l = length(a)\n"
+"    let half = l/2\n"
+"    let lm1 = l-1\n"
+"    for i in range(half)\n"
+"        swap(a[i], a[lm1-i])\n"
+"\n"
+"def combine ( a,b:array<auto(TT)> )\n"
+"    var c : array<TT>\n"
+"    reserve(c, length(a) + length(b))\n"
+"    for t in a\n"
+"        c |> push(t)\n"
+"    for t in b\n"
+"        c |> push(t)\n"
+"    return <- c\n"

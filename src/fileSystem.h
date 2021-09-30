@@ -11,6 +11,7 @@
 namespace fs
 {
 
+void initialize();
 bool is_path_string_valid(const char * path);
 std::string combine_path(const std::string & path1, const std::string & path2);
 std::string extract_dir(const std::string & path);
@@ -43,7 +44,6 @@ public:
   std::vector<std::pair<std::string, int64_t>> filesOpened;
   bool storeOpenedFiles = true;
   bool derivedAccess = false;
-  das::string daslibPath;
   DasboxFsFileAccess(const char * pak, bool allow_hot_reload = true);
   DasboxFsFileAccess(bool allow_hot_reload = true);
   DasboxFsFileAccess(DasboxFsFileAccess * modAccess, bool allow_hot_reload = true);

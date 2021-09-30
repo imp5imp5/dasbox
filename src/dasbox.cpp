@@ -322,7 +322,6 @@ bool load_module(const string & file_name)
 
   print_note("Executing file '%s'", file_name.c_str());
 
-
   das_file->program = compileDaScript(file_name, das_file->fAccess, logger, das_file->dummyLibGroup);
   if (das_file->program->failed())
   {
@@ -621,6 +620,7 @@ int main(int argc, char **argv)
   if (!root_dir.empty() && main_das_file_name.empty())
     main_das_file_name = "main.das";
 
+  fs::initialize();
   graphics::initialize();
   sound::initialize();
 
@@ -642,6 +642,7 @@ int main(int argc, char **argv)
   NEED_MODULE(Module_Rtti);
   NEED_MODULE(Module_Ast);
   NEED_MODULE(Module_Debugger);
+  NEED_MODULE(ModuleFio);
   NEED_MODULE(ModuleGraphics);
   NEED_MODULE(ModuleDasbox);
   NEED_MODULE(ModuleSound);

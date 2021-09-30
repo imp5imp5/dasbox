@@ -2,6 +2,7 @@
 #include "sound.h"
 #include "logger.h"
 #include <daScript/daScript.h>
+#include <daScript/ast/ast.h>
 #include <daScript/simulate/interop.h>
 #include <daScript/simulate/simulate_visit_op.h>
 #include <SFML/System.hpp>
@@ -304,3 +305,39 @@ public:
 
 REGISTER_MODULE(ModuleDasbox);
 
+
+
+namespace das {
+  void builtin_sleep(uint32_t msec);
+  void builtin_exit(int32_t ec);
+
+  class ModuleFio : public Module {
+  public:
+    ModuleFio() : Module("fio") {
+      ModuleLibrary lib;
+      lib.addModule(this);
+      lib.addBuiltInModule();
+      lib.addModule(Module::require("strings"));
+
+      addExtern<DAS_BIND_FUN(builtin_sleep)>(*this, lib, "sleep",
+        SideEffects::modifyExternal, "builtin_sleep")
+        ->arg("msec");
+
+      addExtern<DAS_BIND_FUN(builtin_exit)>(*this, lib, "exit",
+        SideEffects::modifyExternal, "builtin_exit")
+        ->arg("exitCode")->unsafeOperation = true;
+
+      uint32_t verifyFlags = uint32_t(VerifyBuiltinFlags::verifyAll);
+      verifyFlags &= ~VerifyBuiltinFlags::verifyHandleTypes;
+      verifyBuiltinNames(verifyFlags);
+      verifyAotReady();
+    }
+    virtual ModuleAotType aotRequire ( TextWriter & tw ) const override {
+      //tw << "#include \"daScript/misc/performance_time.h\"\n";
+      //tw << "#include \"daScript/simulate/aot_builtin_fio.h\"\n";
+      return ModuleAotType::cpp;
+    }
+  };
+}
+
+REGISTER_MODULE_IN_NAMESPACE(ModuleFio, das);

@@ -12,25 +12,33 @@
 
 using namespace std;
 
+
+
 namespace fs
 {
+
+static unordered_map<std::string, das::FileInfo> daslib_inc_files;
+
+
+void initialize()
+{
+#include "resources/daslib_str/daslib_init.cpp.inl"
+}
+
 
 DasboxFsFileAccess::DasboxFsFileAccess(const char * pak, bool allow_hot_reload) :
   das::ModuleFileAccess(pak, das::make_smart<DasboxFsFileAccess>(false)), storeOpenedFiles(allow_hot_reload)
 {
-  daslibPath = das::getDasRoot() + "/daslib";
 }
 
 DasboxFsFileAccess::DasboxFsFileAccess(bool allow_hot_reload) :
   storeOpenedFiles(allow_hot_reload)
 {
-  daslibPath = das::getDasRoot() + "/daslib";
 }
 
 DasboxFsFileAccess::DasboxFsFileAccess(DasboxFsFileAccess * modAccess, bool allow_hot_reload) :
   storeOpenedFiles(allow_hot_reload)
 {
-  daslibPath = das::getDasRoot() + "/daslib";
   if (modAccess)
   {
     context = modAccess->context;
@@ -52,6 +60,15 @@ das::FileInfo * DasboxFsFileAccess::getNewFileInfo(const das::string & fname)
   FILE * f = fopen(fname.c_str(), "rb");
   if (!f)
   {
+    const char * ptr = fname.c_str();
+    if (!strncmp(fname.c_str(), "daslib/", 7) || strstr(fname.c_str(), "/daslib/"))
+      ptr = std::max(strrchr(ptr, '/'), strrchr(ptr, '\\')) + 1;
+
+    std::string key(ptr);
+    auto it = daslib_inc_files.find(key);
+    if (it != daslib_inc_files.end())
+      return &it->second;
+
     print_error("Script file '%s' not found", fname.c_str());
     return nullptr;
   }

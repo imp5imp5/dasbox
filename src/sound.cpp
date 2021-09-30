@@ -1033,7 +1033,7 @@ struct PcmSoundAnnotation : ManagedStructureAnnotation<sound::PcmSound, true, tr
 
 
 template <>
-struct cast <sound::PlayingSoundHandle>
+struct das::cast <sound::PlayingSoundHandle>
 {
   static __forceinline sound::PlayingSoundHandle to(vec4f x)
   {
@@ -1044,7 +1044,7 @@ struct cast <sound::PlayingSoundHandle>
 
   static __forceinline vec4f from(sound::PlayingSoundHandle x)
   {
-    return cast<uint32_t>::from(x.handle);
+    return das::cast<uint32_t>::from(x.handle);
   }
 };
 

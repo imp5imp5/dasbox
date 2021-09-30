@@ -7,13 +7,13 @@
 #define chdir _chdir
 #else
 #include "unistd.h"
+#include <sys/stat.h>
 #endif
 
 using namespace std;
 
 namespace fs
 {
-
 
 DasboxFsFileAccess::DasboxFsFileAccess(const char * pak, bool allow_hot_reload) :
   das::ModuleFileAccess(pak, das::make_smart<DasboxFsFileAccess>(false)), storeOpenedFiles(allow_hot_reload)

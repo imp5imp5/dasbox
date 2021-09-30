@@ -10,4 +10,6 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 dasbox.exe
+bin
+dasbox
 cmake_tmp

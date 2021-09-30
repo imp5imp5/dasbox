@@ -25,19 +25,33 @@
 
 void print_error(const char * format, ...);
 
-#define DAS_STD_HAS_BIND 1
+#ifndef DAS_STD_HAS_BIND
+#  define DAS_STD_HAS_BIND 1
+#endif
 
-#define DAS_FUSION  0
+#ifndef DAS_FUSION
+#  define DAS_FUSION  0
+#endif
 
-#define DAS_DEBUGGER  1
+#ifndef DAS_DEBUGGER
+#  define DAS_DEBUGGER  1
+#endif
 
-#define DAS_TRACK_ALLOCATIONS  0
+#ifndef DAS_TRACK_ALLOCATIONS
+#  define DAS_TRACK_ALLOCATIONS  0
+#endif
 
-#define DAS_SANITIZER  0
+#ifndef DAS_SANITIZER
+#  define DAS_SANITIZER  0
+#endif
 
-#define DAS_FATAL_LOG  print_error
+#ifndef DAS_FATAL_LOG
+#  define DAS_FATAL_LOG  print_error
+#endif
 
-#define DAS_FATAL_ERROR  print_error
+#ifndef DAS_FATAL_ERROR
+#  define DAS_FATAL_ERROR  print_error
+#endif
 
 
 namespace das { using namespace std; }

@@ -4,6 +4,8 @@
 #include "input.h"
 #include <SFML/Window/Clipboard.hpp>
 #include <SFML/Window/Keyboard.hpp>
+#include <stdarg.h>
+#include <iostream>
 
 #define LOGGER_LINES_LIMIT 10000
 #define LOGGER_LINES_ERASE_COUNT (LOGGER_LINES_LIMIT / 20 + 1)
@@ -22,11 +24,17 @@
 using namespace std;
 
 Logger logger;
+static bool error_as_note = false;
 
 bool ends_with_newline(const char * str)
 {
   size_t len = strlen(str);
   return (len && str[len - 1] == '\n');
+}
+
+void reinterpret_error_as_note(bool is_note)
+{
+  error_as_note = is_note;
 }
 
 void print_error(const char * format, ...)
@@ -38,13 +46,25 @@ void print_error(const char * format, ...)
   buf[sizeof(buf) - 1] = 0;
   va_end(args);
 
-  logger.setTopErrorLine();
-  uint32_t savedColor = logger.setLogColor(ERROR_LINE_COLOR);
-  logger << "\nERROR: ";
-  logger << buf;
-  logger << "\n";
-  logger.setLogColor(savedColor);
-  has_errors = true;
+  if (error_as_note)
+  {
+    uint32_t savedColor = logger.setLogColor(NOTE_LINE_COLOR);
+    logger << "Note: ";
+    logger << buf;
+    if (!ends_with_newline(buf))
+      logger << "\n";
+    logger.setLogColor(savedColor);
+  }
+  else
+  {
+    logger.setTopErrorLine();
+    uint32_t savedColor = logger.setLogColor(ERROR_LINE_COLOR);
+    logger << "\nERROR: ";
+    logger << buf;
+    logger << "\n";
+    logger.setLogColor(savedColor);
+    has_errors = true;
+  }
 }
 
 void print_exception(const char * format, ...)

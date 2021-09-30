@@ -161,7 +161,11 @@ void set_mouse_cursor_visible(bool visible)
 {
   if (g_window && !inside_initialization)
   {
+    fetch_cerr();
+    reinterpret_error_as_note(true);
     g_window->setMouseCursorVisible(visible);
+    fetch_cerr();
+    reinterpret_error_as_note(false);
     delayed_cursor_visible.first = false;
   }
   else
@@ -172,7 +176,11 @@ void set_mouse_cursor_grabbed(bool grabbed)
 {
   if (g_window && !inside_initialization)
   {
+    fetch_cerr();
+    reinterpret_error_as_note(true);
     g_window->setMouseCursorGrabbed(grabbed);
+    fetch_cerr();
+    reinterpret_error_as_note(false);
     delayed_cursor_grabbed.first = false;
   }
   else
@@ -183,7 +191,11 @@ void set_vsync_enabled(bool enalbe)
 {
   if (g_window && !inside_initialization)
   {
+    fetch_cerr();
+    reinterpret_error_as_note(true);
     g_window->setVerticalSyncEnabled(enalbe);
+    fetch_cerr();
+    reinterpret_error_as_note(false);
     delayed_vsync.first = false;
   }
   else
@@ -488,7 +500,7 @@ void create_window()
     delete g_window;
     g_window = nullptr;
   }
-    
+
   delete render_texture;
   render_texture = nullptr;
   delete render_texture_sprite;
@@ -530,7 +542,12 @@ void create_window()
   window_size.y *= screen_global_scale;
 
   sf::VideoMode videoMode(window_size.x, window_size.y);
+
+  fetch_cerr();
+  reinterpret_error_as_note(true);
   g_window = new sf::RenderWindow(videoMode, windowTitle, sf::Style::Close, windowSettings);
+  fetch_cerr();
+  reinterpret_error_as_note(false);
 
   if (pos.x != INT_MAX)
   {

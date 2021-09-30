@@ -24,12 +24,17 @@ extern bool has_errors;
 void print_error(const char * format, ...);
 void print_exception(const char * format, ...);
 void print_note(const char * format, ...);
+void reinterpret_error_as_note(bool is_note);
 void os_debug_break();
 void fetch_cerr();
 
 #define VERY_BIG_NUMBER 2147440000
 #define countof(x) (sizeof(x) / sizeof((x)[0]))
 #define G_UNUSED(x) ((void)(x))
+
+#ifndef _MSC_VER
+#  define stricmp strcasecmp
+#endif
 
 inline float ssmooth(float t, float min = 0.f, float max = 1.f)
 {
@@ -59,3 +64,5 @@ template <typename T> inline T lerp(T a, T b, T t)
 {
   return (b - a) * t + a;
 }
+
+

@@ -225,6 +225,8 @@ int get_font_size_i()
 
 void text_out(float x, float y, const char * str, uint32_t color)
 {
+  if (!str || !str[0])
+    return;
   sf::Color sfColor = conv_color(color);
   if (primitive_rs.blendMode == sf::BlendNone)
     sfColor.a = 255;
@@ -247,6 +249,9 @@ static std::unordered_map<int, std::pair<float2, float2>> cached_char_size; // f
 
 das::float2 get_text_size(const char * str)
 {
+  if (!str || !str[0])
+    return float2(0);
+
   float2 charSize = float2(0);
   float2 charBase = float2(0);
   auto it = cached_char_size.find(current_font_size);

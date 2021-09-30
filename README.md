@@ -3,6 +3,7 @@
 ## Build for Windows
 
 Install Visual Studio 2017 or 2019\
+Install CMake https://cmake.org/install/
 `git clone --recurse-submodules https://github.com/imp5imp5/dasbox.git`\
 `cd dasbox`\
 `build_windows_vs_*.bat`

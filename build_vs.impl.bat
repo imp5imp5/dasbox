@@ -4,6 +4,10 @@
 
 @echo off
 
+if [%CONFIGURATION%] == [] (
+  set CONFIGURATION=Release
+)
+
 if exist "%programfiles(x86)%\Microsoft Visual Studio\%VS_NUMBER%\Professional" (
   call   "%programfiles(x86)%\Microsoft Visual Studio\%VS_NUMBER%\Professional\VC\Auxiliary\Build\vcvarsall.bat" x86_x64
   goto on_found
@@ -54,7 +58,7 @@ rd /S /Q build
 mkdir build
 pushd build
 cmake -G %CMAKE_GEN_TARGET% -DDAS_USE_STATIC_STD_LIBS:BOOL=TRUE ..
-msbuild libDaScript.vcxproj /p:Configuration=Release
+msbuild libDaScript.vcxproj /p:Configuration=%CONFIGURATION%
 popd
 popd
 
@@ -64,7 +68,7 @@ rd /S /Q build
 mkdir build
 pushd build
 cmake -G %CMAKE_GEN_TARGET% -DSFML_BUILD_EXAMPLES=FALSE -DBUILD_SHARED_LIBS:BOOL=FALSE -DSFML_USE_STATIC_STD_LIBS:BOOL=TRUE ..
-msbuild ALL_BUILD.vcxproj /p:Configuration=Release
+msbuild ALL_BUILD.vcxproj /p:Configuration=%CONFIGURATION%
 popd
 popd
 
@@ -73,7 +77,7 @@ rd /S /Q cmake_tmp
 mkdir cmake_tmp
 pushd cmake_tmp
 cmake -G %CMAKE_GEN_TARGET% -DDASBOX_USE_STATIC_STD_LIBS:BOOL=TRUE ../src
-msbuild dasbox.vcxproj /p:Configuration=Release
+msbuild dasbox.vcxproj /p:Configuration=%CONFIGURATION%
 popd
 
 rem ============ copy ==================

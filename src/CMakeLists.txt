@@ -5,7 +5,10 @@ set(CMAKE_CONFIGURATION_TYPES "Release" "Debug")
 if(MSVC)
   add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/MP>)
   if(DASBOX_USE_STATIC_STD_LIBS)
-    add_compile_options(/MT)
+    add_compile_options(
+      "$<$<CONFIG:RELEASE>:/MT>"
+      "$<$<CONFIG:DEBUG>:/MTd>"
+    )
   endif()
 endif()
 
@@ -39,13 +42,18 @@ if(WIN32)
     legacy_stdio_definitions
     winmm
     Opengl32
-    sfml-main
-    sfml-graphics-s
-    sfml-network-s
-    sfml-system-s
-    sfml-window-s
     libDaScript
     freetype
+    optimized sfml-main
+    optimized sfml-graphics-s
+    optimized sfml-network-s
+    optimized sfml-system-s
+    optimized sfml-window-s
+    debug sfml-main-d
+    debug sfml-graphics-s-d
+    debug sfml-network-s-d
+    debug sfml-system-s-d
+    debug sfml-window-s-d
   )
 endif()
 

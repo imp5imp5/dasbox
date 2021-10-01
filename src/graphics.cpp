@@ -5,13 +5,18 @@
 #include <daScript/daScript.h>
 #include <daScript/simulate/interop.h>
 #include <daScript/simulate/simulate_visit_op.h>
+#include <string>
 
 using namespace das;
 
 
 static sf::RenderStates primitive_rs;
-static sf::Font * default_font = nullptr;
+static sf::Font * font_mono = nullptr;
+static sf::Font * font_sans = nullptr;
+static sf::Font * current_font = nullptr;
 static int current_font_size = 16;
+static sf::Font * saved_font = nullptr;
+
 
 const sf::BlendMode BlendPremultipliedAlpha(sf::BlendMode::One, sf::BlendMode::OneMinusSrcAlpha, sf::BlendMode::Add,
   sf::BlendMode::One, sf::BlendMode::OneMinusSrcAlpha, sf::BlendMode::Add);
@@ -208,6 +213,37 @@ void fill_circle_i(int x, int y, int radius, uint32_t color)
   fill_circle((float)x, (float)y, (float)radius, color);
 }
 
+void set_font_name(const char * name)
+{
+  if (!name || !name[0] || !strcmp(name, "mono"))
+  {
+    current_font = font_mono;
+    return;
+  }
+
+  if (!strcmp(name, "sans"))
+  {
+    current_font = font_sans;
+    return;
+  }
+
+  // TODO: load font from file to font cache
+  current_font = font_mono;
+}
+
+void stash_font()
+{
+  saved_font = current_font;
+}
+
+void restore_font()
+{
+  if (saved_font)
+    current_font = saved_font;
+  else
+    current_font = font_mono;
+}
+
 void set_font_size(float size)
 {
   current_font_size = int(size + 0.5f);
@@ -231,7 +267,7 @@ void text_out(float x, float y, const char * str, uint32_t color)
   if (primitive_rs.blendMode == sf::BlendNone)
     sfColor.a = 255;
   sf::Text text;
-  text.setFont(*default_font);
+  text.setFont(*current_font);
   text.setFillColor(sfColor);
   text.setPosition(x, y);
   text.setCharacterSize(current_font_size);
@@ -258,7 +294,7 @@ das::float2 get_text_size(const char * str)
   if (it == cached_char_size.end())
   {
     sf::Text text;
-    text.setFont(*default_font);
+    text.setFont(*current_font);
     text.setCharacterSize(current_font_size);
     text.setPosition(0, 0);
     text.setString("W");
@@ -857,9 +893,14 @@ void fill_convex_polygon8(const PointsType_8 & points, uint32_t color)
 }
 
 
-static const uint8_t font_data[] =
+static const uint8_t font_mono_data[] =
 {
 #include "resources/font.JetBrainsMonoNL-Medium.ttf.inl"
+};
+
+static const uint8_t font_sans_data[] =
+{
+#include "resources/font.OpenSans-Regular.ttf.inl"
 };
 
 namespace graphics
@@ -867,14 +908,22 @@ namespace graphics
 
 void initialize()
 {
-  default_font = new sf::Font;
-  if (!default_font->loadFromMemory((void *)font_data, sizeof(font_data)))
-    print_error("Cannot load default font\n");
+  font_mono = new sf::Font;
+  if (!font_mono->loadFromMemory((void *)font_mono_data, sizeof(font_mono_data)))
+    print_error("Cannot load default font (mono)\n");
+
+  font_sans = new sf::Font;
+  if (!font_sans->loadFromMemory((void *)font_sans_data, sizeof(font_sans_data)))
+    print_error("Cannot load default font (sans)\n");
+
+  saved_font = nullptr;
+  set_font_name(nullptr);
 }
 
 void finalize()
 {
-  delete default_font;
+  delete font_mono;
+  delete font_sans;
 }
 
 void on_graphics_frame_start()
@@ -1003,6 +1052,7 @@ public:
       "fill_convex_polygon", SideEffects::modifyExternal, "fill_convex_polygon8");
 
 
+    addExtern<DAS_BIND_FUN(set_font_name)>(*this, lib, "set_font_name", SideEffects::modifyExternal, "set_font_name");
     addExtern<DAS_BIND_FUN(set_font_size)>(*this, lib, "set_font_size", SideEffects::modifyExternal, "set_font_size");
     addExtern<DAS_BIND_FUN(set_font_size_i)>(*this, lib, "set_font_size", SideEffects::modifyExternal, "set_font_size_i");
 

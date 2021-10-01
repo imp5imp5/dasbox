@@ -403,11 +403,17 @@ void set_font_size_i(int size);
 int  get_font_size_i();
 void text_out_i(int x, int y, const char * str, uint32_t color);
 void fill_rect_i(int x, int y, int width, int height, uint32_t color);
+void stash_font();
+void restore_font();
+void set_font_name(const char *);
+
 
 
 void draw_log_screen()
 {
   disable_alpha_blend();
+  stash_font();
+  set_font_name(nullptr);
   int savedFontSize = get_font_size_i();
   set_font_size_i(FONT_HEIGHT - 3);
   fill_rect_i(0, 0, screen_width, screen_height, 0xFF202020);
@@ -446,6 +452,7 @@ void draw_log_screen()
       break;
   }
   
+  restore_font();
   set_font_size_i(savedFontSize);
 }
 

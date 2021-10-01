@@ -4,6 +4,8 @@ set init_file=daslib_str\daslib_init.cpp.inl
 del %init_file%
 
 
+rem call python stringify.py --array JetBrainsMonoNL-Medium.ttf font.JetBrainsMonoNL-Medium.ttf.inl
+call python stringify.py --array OpenSans-Regular.ttf font.OpenSans-Regular.ttf.inl
 call python stringify.py --array JetBrainsMonoNL-Medium.ttf font.JetBrainsMonoNL-Medium.ttf.inl
 
 %L% algorithm.das

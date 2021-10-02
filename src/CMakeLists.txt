@@ -36,6 +36,7 @@ endif()
 add_executable(dasbox ${SRC})
 
 if(WIN32)
+  set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT dasbox)
   set(CMAKE_FIND_LIBRARY_SUFFIXES ".lib")
   target_link_libraries(
     dasbox

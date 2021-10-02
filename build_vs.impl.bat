@@ -57,7 +57,7 @@ pushd 3rdParty\daScript
 rd /S /Q build
 mkdir build
 pushd build
-cmake -G %CMAKE_GEN_TARGET% -DDAS_USE_STATIC_STD_LIBS:BOOL=TRUE ..
+cmake -G %CMAKE_GEN_TARGET% -DDAS_USE_STATIC_STD_LIBS:BOOL=TRUE -DCMAKE_CXX_FLAGS_DEBUG:STRING="/MTd /Od /DDAS_FUSION=1 /DDAS_DEBUGGER=1 /Zi /EHa" ..
 msbuild libDaScript.vcxproj /p:Configuration=%CONFIGURATION%
 popd
 popd

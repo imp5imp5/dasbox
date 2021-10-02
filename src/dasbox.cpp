@@ -226,7 +226,6 @@ void check_delayed_variables()
 struct PlaygroundContext final : das::Context
 {
   PlaygroundContext(uint32_t stackSize) : das::Context(stackSize) {}
-  PlaygroundContext(const Context & ctx) : das::Context(ctx) {}
 
   void to_out(const char * message)
   {

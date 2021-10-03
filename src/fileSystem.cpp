@@ -94,7 +94,7 @@ das::FileInfo * DasboxFsFileAccess::getNewFileInfo(const das::string & fname)
   info->source = source;
   if (storeOpenedFiles)
   {
-    int64_t fileTime = get_file_time(fname.c_str());
+    int64_t fileTime = get_file_time(fname);
     filesOpened.emplace_back(fname, fileTime);
   }
   return setFileInfo(fname, std::move(info));

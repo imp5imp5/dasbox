@@ -317,7 +317,7 @@ bool load_module(const string & file_name)
 
   if (!fs::is_file_exists(file_name))
   {
-    print_error("File not found: '%s'", file_name);
+    print_error("File not found: '%s'", file_name.c_str());
     return false;
   }
 
@@ -396,7 +396,7 @@ void das_file_reload_update(float dt)
 {
   if (input::get_key_down(sf::Keyboard::F5) ||
     (input::get_key_down(sf::Keyboard::R) &&
-    (input::get_key_down(sf::Keyboard::LControl) || input::get_key_down(sf::Keyboard::LControl))))
+    (input::get_key_down(sf::Keyboard::LControl) || input::get_key_down(sf::Keyboard::RControl))))
   {
     das_file_manual_reload();
     return;

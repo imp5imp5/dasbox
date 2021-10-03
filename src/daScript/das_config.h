@@ -50,7 +50,7 @@ void print_error(const char * format, ...);
 #endif
 
 #ifndef DAS_FATAL_ERROR
-#  define DAS_FATAL_ERROR  print_error
+#  define DAS_FATAL_ERROR  (void)print_error
 #endif
 
 

@@ -12,7 +12,7 @@
 "require ast\n"
 "require daslib/ast_boost\n"
 "\n"
-"def isYetAnotherVectorTemplate ( var td:TypeDeclPtr )\n"
+"def public isYetAnotherVectorTemplate ( var td:TypeDeclPtr )\n"
 "    return td.isHandle && td.annotation!=null && td.annotation.is_any_vector\n"
 "\n"
 "class IsAnyType : AstFunctionAnnotation\n"

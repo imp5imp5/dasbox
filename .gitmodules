@@ -6,4 +6,4 @@
 	url = https://github.com/mackron/miniaudio
 [submodule "3rdParty/SFML"]
 	path = 3rdParty/SFML
-	url = https://github.com/SFML/SFML
+	url = https://github.com/imp5imp5/SFML

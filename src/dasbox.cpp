@@ -380,6 +380,11 @@ void set_application_screen();
 
 void das_file_manual_reload()
 {
+  sound::stop_all_sounds();
+  builtin_sleep(50);
+  graphics::delete_allocated_images();
+  sound::delete_allocated_sounds();
+
   time_to_check = 0.8f;
   set_application_screen();
   logger.clear();
@@ -410,11 +415,7 @@ void das_file_reload_update(float dt)
       }
 
     if (reload)
-    {
-      sound::stop_all_sounds();
-      builtin_sleep(100);
       das_file_manual_reload();
-    }
   }
 }
 

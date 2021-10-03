@@ -412,6 +412,10 @@ void fill_convex_polygon(const das::TArray<das::float2> & points, uint32_t color
 }
 
 
+struct Image;
+static unordered_set<Image *> image_pointers;
+
+
 struct Image
 {
   sf::Image * img;
@@ -444,6 +448,7 @@ struct Image
     cached_pixels = nullptr;
     width = 0;
     height = 0;
+    image_pointers.insert(this);
   }
 
   Image(const Image & b)
@@ -454,6 +459,7 @@ struct Image
     width = 0;
     height = 0;
     applied = false;
+    image_pointers.insert(this);
   }
 
   Image(Image && b)
@@ -470,6 +476,8 @@ struct Image
     b.img = nullptr;
     b.tex = nullptr;
     b.cached_pixels = nullptr;
+    image_pointers.erase(&b);
+    image_pointers.insert(this);
   }
 
   Image& operator=(const Image & b)
@@ -482,6 +490,7 @@ struct Image
     width = 0;
     height = 0;
     applied = false;
+    image_pointers.insert(this);
     return *this;
   }
 
@@ -495,6 +504,7 @@ struct Image
     cached_pixels = nullptr;
     width = 0;
     height = 0;
+    image_pointers.erase(this);
   }
 };
 
@@ -509,6 +519,7 @@ void delete_image(Image * image)
   image->width = 0;
   image->height = 0;
   image->applied = false;
+  image_pointers.erase(image);
 }
 
 Image create_image(int width, int height, const das::TArray<uint32_t> & pixels)
@@ -920,6 +931,17 @@ void initialize()
   set_font_name(nullptr);
 }
 
+void delete_allocated_images()
+{
+  for (auto && image : image_pointers)
+  {
+    delete image->img;
+    delete image->tex;
+  }
+
+  image_pointers.clear();
+}
+
 void finalize()
 {
   delete font_mono;
@@ -1114,8 +1136,3 @@ public:
 };
 
 REGISTER_MODULE(ModuleGraphics);
-
-
-void bind_graphics()
-{
-}

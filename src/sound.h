@@ -5,75 +5,7 @@
 
 namespace sound
 {
-  struct PcmSound
-  {
-    int frequency;
-    int samples;
-    int channels;
-    float * data;
-
-    bool isValid() const
-    {
-      return !!data;
-    }
-
-    inline int getDataMemorySize() const
-    {
-      return channels * (samples + 4) * sizeof(float);
-    }
-
-    float getDuration() const
-    {
-      return samples / float(frequency);
-    }
-
-    int getFrequency() const
-    {
-      return frequency;
-    }
-
-    int getSamples() const
-    {
-      return samples;
-    }
-
-    int getChannels() const
-    {
-      return channels;
-    }
-
-    PcmSound()
-    {
-      frequency = 44100;
-      samples = 0;
-      channels = 1;
-      data = nullptr;
-    }
-
-    PcmSound(const PcmSound & b)
-    {
-      frequency = b.frequency;
-      samples = b.samples;
-      channels = b.channels;
-      data = new float[getDataMemorySize()];
-      memcpy(data, b.data, getDataMemorySize());
-    }
-
-    PcmSound& operator=(const PcmSound & b)
-    {
-      frequency = b.frequency;
-      samples = b.samples;
-      channels = b.channels;
-      data = new float[getDataMemorySize()];
-      memcpy(data, b.data, getDataMemorySize());
-      return *this;
-    }
-
-    PcmSound(PcmSound && b);
-
-    ~PcmSound();
-  };
-
+  struct PcmSound;
 
   struct PlayingSoundHandle
   {
@@ -93,6 +25,7 @@ namespace sound
   void set_sound_data(PcmSound & sound, const das::TArray<float> & in_data);
   void set_sound_data_stereo(PcmSound & sound, const das::TArray<das::float2> & in_data);
   void delete_sound(PcmSound * sound);
+  void delete_allocated_sounds();
 
   PlayingSoundHandle play_sound_1(const PcmSound & sound);
   PlayingSoundHandle play_sound_2(const PcmSound & sound, float volume);

@@ -4,6 +4,7 @@
 #include <daScript/simulate/interop.h>
 #include <daScript/simulate/simulate_visit_op.h>
 #include <array>
+#include <unordered_set>
 #include "globals.h"
 
 #define MINIAUDIO_IMPLEMENTATION
@@ -32,6 +33,7 @@ static volatile bool sound_cs_manual_entered = false;
 
 static float master_volume = 1.0f;
 
+static unordered_set<float *> sound_data_pointers;
 
 struct WinAutoLock
 {
@@ -46,6 +48,100 @@ struct WinAutoLock
   {
     mutex->unlock();
   }
+};
+
+
+struct PcmSound
+{
+private:
+  float * data;
+public:
+  int frequency;
+  int samples;
+  int channels;
+
+  float * getData() const
+  {
+    return data;
+  }
+
+  void newData(size_t size)
+  {
+    data = new float[size];
+    sound_data_pointers.insert(data);
+  }
+
+  void deleteData()
+  {
+    if (data)
+    {
+      sound_data_pointers.erase(data);
+      delete[] data;
+    }
+  }
+
+  bool isValid() const
+  {
+    return !!data;
+  }
+
+  inline int getDataMemorySize() const
+  {
+    return channels * (samples + 4) * sizeof(float);
+  }
+
+  float getDuration() const
+  {
+    return samples / float(frequency);
+  }
+
+  int getFrequency() const
+  {
+    return frequency;
+  }
+
+  int getSamples() const
+  {
+    return samples;
+  }
+
+  int getChannels() const
+  {
+    return channels;
+  }
+
+  PcmSound()
+  {
+    frequency = 44100;
+    samples = 0;
+    channels = 1;
+    data = nullptr;
+  }
+
+  PcmSound(const PcmSound & b)
+  {
+    frequency = b.frequency;
+    samples = b.samples;
+    channels = b.channels;
+    newData(getDataMemorySize());
+    memcpy(data, b.data, getDataMemorySize());
+  }
+
+  PcmSound& operator=(const PcmSound & b)
+  {
+    deleteData();
+    frequency = b.frequency;
+    samples = b.samples;
+    channels = b.channels;
+    newData(getDataMemorySize());
+    memcpy(data, b.data, getDataMemorySize());
+    return *this;
+  }
+
+  PcmSound(PcmSound && b);
+  ~PcmSound();
+
+  friend void delete_sound(PcmSound * sound);
 };
 
 
@@ -105,14 +201,14 @@ struct PlayingSound
 
     if (channels == 1)
     {
-      float val = sound->data[unsigned(pos)];
+      float val = sound->getData()[unsigned(pos)];
       volumeL *= val;
       volumeR *= val;
     }
     else
     {
-      volumeL *= sound->data[unsigned(pos) * 2];
-      volumeR *= sound->data[unsigned(pos) * 2 + 1];
+      volumeL *= sound->getData()[unsigned(pos) * 2];
+      volumeR *= sound->getData()[unsigned(pos) * 2 + 1];
     }
     volumeTrendL = sign(volumeL) * -(1.f / 10000);
     volumeTrendR = sign(volumeR) * -(1.f / 10000);
@@ -124,7 +220,7 @@ struct PlayingSound
   {
     float wishVolumeL = master_volume * volume * min(1.0f + pan, 1.0f);
     float wishVolumeR = master_volume * volume * min(1.0f - pan, 1.0f);
-    float * __restrict sndData = sound ? sound->data : nullptr;
+    float * __restrict sndData = sound ? sound->getData() : nullptr;
     if (!sndData)
       return;
 
@@ -388,41 +484,6 @@ static void fill_buffer_cb(float * __restrict out_buf, int frequency, int channe
 
 
 
-PcmSound::PcmSound(PcmSound && b)
-{
-  WinAutoLock lock(&sound_cs);
-
-  for (auto && s : playing_sounds)
-    if (s.sound == &b)
-      if (!s.isEmpty())
-        s.setStopMode();
-
-  frequency = b.frequency;
-  samples = b.samples;
-  channels = b.channels;
-  data = b.data;
-  b.data = nullptr;
-}
-
-PcmSound::~PcmSound()
-{
-  if (!data)
-    return;
-
-  WinAutoLock lock(&sound_cs);
-
-  for (auto && s : playing_sounds)
-    if (s.sound == this)
-      if (!s.isEmpty())
-        s.setStopMode();
-
-  delete[] data;
-  data = nullptr;
-  samples = 0;
-}
-
-
-
 static ma_device miniaudio_device;
 static bool device_initialized = false;
 static ma_log ma_log_struct = { 0 };
@@ -509,9 +570,9 @@ PcmSound create_sound(int frequency, const das::TArray<float> & data)
   s.frequency = frequency;
   s.channels = 1;
   s.samples = data.size;
-  s.data = new float[s.getDataMemorySize()];
-  memcpy(s.data, data.data, s.getDataMemorySize());
-  s.data[data.size] = s.data[0];
+  s.newData(s.getDataMemorySize());
+  memcpy(s.getData(), data.data, s.getDataMemorySize());
+  s.getData()[data.size] = s.getData()[0];
   return move(s);
 }
 
@@ -527,10 +588,10 @@ PcmSound create_sound_stereo(int frequency, const das::TArray<das::float2> & dat
   s.frequency = frequency;
   s.channels = 2;
   s.samples = data.size;
-  s.data = new float[s.getDataMemorySize()];
-  memcpy(s.data, data.data, s.getDataMemorySize());
-  s.data[s.samples * 2] = s.data[0];
-  s.data[s.samples * 2 + 1] = s.data[1];
+  s.newData(s.getDataMemorySize());
+  memcpy(s.getData(), data.data, s.getDataMemorySize());
+  s.getData()[s.samples * 2] = s.getData()[0];
+  s.getData()[s.samples * 2 + 1] = s.getData()[1];
   return move(s);
 }
 
@@ -586,17 +647,26 @@ PcmSound create_sound_from_file(const char * file_name)
   s.channels = int(channels);
   s.frequency = int(sampleRate);
   s.samples = int(totalPCMFrameCount);
-  s.data = new float[channels * s.samples];
-  memcpy(s.data, pSampleData, channels * s.samples * sizeof(float));
-  drwav_free(pSampleData, NULL);
+  s.newData(s.getDataMemorySize());
+  memcpy(s.getData(), pSampleData, channels * s.samples * sizeof(float));
+  if (s.channels == 2)
+  {
+    s.getData()[s.samples * 2] = s.getData()[0];
+    s.getData()[s.samples * 2 + 1] = s.getData()[1];
+  }
+  else
+  {
+    s.getData()[s.samples] = s.getData()[0];
+  }
 
+  drwav_free(pSampleData, NULL);
   return move(s);
 }
 
 
 void get_sound_data(const PcmSound & sound, das::TArray<float> & out_data)
 {
-  if (!sound.data)
+  if (!sound.getData())
     return;
 
   int count = sound.samples;
@@ -606,11 +676,11 @@ void get_sound_data(const PcmSound & sound, das::TArray<float> & out_data)
   if (count)
   {
     if (sound.channels == 1)
-      memcpy(out_data.data, sound.data, count * sizeof(float));
+      memcpy(out_data.data, sound.getData(), count * sizeof(float));
     else if (sound.channels == 2)
     {
       float * __restrict ptr = (float *)out_data.data;
-      float * __restrict soundData = (float *)sound.data;
+      float * __restrict soundData = (float *)sound.getData();
       for (int i = 0; i < count; i++)
         ptr[i] = (soundData[i * 2] + soundData[i * 2 + 1]) * 0.5f;
     }
@@ -619,7 +689,7 @@ void get_sound_data(const PcmSound & sound, das::TArray<float> & out_data)
 
 void get_sound_data_stereo(const PcmSound & sound, das::TArray<das::float2> & out_data)
 {
-  if (!sound.data)
+  if (!sound.getData())
     return;
 
   int count = sound.samples;
@@ -629,11 +699,11 @@ void get_sound_data_stereo(const PcmSound & sound, das::TArray<das::float2> & ou
   if (count)
   {
     if (sound.channels == 2)
-      memcpy(out_data.data, sound.data, count * sizeof(float) * 2);
+      memcpy(out_data.data, sound.getData(), count * sizeof(float) * 2);
     else if (sound.channels == 1)
     {
       float * __restrict ptr = (float *)out_data.data;
-      float * __restrict soundData = (float *)sound.data;
+      float * __restrict soundData = (float *)sound.getData();
       for (int i = 0; i < count; i++)
       {
         ptr[i * 2] = soundData[i];
@@ -645,7 +715,7 @@ void get_sound_data_stereo(const PcmSound & sound, das::TArray<das::float2> & ou
 
 void set_sound_data(PcmSound & sound, const das::TArray<float> & in_data)
 {
-  if (!sound.data)
+  if (!sound.getData())
     return;
 
   int count = sound.samples;
@@ -657,13 +727,13 @@ void set_sound_data(PcmSound & sound, const das::TArray<float> & in_data)
 
   if (sound.channels == 1)
   {
-    memcpy(sound.data, in_data.data, count * sizeof(float));
-    sound.data[sound.samples] = sound.data[0];
+    memcpy(sound.getData(), in_data.data, count * sizeof(float));
+    sound.getData()[sound.samples] = sound.getData()[0];
   }
   else if (sound.channels == 2)
   {
     float * __restrict ptr = (float *)in_data.data;
-    float * __restrict soundData = (float *)sound.data;
+    float * __restrict soundData = (float *)sound.getData();
     for (int i = 0; i < count; i++)
     {
       soundData[i * 2] = ptr[i];
@@ -676,7 +746,7 @@ void set_sound_data(PcmSound & sound, const das::TArray<float> & in_data)
 
 void set_sound_data_stereo(PcmSound & sound, const das::TArray<das::float2> & in_data)
 {
-  if (!sound.data)
+  if (!sound.getData())
     return;
 
   int count = sound.samples;
@@ -689,17 +759,17 @@ void set_sound_data_stereo(PcmSound & sound, const das::TArray<das::float2> & in
   if (sound.channels == 1)
   {
     float * __restrict ptr = (float *)in_data.data;
-    float * __restrict soundData = (float *)sound.data;
+    float * __restrict soundData = (float *)sound.getData();
     for (int i = 0; i < count; i++)
       soundData[i] = (ptr[i * 2] + ptr[i * 2 + 1]) * 0.5f;
 
-    sound.data[sound.samples] = sound.data[0];
+    sound.getData()[sound.samples] = sound.getData()[0];
   }
   else if (sound.channels == 2)
   {
-    memcpy(sound.data, in_data.data, 2 * count * sizeof(float));
-    sound.data[sound.samples * 2] = sound.data[0];
-    sound.data[sound.samples * 2 + 1] = sound.data[1];
+    memcpy(sound.getData(), in_data.data, 2 * count * sizeof(float));
+    sound.getData()[sound.samples * 2] = sound.getData()[0];
+    sound.getData()[sound.samples * 2 + 1] = sound.getData()[1];
   }
 }
 
@@ -712,10 +782,20 @@ void delete_sound(PcmSound * sound)
       if (!s.isEmpty())
         s.setStopMode();
 
-  sound->samples = 0;
-  delete[] sound->data;
+  sound->deleteData();
   sound->data = nullptr;
+  sound->samples = 0;
 }
+
+void delete_allocated_sounds()
+{
+  WinAutoLock lock(&sound_cs);
+  for (auto && data : sound_data_pointers)
+    delete[] data;
+
+  sound_data_pointers.clear();
+}
+
 
 
 PlayingSoundHandle play_sound_internal(const PcmSound & sound, float volume, float pitch, float pan, float start_time, float end_time,
@@ -971,6 +1051,40 @@ int64_t get_total_samples_played()
 double get_total_time_played()
 {
   return total_time_played;
+}
+
+
+PcmSound::PcmSound(PcmSound && b)
+{
+  WinAutoLock lock(&sound_cs);
+
+  for (auto && s : playing_sounds)
+    if (s.sound == &b)
+      if (!s.isEmpty())
+        s.setStopMode();
+
+  frequency = b.frequency;
+  samples = b.samples;
+  channels = b.channels;
+  data = b.data;
+  b.data = nullptr;
+}
+
+PcmSound::~PcmSound()
+{
+  if (!data)
+    return;
+
+  WinAutoLock lock(&sound_cs);
+
+  for (auto && s : playing_sounds)
+    if (s.sound == this)
+      if (!s.isEmpty())
+        s.setStopMode();
+
+  deleteData();
+  data = nullptr;
+  samples = 0;
 }
 
 } // namespace sound

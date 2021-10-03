@@ -139,6 +139,7 @@ public:
   }
 
   PcmSound(PcmSound && b);
+  PcmSound& operator=(PcmSound && b);
   ~PcmSound();
 
   friend void delete_sound(PcmSound * sound);
@@ -194,7 +195,6 @@ struct PlayingSound
     if (waitingStart)
     {
       waitingStart = false;
-      stopMode = false;
       sound = nullptr;
       return;
     }
@@ -564,7 +564,7 @@ PcmSound create_sound(int frequency, const das::TArray<float> & data)
     init_sound_lib_internal();
 
   if (frequency < 1 || !data.size)
-    return move(PcmSound());
+    return PcmSound();
 
   PcmSound s;
   s.frequency = frequency;
@@ -573,7 +573,7 @@ PcmSound create_sound(int frequency, const das::TArray<float> & data)
   s.newData(s.getDataMemorySize());
   memcpy(s.getData(), data.data, s.getDataMemorySize());
   s.getData()[data.size] = s.getData()[0];
-  return move(s);
+  return s;
 }
 
 PcmSound create_sound_stereo(int frequency, const das::TArray<das::float2> & data)
@@ -582,7 +582,7 @@ PcmSound create_sound_stereo(int frequency, const das::TArray<das::float2> & dat
     init_sound_lib_internal();
 
   if (frequency < 1 || !data.size)
-    return move(PcmSound());
+    return PcmSound();
 
   PcmSound s;
   s.frequency = frequency;
@@ -592,7 +592,7 @@ PcmSound create_sound_stereo(int frequency, const das::TArray<das::float2> & dat
   memcpy(s.getData(), data.data, s.getDataMemorySize());
   s.getData()[s.samples * 2] = s.getData()[0];
   s.getData()[s.samples * 2 + 1] = s.getData()[1];
-  return move(s);
+  return s;
 }
 
 
@@ -604,7 +604,7 @@ PcmSound create_sound_from_file(const char * file_name)
   if (!file_name || !file_name[0])
   {
     print_error("Cannot create sound. File name is empty.", file_name);
-    return move(PcmSound());
+    return PcmSound();
   }
 
   PcmSound s;
@@ -629,19 +629,19 @@ PcmSound create_sound_from_file(const char * file_name)
   else
   {
     print_error("Cannot create sound from '%s', unrecognized file format. Expected .wav, .flac or .mp3", file_name);
-    return move(PcmSound());
+    return PcmSound();
   }
 
   if (!pSampleData)
   {
     print_error("Cannot create sound from '%s'", file_name);
-    return move(PcmSound());
+    return PcmSound();
   }
 
   if (channels != 1 && channels != 2)
   {
     print_error("Cannot create sound from '%s', invalid channels count = %d", int(channels));
-    return move(PcmSound());
+    return PcmSound();
   }
 
   s.channels = int(channels);
@@ -660,7 +660,7 @@ PcmSound create_sound_from_file(const char * file_name)
   }
 
   drwav_free(pSampleData, NULL);
-  return move(s);
+  return s;
 }
 
 
@@ -1069,6 +1069,25 @@ PcmSound::PcmSound(PcmSound && b)
   data = b.data;
   b.data = nullptr;
 }
+
+PcmSound& PcmSound::operator=(PcmSound && b)
+{
+  WinAutoLock lock(&sound_cs);
+
+  for (auto && s : playing_sounds)
+    if (s.sound == this || s.sound == &b)
+      if (!s.isEmpty())
+        s.setStopMode();
+
+  frequency = b.frequency;
+  samples = b.samples;
+  channels = b.channels;
+  data = b.data;
+  b.data = nullptr;
+
+  return *this;
+}
+
 
 PcmSound::~PcmSound()
 {

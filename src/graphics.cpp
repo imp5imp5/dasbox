@@ -487,9 +487,28 @@ struct Image
     img = b.img ? new sf::Image(*b.img) : nullptr;
     tex = b.tex ? new sf::Texture(*b.tex) : nullptr;
     cached_pixels = img ? (uint32_t *)img->getPixelsPtr() : nullptr;
-    width = 0;
-    height = 0;
+    width = b.width;
+    height = b.height;
     applied = false;
+    image_pointers.insert(this);
+    return *this;
+  }
+
+  Image& operator=(Image && b)
+  {
+    img = b.img;
+    tex = b.tex;
+    cached_pixels = b.cached_pixels;
+    width = b.width;
+    height = b.height;
+    applied = b.applied;
+
+    b.width = 0;
+    b.height = 0;
+    b.img = nullptr;
+    b.tex = nullptr;
+    b.cached_pixels = nullptr;
+    image_pointers.erase(&b);
     image_pointers.insert(this);
     return *this;
   }
@@ -525,7 +544,7 @@ void delete_image(Image * image)
 Image create_image(int width, int height, const das::TArray<uint32_t> & pixels)
 {
   if (width <= 0 || height <= 0)
-    return std::move(Image());
+    return Image();
 
   Image b;
   b.img = new sf::Image();
@@ -541,13 +560,13 @@ Image create_image(int width, int height, const das::TArray<uint32_t> & pixels)
 
   b.tex = new sf::Texture();
   b.tex->loadFromImage(*b.img);
-  return std::move(b);
+  return b;
 }
 
 Image create_image_from_file(const char * file_name)
 {
   if (!file_name || !*file_name)
-    return std::move(Image());
+    return Image();
 
   Image b;
   b.img = new sf::Image();
@@ -557,7 +576,7 @@ Image create_image_from_file(const char * file_name)
     //print_error("Cannot create image from file '%s'", file_name);
     delete b.img;
     b.img = nullptr;
-    return std::move(Image());
+    return Image();
   }
 
   b.cached_pixels = (uint32_t *)b.img->getPixelsPtr();
@@ -566,7 +585,7 @@ Image create_image_from_file(const char * file_name)
 
   b.tex = new sf::Texture();
   b.tex->loadFromImage(*b.img);
-  return std::move(b);
+  return b;
 }
 
 void get_image_data(const Image & b, das::TArray<uint32_t> & out_pixels)

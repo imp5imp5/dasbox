@@ -102,6 +102,8 @@ bool is_window_active()
 
 void set_window_title(const char * title)
 {
+  if (!title)
+    title = "";
   if (g_window && !inside_initialization)
   {
     g_window->setTitle(sf::String::fromUtf8(title, title + strlen(title)));

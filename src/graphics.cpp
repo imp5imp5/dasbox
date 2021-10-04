@@ -714,7 +714,7 @@ inline void apply_texture(const Image & image)
 }
 
 
-void draw_image_cs2(const Image & image, float x, float y, uint32_t color, das::float2 scale)
+void draw_image_cs2(const Image & image, float x, float y, uint32_t color, das::float2 size)
 {
   if (!image.tex)
     return;
@@ -725,13 +725,13 @@ void draw_image_cs2(const Image & image, float x, float y, uint32_t color, das::
   v[0].position = sf::Vector2f(x, y);
   v[0].color = c;
   v[0].texCoords = sf::Vector2f(0, 0);
-  v[1].position = sf::Vector2f(x, y + scale.y * image.height);
+  v[1].position = sf::Vector2f(x, y + size.y);
   v[1].color = c;
   v[1].texCoords = sf::Vector2f(0, (float)image.height);
-  v[2].position = sf::Vector2f(x + scale.x * image.width, y);
+  v[2].position = sf::Vector2f(x + size.x, y);
   v[2].color = c;
   v[2].texCoords = sf::Vector2f((float)image.width, 0);
-  v[3].position = sf::Vector2f(x + scale.x * image.width, y + scale.y * image.height);
+  v[3].position = sf::Vector2f(x + size.x, y + size.y);
   v[3].color = c;
   v[3].texCoords = sf::Vector2f((float)image.width, (float)image.height);
 
@@ -743,18 +743,40 @@ void draw_image_cs2(const Image & image, float x, float y, uint32_t color, das::
 
 void draw_image(const Image & image, float x, float y)
 {
-  draw_image_cs2(image, x, y, 0xFFFFFFFF, das::float2(1.0f, 1.0f));
+  draw_image_cs2(image, x, y, 0xFFFFFFFF, das::float2(image.width, image.height));
 }
 
 void draw_image_c(const Image & image, float x, float y, uint32_t color)
 {
-  draw_image_cs2(image, x, y, color, das::float2(1.0f, 1.0f));
+  draw_image_cs2(image, x, y, color, das::float2(image.width, image.height));
 }
 
-void draw_image_cs(const Image & image, float x, float y, uint32_t color, float scale)
+void draw_image_cs(const Image & image, float x, float y, uint32_t color, float size)
 {
-  draw_image_cs2(image, x, y, color, das::float2(scale, scale));
+  draw_image_cs2(image, x, y, color, das::float2(size, size));
 }
+
+
+void draw_image_cs2i(const Image & image, int x, int y, uint32_t color, das::int2 size)
+{
+  draw_image_cs2(image, (float)x, (float)y, color, das::float2(size.x, size.y));
+}
+
+void draw_image_i(const Image & image, int x, int y)
+{
+  draw_image_cs2(image, (float)x, (float)y, 0xFFFFFFFF, das::float2(image.width, image.height));
+}
+
+void draw_image_ci(const Image & image, int x, int y, uint32_t color)
+{
+  draw_image_cs2(image, (float)x, (float)y, color, das::float2(image.width, image.height));
+}
+
+void draw_image_csi(const Image & image, int x, int y, uint32_t color, int size)
+{
+  draw_image_cs2(image, (float)x, (float)y, color, das::float2(size, size));
+}
+
 
 
 void draw_quad(const Image & image, das::float2 p0, das::float2 p1, das::float2 p2, das::float2 p3, uint32_t color)
@@ -1051,32 +1073,72 @@ public:
     addExtern<DAS_BIND_FUN(get_screen_height)>(*this, lib, "get_screen_height", SideEffects::accessExternal, "get_screen_height");
     addExtern<DAS_BIND_FUN(get_desktop_width)>(*this, lib, "get_desktop_width", SideEffects::accessExternal, "get_desktop_width");
     addExtern<DAS_BIND_FUN(get_desktop_height)>(*this, lib, "get_desktop_height", SideEffects::accessExternal, "get_desktop_height");
-    addExtern<DAS_BIND_FUN(set_pixel)>(*this, lib, "set_pixel", SideEffects::modifyExternal, "set_pixel");
-    addExtern<DAS_BIND_FUN(set_pixel_i)>(*this, lib, "set_pixel", SideEffects::modifyExternal, "set_pixel_i");
-    addExtern<DAS_BIND_FUN(fill_rect)>(*this, lib, "fill_rect", SideEffects::modifyExternal, "fill_rect");
-    addExtern<DAS_BIND_FUN(fill_rect_i)>(*this, lib, "fill_rect", SideEffects::modifyExternal, "fill_rect_i");
-    addExtern<DAS_BIND_FUN(rect)>(*this, lib, "rect", SideEffects::modifyExternal, "rect");
-    addExtern<DAS_BIND_FUN(rect_i)>(*this, lib, "rect", SideEffects::modifyExternal, "rect_i");
-    addExtern<DAS_BIND_FUN(text_out)>(*this, lib, "text_out", SideEffects::modifyExternal, "text_out");
-    addExtern<DAS_BIND_FUN(text_out_i)>(*this, lib, "text_out", SideEffects::modifyExternal, "text_out_i");
-    addExtern<DAS_BIND_FUN(get_text_size)>(*this, lib, "get_text_size", SideEffects::modifyExternal, "get_text_size");
-    addExtern<DAS_BIND_FUN(line)>(*this, lib, "line", SideEffects::modifyExternal, "line");
-    addExtern<DAS_BIND_FUN(line_i)>(*this, lib, "line", SideEffects::modifyExternal, "line_i");
-    addExtern<DAS_BIND_FUN(circle)>(*this, lib, "circle", SideEffects::modifyExternal, "circle");
-    addExtern<DAS_BIND_FUN(circle_i)>(*this, lib, "circle", SideEffects::modifyExternal, "circle_i");
-    addExtern<DAS_BIND_FUN(fill_circle)>(*this, lib, "fill_circle", SideEffects::modifyExternal, "fill_circle");
-    addExtern<DAS_BIND_FUN(fill_circle_i)>(*this, lib, "fill_circle", SideEffects::modifyExternal, "fill_circle_i");
-    addExtern<DAS_BIND_FUN(polygon)>(*this, lib, "polygon", SideEffects::modifyExternal, "polygon");
+    addExtern<DAS_BIND_FUN(set_pixel)>(*this, lib, "set_pixel", SideEffects::modifyExternal, "set_pixel")
+      ->args({"x", "y", "color"});
+
+    addExtern<DAS_BIND_FUN(set_pixel_i)>(*this, lib, "set_pixel", SideEffects::modifyExternal, "set_pixel_i")
+      ->args({"x", "y", "color"});
+
+    addExtern<DAS_BIND_FUN(fill_rect)>(*this, lib, "fill_rect", SideEffects::modifyExternal, "fill_rect")
+      ->args({"x", "y", "width", "height", "color"});
+
+    addExtern<DAS_BIND_FUN(fill_rect_i)>(*this, lib, "fill_rect", SideEffects::modifyExternal, "fill_rect_i")
+      ->args({"x", "y", "width", "height", "color"});
+
+    addExtern<DAS_BIND_FUN(rect)>(*this, lib, "rect", SideEffects::modifyExternal, "rect")
+      ->args({"x", "y", "width", "height", "color"});
+
+    addExtern<DAS_BIND_FUN(rect_i)>(*this, lib, "rect", SideEffects::modifyExternal, "rect_i")
+      ->args({"x", "y", "width", "height", "color"});
+
+    addExtern<DAS_BIND_FUN(text_out)>(*this, lib, "text_out", SideEffects::modifyExternal, "text_out")
+      ->args({"x", "y", "str", "color"});
+
+    addExtern<DAS_BIND_FUN(text_out_i)>(*this, lib, "text_out", SideEffects::modifyExternal, "text_out_i")
+      ->args({"x", "y", "str", "color"});
+
+    addExtern<DAS_BIND_FUN(get_text_size)>(*this, lib, "get_text_size", SideEffects::modifyExternal, "get_text_size")
+      ->args({"str"});
+
+    addExtern<DAS_BIND_FUN(line)>(*this, lib, "line", SideEffects::modifyExternal, "line")
+      ->args({"x0", "y0", "x1", "y1", "color"});
+
+    addExtern<DAS_BIND_FUN(line_i)>(*this, lib, "line", SideEffects::modifyExternal, "line_i")
+      ->args({"x0", "y0", "x1", "y1", "color"});
+
+    addExtern<DAS_BIND_FUN(circle)>(*this, lib, "circle", SideEffects::modifyExternal, "circle")
+      ->args({"x", "y", "radius", "color"});
+
+    addExtern<DAS_BIND_FUN(circle_i)>(*this, lib, "circle", SideEffects::modifyExternal, "circle_i")
+      ->args({"x", "y", "radius", "color"});
+
+    addExtern<DAS_BIND_FUN(fill_circle)>(*this, lib, "fill_circle", SideEffects::modifyExternal, "fill_circle")
+      ->args({"x", "y", "radius", "color"});
+
+    addExtern<DAS_BIND_FUN(fill_circle_i)>(*this, lib, "fill_circle", SideEffects::modifyExternal, "fill_circle_i")
+      ->args({"x", "y", "radius", "color"});
+
+    addExtern<DAS_BIND_FUN(polygon)>(*this, lib, "polygon", SideEffects::modifyExternal, "polygon")
+      ->args({"points", "color"});
+
     addExtern<DAS_BIND_FUN(polygon2)>(*this, lib, "polygon", SideEffects::modifyExternal, "polygon2");
+
     addExtern<DAS_BIND_FUN(polygon3)>(*this, lib, "polygon", SideEffects::modifyExternal, "polygon3");
+
     addExtern<DAS_BIND_FUN(polygon4)>(*this, lib, "polygon", SideEffects::modifyExternal, "polygon4");
+
     addExtern<DAS_BIND_FUN(polygon5)>(*this, lib, "polygon", SideEffects::modifyExternal, "polygon5");
+
     addExtern<DAS_BIND_FUN(polygon6)>(*this, lib, "polygon", SideEffects::modifyExternal, "polygon6");
+
     addExtern<DAS_BIND_FUN(polygon7)>(*this, lib, "polygon", SideEffects::modifyExternal, "polygon7");
+
     addExtern<DAS_BIND_FUN(polygon8)>(*this, lib, "polygon", SideEffects::modifyExternal, "polygon8");
 
     addExtern<DAS_BIND_FUN(fill_convex_polygon)>(*this, lib,
-      "fill_convex_polygon", SideEffects::modifyExternal, "fill_convex_polygon");
+      "fill_convex_polygon", SideEffects::modifyExternal, "fill_convex_polygon")
+      ->args({"points", "color"});
+
     addExtern<DAS_BIND_FUN(fill_convex_polygon2)>(*this, lib,
       "fill_convex_polygon", SideEffects::modifyExternal, "fill_convex_polygon2");
     addExtern<DAS_BIND_FUN(fill_convex_polygon3)>(*this, lib,
@@ -1093,9 +1155,14 @@ public:
       "fill_convex_polygon", SideEffects::modifyExternal, "fill_convex_polygon8");
 
 
-    addExtern<DAS_BIND_FUN(set_font_name)>(*this, lib, "set_font_name", SideEffects::modifyExternal, "set_font_name");
-    addExtern<DAS_BIND_FUN(set_font_size)>(*this, lib, "set_font_size", SideEffects::modifyExternal, "set_font_size");
-    addExtern<DAS_BIND_FUN(set_font_size_i)>(*this, lib, "set_font_size", SideEffects::modifyExternal, "set_font_size_i");
+    addExtern<DAS_BIND_FUN(set_font_name)>(*this, lib, "set_font_name", SideEffects::modifyExternal, "set_font_name")
+      ->args({"font_name"});
+
+    addExtern<DAS_BIND_FUN(set_font_size)>(*this, lib, "set_font_size", SideEffects::modifyExternal, "set_font_size")
+      ->args({"size_px"});
+
+    addExtern<DAS_BIND_FUN(set_font_size_i)>(*this, lib, "set_font_size", SideEffects::modifyExternal, "set_font_size_i")
+      ->args({"size_px"});
 
     addExtern<DAS_BIND_FUN(enable_premultiplied_alpha_blend)>(*this, lib,
       "enable_premultiplied_alpha_blend", SideEffects::modifyExternal, "enable_premultiplied_alpha_blend");
@@ -1106,41 +1173,84 @@ public:
 
     addExtern<DAS_BIND_FUN(flip_image_x)>(*this, lib, "flip_image_x", SideEffects::modifyExternal, "flip_image_x");
     addExtern<DAS_BIND_FUN(flip_image_y)>(*this, lib, "flip_image_y", SideEffects::modifyExternal, "flip_image_y");
-    addExtern<DAS_BIND_FUN(set_image_smooth)>(*this, lib, "set_image_smooth", SideEffects::modifyExternal, "set_image_smooth");
-    addExtern<DAS_BIND_FUN(set_image_clamp)>(*this, lib, "set_image_clamp", SideEffects::modifyExternal, "set_image_clamp");
+    addExtern<DAS_BIND_FUN(set_image_smooth)>(*this, lib, "set_image_smooth", SideEffects::modifyExternal, "set_image_smooth")
+      ->args({"image", "is_smooth"});
+
+    addExtern<DAS_BIND_FUN(set_image_clamp)>(*this, lib, "set_image_clamp", SideEffects::modifyExternal, "set_image_clamp")
+      ->args({"image", "is_clamped"});
+
 
     addExtern<DAS_BIND_FUN(create_image), SimNode_ExtFuncCallAndCopyOrMove>
-      (*this, lib, "create_image", SideEffects::modifyExternal, "create_image");
+      (*this, lib, "create_image", SideEffects::modifyExternal, "create_image")
+      ->args({"width", "height", "pixels"});
 
     addExtern<DAS_BIND_FUN(create_image_from_file), SimNode_ExtFuncCallAndCopyOrMove>(*this, lib,
-      "create_image", SideEffects::modifyExternal, "create_image_from_file");
+      "create_image", SideEffects::modifyExternal, "create_image_from_file")
+      ->args({"file_name"});
 
-    addExtern<DAS_BIND_FUN(draw_quad)>(*this, lib, "draw_quad", SideEffects::modifyExternal, "draw_quad");
-    addExtern<DAS_BIND_FUN(draw_quad_a)>(*this, lib, "draw_quad", SideEffects::modifyExternal, "draw_quad_a");
+    addExtern<DAS_BIND_FUN(draw_quad)>(*this, lib, "draw_quad", SideEffects::modifyExternal, "draw_quad")
+      ->args({"image", "p0", "p1", "p2", "p3", "color"});
+
+    addExtern<DAS_BIND_FUN(draw_quad_a)>(*this, lib, "draw_quad", SideEffects::modifyExternal, "draw_quad_a")
+      ->args({"image", "points", "color"});
 
     addExtern<DAS_BIND_FUN(draw_triangle_strip)>(*this, lib,
-      "draw_triangle_strip", SideEffects::modifyExternal, "draw_triangle_strip");
-    addExtern<DAS_BIND_FUN(draw_triangle_strip_color)>(*this, lib,
-      "draw_triangle_strip", SideEffects::modifyExternal, "draw_triangle_strip_color");
-    addExtern<DAS_BIND_FUN(draw_triangle_strip_color_a)>(*this, lib,
-      "draw_triangle_strip", SideEffects::modifyExternal, "draw_triangle_strip_color_a");
+      "draw_triangle_strip", SideEffects::modifyExternal, "draw_triangle_strip")
+      ->args({"image", "coord", "uv"});
 
-    addExtern<DAS_BIND_FUN(draw_image)>(*this, lib, "draw_image", SideEffects::modifyExternal, "draw_image");
-    addExtern<DAS_BIND_FUN(draw_image_c)>(*this, lib, "draw_image", SideEffects::modifyExternal, "draw_image_c");
-    addExtern<DAS_BIND_FUN(draw_image_cs)>(*this, lib, "draw_image", SideEffects::modifyExternal, "draw_image_cs");
-    addExtern<DAS_BIND_FUN(draw_image_cs2)>(*this, lib, "draw_image", SideEffects::modifyExternal, "draw_image_cs2");
+    addExtern<DAS_BIND_FUN(draw_triangle_strip_color)>(*this, lib,
+      "draw_triangle_strip", SideEffects::modifyExternal, "draw_triangle_strip_color")
+      ->args({"image", "coord", "uv", "color"});
+
+    addExtern<DAS_BIND_FUN(draw_triangle_strip_color_a)>(*this, lib,
+      "draw_triangle_strip", SideEffects::modifyExternal, "draw_triangle_strip_color_a")
+      ->args({"image", "coord", "uv", "colors"});
+
+
+    addExtern<DAS_BIND_FUN(draw_image)>(*this, lib, "draw_image", SideEffects::modifyExternal, "draw_image")
+      ->args({"image", "x", "y"});
+
+    addExtern<DAS_BIND_FUN(draw_image_c)>(*this, lib, "draw_image", SideEffects::modifyExternal, "draw_image_c")
+      ->args({"image", "x", "y", "color"});
+
+    addExtern<DAS_BIND_FUN(draw_image_cs)>(*this, lib, "draw_image", SideEffects::modifyExternal, "draw_image_cs")
+      ->args({"image", "x", "y", "color", "size"});
+
+    addExtern<DAS_BIND_FUN(draw_image_cs2)>(*this, lib, "draw_image", SideEffects::modifyExternal, "draw_image_cs2")
+      ->args({"image", "x", "y", "color", "size"});
+
+    addExtern<DAS_BIND_FUN(draw_image_i)>(*this, lib, "draw_image", SideEffects::modifyExternal, "draw_image_i")
+      ->args({"image", "x", "y"});
+
+    addExtern<DAS_BIND_FUN(draw_image_ci)>(*this, lib, "draw_image", SideEffects::modifyExternal, "draw_image_ci")
+      ->args({"image", "x", "y", "color"});
+
+    addExtern<DAS_BIND_FUN(draw_image_csi)>(*this, lib, "draw_image", SideEffects::modifyExternal, "draw_image_csi")
+      ->args({"image", "x", "y", "color", "size"});
+
+    addExtern<DAS_BIND_FUN(draw_image_cs2i)>(*this, lib, "draw_image", SideEffects::modifyExternal, "draw_image_cs2i")
+      ->args({"image", "x", "y", "color", "size"});
 
     addExtern<DAS_BIND_FUN(premultiply_alpha)>(*this, lib,
-      "premultiply_alpha", SideEffects::modifyExternal, "premultiply_alpha");
+      "premultiply_alpha", SideEffects::modifyExternal, "premultiply_alpha")
+      ->args({"image"});
+
     addExtern<DAS_BIND_FUN(make_image_color_transparent)>(*this, lib,
-      "make_image_color_transparent", SideEffects::modifyExternal, "make_image_color_transparent");
+      "make_image_color_transparent", SideEffects::modifyExternal, "make_image_color_transparent")
+      ->args({"image", "color"});
 
     addExtern<DAS_BIND_FUN(get_image_data)>(*this, lib,
-      "get_image_data", SideEffects::modifyArgumentAndExternal, "get_image_data");
+      "get_image_data", SideEffects::modifyArgumentAndExternal, "get_image_data")
+      ->args({"image", "out_pixels"});
 
-    addExtern<DAS_BIND_FUN(set_image_data)>(*this, lib, "set_image_data", SideEffects::modifyExternal, "set_image_data");
-    addExtern<DAS_BIND_FUN(set_image_pixel)>(*this, lib, "set_image_pixel", SideEffects::modifyExternal, "set_image_pixel");
-    addExtern<DAS_BIND_FUN(get_image_pixel)>(*this, lib, "get_image_pixel", SideEffects::accessExternal, "get_image_pixel");
+    addExtern<DAS_BIND_FUN(set_image_data)>(*this, lib, "set_image_data", SideEffects::modifyExternal, "set_image_data")
+      ->args({"image", "pixels"});
+
+    addExtern<DAS_BIND_FUN(set_image_pixel)>(*this, lib, "set_image_pixel", SideEffects::modifyExternal, "set_image_pixel")
+      ->args({"image", "x", "y", "color"});
+
+    addExtern<DAS_BIND_FUN(get_image_pixel)>(*this, lib, "get_image_pixel", SideEffects::accessExternal, "get_image_pixel")
+      ->args({"image", "x", "y"});
 
 
     compileBuiltinModule("graphics.das", (unsigned char *)graphics_das, sizeof(graphics_das));

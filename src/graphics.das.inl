@@ -12,6 +12,11 @@ def make_color(brightness: float): uint
     let ib = uint(saturate(brightness) * 255.0 + 0.5)
     return 0xFF000000 | ib | (ib << 8u) | (ib << 16u)
 
+def make_color(brightness, alpha: float): uint
+    let ib = uint(saturate(brightness) * 255.0 + 0.5)
+    let ia = uint(saturate(alpha) * 255.0 + 0.5)
+    return ib | (ib << 8u) | (ib << 16u) | (ia << 24u)
+
 def make_color(r, g, b: float): uint
     let ir = uint(saturate(r) * 255.0 + 0.5)
     let ig = uint(saturate(g) * 255.0 + 0.5)

@@ -232,22 +232,39 @@ public:
     addConstant(*this, "MB_MIDDLE", MOUSE_CODE_OFFSET + 2);
 
 
-    addExtern<DAS_BIND_FUN(das_get_key)>(*this, lib, "get_key", SideEffects::accessExternal, "das_get_key");
-    addExtern<DAS_BIND_FUN(das_get_key_down)>(*this, lib, "get_key_down", SideEffects::accessExternal, "das_get_key_down");
-    addExtern<DAS_BIND_FUN(das_get_key_up)>(*this, lib, "get_key_up", SideEffects::accessExternal, "das_get_key_up");
+    addExtern<DAS_BIND_FUN(das_get_key)>(*this, lib, "get_key", SideEffects::accessExternal, "das_get_key")
+      ->args({"key_code"});
+
+    addExtern<DAS_BIND_FUN(das_get_key_down)>(*this, lib, "get_key_down", SideEffects::accessExternal, "das_get_key_down")
+      ->args({"key_code"});
+
+    addExtern<DAS_BIND_FUN(das_get_key_up)>(*this, lib, "get_key_up", SideEffects::accessExternal, "das_get_key_up")
+      ->args({"key_code"});
+
     addExtern<DAS_BIND_FUN(input::fetch_entered_symbol)>
       (*this, lib, "fetch_entered_symbol", SideEffects::accessExternal, "input::fetch_entered_symbol");
 
+
     addExtern<DAS_BIND_FUN(das_get_key_name)>
-      (*this, lib, "get_key_name", SideEffects::accessExternal, "das_get_key_name");
+      (*this, lib, "get_key_name", SideEffects::accessExternal, "das_get_key_name")
+      ->args({"key_code"});
+
     addExtern<DAS_BIND_FUN(das_get_key_press)>
-      (*this, lib, "get_key_press", SideEffects::accessExternal, "das_get_key_press");
+      (*this, lib, "get_key_press", SideEffects::accessExternal, "das_get_key_press")
+      ->args({"key_code"});
+
     addExtern<DAS_BIND_FUN(das_get_mouse_button)>
-      (*this, lib, "get_mouse_button", SideEffects::accessExternal, "das_get_mouse_button");
+      (*this, lib, "get_mouse_button", SideEffects::accessExternal, "das_get_mouse_button")
+      ->args({"button_code"});
+
     addExtern<DAS_BIND_FUN(das_get_mouse_button_up)>
-      (*this, lib, "get_mouse_button_up", SideEffects::accessExternal, "das_get_mouse_button_up");
+      (*this, lib, "get_mouse_button_up", SideEffects::accessExternal, "das_get_mouse_button_up")
+      ->args({"button_code"});
+
     addExtern<DAS_BIND_FUN(das_get_mouse_button_down)>
-      (*this, lib, "get_mouse_button_down", SideEffects::accessExternal, "das_get_mouse_button_down");
+      (*this, lib, "get_mouse_button_down", SideEffects::accessExternal, "das_get_mouse_button_down")
+      ->args({"button_code"});
+
     addExtern<DAS_BIND_FUN(input::get_mouse_scroll_delta)>
       (*this, lib, "get_mouse_scroll_delta", SideEffects::accessExternal, "input::get_mouse_scroll_delta");
     addExtern<DAS_BIND_FUN(input::get_mouse_position)>
@@ -257,19 +274,30 @@ public:
     addExtern<DAS_BIND_FUN(input::get_mouse_velocity)>
       (*this, lib, "get_mouse_velocity", SideEffects::accessExternal, "input::get_mouse_velocity");
     addExtern<DAS_BIND_FUN(input::set_relative_mouse_movement)>
-      (*this, lib, "set_relative_mouse_movement", SideEffects::modifyExternal, "input::set_relative_mouse_movement");
+      (*this, lib, "set_relative_mouse_movement", SideEffects::modifyExternal, "input::set_relative_mouse_movement")
+      ->args({"relative"});
+
     addExtern<DAS_BIND_FUN(das_get_axis)>
-      (*this, lib, "get_axis", SideEffects::accessExternal, "das_get_axis");
+      (*this, lib, "get_axis", SideEffects::accessExternal, "das_get_axis")
+      ->args({"axis_code"});
 
 
     addExtern<DAS_BIND_FUN(set_window_title)>
-      (*this, lib, "set_window_title", SideEffects::modifyExternal, "set_window_title");
+      (*this, lib, "set_window_title", SideEffects::modifyExternal, "set_window_title")
+      ->args({"title"});
+
     addExtern<DAS_BIND_FUN(set_antialiasing)>
-      (*this, lib, "set_antialiasing", SideEffects::modifyExternal, "set_antialiasing");
+      (*this, lib, "set_antialiasing", SideEffects::modifyExternal, "set_antialiasing")
+      ->args({"antialiasing_level"});
+
     addExtern<DAS_BIND_FUN(set_resolution)>
-      (*this, lib, "set_resolution", SideEffects::modifyExternal, "set_resolution");
+      (*this, lib, "set_resolution", SideEffects::modifyExternal, "set_resolution")
+      ->args({"width", "height"});
+
     addExtern<DAS_BIND_FUN(set_rendering_upscale)>
-      (*this, lib, "set_rendering_upscale", SideEffects::modifyExternal, "set_rendering_upscale");
+      (*this, lib, "set_rendering_upscale", SideEffects::modifyExternal, "set_rendering_upscale")
+      ->args({"upscale"});
+
     addExtern<DAS_BIND_FUN(disable_auto_upscale)>
       (*this, lib, "disable_auto_upscale", SideEffects::modifyExternal, "disable_auto_upscale");
 
@@ -284,11 +312,16 @@ public:
     addExtern<DAS_BIND_FUN(is_window_active)>
       (*this, lib, "is_window_active", SideEffects::modifyExternal, "is_window_active");
     addExtern<DAS_BIND_FUN(set_vsync_enabled)>
-      (*this, lib, "set_vsync_enabled", SideEffects::modifyExternal, "set_vsync_enabled");
+      (*this, lib, "set_vsync_enabled", SideEffects::modifyExternal, "set_vsync_enabled")
+      ->args({"vsync"});
+
     addExtern<DAS_BIND_FUN(set_mouse_cursor_visible)>
-      (*this, lib, "set_mouse_cursor_visible", SideEffects::modifyExternal, "set_mouse_cursor_visible");
+      (*this, lib, "set_mouse_cursor_visible", SideEffects::modifyExternal, "set_mouse_cursor_visible")
+      ->args({"visible"});
+
     addExtern<DAS_BIND_FUN(set_mouse_cursor_grabbed)>
-      (*this, lib, "set_mouse_cursor_grabbed", SideEffects::modifyExternal, "set_mouse_cursor_grabbed");
+      (*this, lib, "set_mouse_cursor_grabbed", SideEffects::modifyExternal, "set_mouse_cursor_grabbed")
+      ->args({"grabbed"});
 
     compileBuiltinModule("utils.das", (unsigned char *)utils_das, sizeof(utils_das));
 

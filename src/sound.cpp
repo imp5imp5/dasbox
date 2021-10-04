@@ -1219,91 +1219,122 @@ public:
     addCtorAndUsing<sound::PcmSound>(*this, lib, "PcmSound", "PcmSound");
 
     addExtern<DAS_BIND_FUN(sound::create_sound), SimNode_ExtFuncCallAndCopyOrMove>(*this, lib,
-      "create_sound", SideEffects::modifyExternal, "create_sound");
+      "create_sound", SideEffects::modifyExternal, "create_sound")
+      ->args({"frequency", "data"});
 
     addExtern<DAS_BIND_FUN(sound::create_sound_stereo), SimNode_ExtFuncCallAndCopyOrMove>(*this, lib,
-      "create_sound", SideEffects::modifyExternal, "create_sound_stereo");
+      "create_sound", SideEffects::modifyExternal, "create_sound_stereo")
+      ->args({"frequency", "data"});
 
     addExtern<DAS_BIND_FUN(sound::create_sound_from_file), SimNode_ExtFuncCallAndCopyOrMove>(*this, lib,
-      "create_sound", SideEffects::modifyExternal, "create_sound_from_file");
+      "create_sound", SideEffects::modifyExternal, "create_sound_from_file")
+      ->args({"file_name"});
 
     addExtern<DAS_BIND_FUN(sound::get_sound_data)>(*this, lib,
-      "get_sound_data", SideEffects::modifyArgumentAndExternal, "get_sound_data");
+      "get_sound_data", SideEffects::modifyArgumentAndExternal, "get_sound_data")
+      ->args({"sound", "out_data"});
 
     addExtern<DAS_BIND_FUN(sound::get_sound_data_stereo)>(*this, lib,
-      "get_sound_data", SideEffects::modifyArgumentAndExternal, "get_sound_data_stereo");
+      "get_sound_data", SideEffects::modifyArgumentAndExternal, "get_sound_data_stereo")
+      ->args({"sound", "out_data"});
 
     addExtern<DAS_BIND_FUN(sound::set_sound_data)>(*this, lib,
-      "set_sound_data", SideEffects::modifyExternal, "set_sound_data");
+      "set_sound_data", SideEffects::modifyExternal, "set_sound_data")
+      ->args({"sound", "in_data"});
 
     addExtern<DAS_BIND_FUN(sound::set_sound_data_stereo)>(*this, lib,
-      "set_sound_data", SideEffects::modifyExternal, "set_sound_data_stereo");
+      "set_sound_data", SideEffects::modifyExternal, "set_sound_data_stereo")
+      ->args({"sound", "in_data"});
 
     addExtern<DAS_BIND_FUN(sound::play_sound_1)>(*this, lib,
-      "play_sound", SideEffects::modifyExternal, "play_sound_1");
+      "play_sound", SideEffects::modifyExternal, "play_sound_1")
+      ->args({"sound"});
 
     addExtern<DAS_BIND_FUN(sound::play_sound_2)>(*this, lib,
-      "play_sound", SideEffects::modifyExternal, "play_sound_2");
+      "play_sound", SideEffects::modifyExternal, "play_sound_2")
+      ->args({"sound", "volume"});
 
     addExtern<DAS_BIND_FUN(sound::play_sound_3)>(*this, lib,
-      "play_sound", SideEffects::modifyExternal, "play_sound_3");
+      "play_sound", SideEffects::modifyExternal, "play_sound_3")
+      ->args({"sound", "volume", "pitch"});
 
     addExtern<DAS_BIND_FUN(sound::play_sound_4)>(*this, lib,
-      "play_sound", SideEffects::modifyExternal, "play_sound_4");
+      "play_sound", SideEffects::modifyExternal, "play_sound_4")
+      ->args({"sound", "volume", "pitch", "pan"});
 
     addExtern<DAS_BIND_FUN(sound::play_sound_5)>(*this, lib,
-      "play_sound", SideEffects::modifyExternal, "play_sound_5");
+      "play_sound", SideEffects::modifyExternal, "play_sound_5")
+      ->args({"sound", "volume", "pitch", "pan", "start_time", "stop_time"});
 
     addExtern<DAS_BIND_FUN(sound::play_sound_loop_1)>(*this, lib,
-      "play_sound_loop", SideEffects::modifyExternal, "play_sound_loop_1");
+      "play_sound_loop", SideEffects::modifyExternal, "play_sound_loop_1")
+      ->args({"sound"});
 
     addExtern<DAS_BIND_FUN(sound::play_sound_loop_2)>(*this, lib,
-      "play_sound_loop", SideEffects::modifyExternal, "play_sound_loop_2");
+      "play_sound_loop", SideEffects::modifyExternal, "play_sound_loop_2")
+      ->args({"sound", "volume"});
 
     addExtern<DAS_BIND_FUN(sound::play_sound_loop_3)>(*this, lib,
-      "play_sound_loop", SideEffects::modifyExternal, "play_sound_loop_3");
+      "play_sound_loop", SideEffects::modifyExternal, "play_sound_loop_3")
+      ->args({"sound", "volume", "pitch"});
 
     addExtern<DAS_BIND_FUN(sound::play_sound_loop_4)>(*this, lib,
-      "play_sound_loop", SideEffects::modifyExternal, "play_sound_loop_4");
+      "play_sound_loop", SideEffects::modifyExternal, "play_sound_loop_4")
+      ->args({"sound", "volume", "pitch", "pan"});
 
     addExtern<DAS_BIND_FUN(sound::play_sound_loop_5)>(*this, lib,
-      "play_sound_loop", SideEffects::modifyExternal, "play_sound_loop_5");
+      "play_sound_loop", SideEffects::modifyExternal, "play_sound_loop_5")
+      ->args({"sound", "volume", "pitch", "pan", "start_time", "end_time"});
 
     addExtern<DAS_BIND_FUN(sound::play_sound_deferred_1)>(*this, lib,
-      "play_sound_deferred", SideEffects::modifyExternal, "play_sound_deferred_1");
+      "play_sound_deferred", SideEffects::modifyExternal, "play_sound_deferred_1")
+      ->args({"sound", "defer_seconds"});
 
     addExtern<DAS_BIND_FUN(sound::play_sound_deferred_2)>(*this, lib,
-      "play_sound_deferred", SideEffects::modifyExternal, "play_sound_deferred_2");
+      "play_sound_deferred", SideEffects::modifyExternal, "play_sound_deferred_2")
+      ->args({"sound", "defer_seconds", "volume"});
 
     addExtern<DAS_BIND_FUN(sound::play_sound_deferred_3)>(*this, lib,
-      "play_sound_deferred", SideEffects::modifyExternal, "play_sound_deferred_3");
+      "play_sound_deferred", SideEffects::modifyExternal, "play_sound_deferred_3")
+      ->args({"sound", "defer_seconds", "volume", "pitch"});
 
     addExtern<DAS_BIND_FUN(sound::play_sound_deferred_4)>(*this, lib,
-      "play_sound_deferred", SideEffects::modifyExternal, "play_sound_deferred_4");
+      "play_sound_deferred", SideEffects::modifyExternal, "play_sound_deferred_4")
+      ->args({"sound", "defer_seconds", "volume", "pitch", "pan"});
 
     addExtern<DAS_BIND_FUN(sound::play_sound_deferred_5)>(*this, lib,
-      "play_sound_deferred", SideEffects::modifyExternal, "play_sound_deferred_5");
+      "play_sound_deferred", SideEffects::modifyExternal, "play_sound_deferred_5")
+      ->args({"sound", "defer_seconds", "volume", "pitch", "pan", "start_time", "stop_time"});
+
 
     addExtern<DAS_BIND_FUN(sound::set_sound_pitch)>(*this, lib,
-      "set_sound_pitch", SideEffects::modifyExternal, "set_sound_pitch");
+      "set_sound_pitch", SideEffects::modifyExternal, "set_sound_pitch")
+      ->args({"sound_handle", "pitch"});
 
     addExtern<DAS_BIND_FUN(sound::set_sound_volume)>(*this, lib,
-      "set_sound_volume", SideEffects::modifyExternal, "set_sound_volume");
+      "set_sound_volume", SideEffects::modifyExternal, "set_sound_volume")
+      ->args({"sound_handle", "volume"});
 
     addExtern<DAS_BIND_FUN(sound::set_sound_pan)>(*this, lib,
-      "set_sound_pan", SideEffects::modifyExternal, "set_sound_pan");
+      "set_sound_pan", SideEffects::modifyExternal, "set_sound_pan")
+      ->args({"sound_handle", "pan"});
 
     addExtern<DAS_BIND_FUN(sound::is_playing)>(*this, lib,
-      "is_playing", SideEffects::accessExternal, "is_playing");
+      "is_playing", SideEffects::accessExternal, "is_playing")
+      ->args({"sound_handle"});
 
     addExtern<DAS_BIND_FUN(sound::get_sound_play_pos)>(*this, lib,
-      "get_sound_play_pos", SideEffects::accessExternal, "get_sound_play_pos");
+      "get_sound_play_pos", SideEffects::accessExternal, "get_sound_play_pos")
+      ->args({"sound_handle"});
 
     addExtern<DAS_BIND_FUN(sound::set_sound_play_pos)>(*this, lib,
-      "set_sound_play_pos", SideEffects::modifyExternal, "set_sound_play_pos");
+      "set_sound_play_pos", SideEffects::modifyExternal, "set_sound_play_pos")
+      ->args({"sound_handle", "pos_seconds"});
 
     addExtern<DAS_BIND_FUN(sound::stop_sound)>(*this, lib,
-      "stop_sound", SideEffects::modifyExternal, "stop_sound");
+      "stop_sound", SideEffects::modifyExternal, "stop_sound")
+      ->args({"sound_handle"});
+
 
     addExtern<DAS_BIND_FUN(sound::stop_all_sounds)>(*this, lib,
       "stop_all_sounds", SideEffects::modifyExternal, "stop_all_sounds");
@@ -1315,7 +1346,8 @@ public:
       "leave_sound_critical_section", SideEffects::modifyExternal, "leave_sound_critical_section");
 
     addExtern<DAS_BIND_FUN(sound::set_master_volume)>(*this, lib,
-      "set_master_volume", SideEffects::modifyExternal, "set_master_volume");
+      "set_master_volume", SideEffects::modifyExternal, "set_master_volume")
+      ->args({"volume"});
 
     addExtern<DAS_BIND_FUN(sound::get_output_sample_rate)>(*this, lib,
       "get_output_sample_rate", SideEffects::accessExternal, "get_output_sample_rate");

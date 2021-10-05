@@ -40,6 +40,9 @@ int screen_global_scale = 0;
 int screen_width = 1280;
 int screen_height = 720;
 
+void set_font_name(const char *);
+
+
 //------------------------------- logger ----------------------------------------------
 
 void os_debug_break()
@@ -388,6 +391,7 @@ void das_file_manual_reload()
   builtin_sleep(50);
   graphics::delete_allocated_images();
   sound::delete_allocated_sounds();
+  set_font_name(nullptr);
 
   time_to_check = 0.8f;
   set_application_screen();

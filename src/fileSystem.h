@@ -13,12 +13,14 @@ namespace fs
 
 void initialize();
 bool is_path_string_valid(const char * path);
+bool read_whole_file(const char * file_name, std::vector<uint8_t> & bytes);
 std::string combine_path(const std::string & path1, const std::string & path2);
 std::string extract_dir(const std::string & path);
 std::string extract_file_name(const std::string & path);
 bool change_dir(const std::string & dir);
-bool is_file_exists(const std::string & file_name);
-uint64_t get_file_time(const std::string & file_name);
+bool is_file_exists(const char *  file_name);
+std::string get_current_dir();
+uint64_t get_file_time(const char * file_name);
 
 
 class DasboxFsFileInfo final : public das::FileInfo

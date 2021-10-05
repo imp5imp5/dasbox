@@ -6,6 +6,7 @@
 #include <array>
 #include <unordered_set>
 #include "globals.h"
+#include "fileSystem.h"
 
 #define MINIAUDIO_IMPLEMENTATION
 #include <miniaudio.h>
@@ -604,6 +605,12 @@ PcmSound create_sound_from_file(const char * file_name)
   if (!file_name || !file_name[0])
   {
     print_error("Cannot create sound. File name is empty.", file_name);
+    return PcmSound();
+  }
+
+  if (!fs::is_path_string_valid(file_name))
+  {
+    print_error("Cannot open sound '%s'. Absolute paths or access to the parent directory is prohibited.", file_name);
     return PcmSound();
   }
 

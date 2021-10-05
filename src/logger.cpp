@@ -451,7 +451,7 @@ void draw_log_screen()
     if (y > screen_height)
       break;
   }
-  
+
   restore_font();
   set_font_size_i(savedFontSize);
 }

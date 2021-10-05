@@ -1,6 +1,7 @@
 #include "input.h"
 #include "sound.h"
 #include "logger.h"
+#include "fileSystem.h"
 #include <daScript/daScript.h>
 #include <daScript/ast/ast.h>
 #include <daScript/simulate/interop.h>
@@ -8,6 +9,7 @@
 #include <SFML/System.hpp>
 #include <SFML/Window/Keyboard.hpp>
 #include <SFML/Window/Joystick.hpp>
+#include <SFML/Window/Clipboard.hpp>
 #include <unordered_map>
 #include <string>
 
@@ -37,12 +39,14 @@ void disable_auto_upscale();
 
 void schedule_pause();
 void schedule_quit_game();
+void reset_time_after_start();
 float get_time_after_start();
 float get_delta_time();
 bool is_window_active();
 void set_vsync_enabled(bool enalbe);
 void set_mouse_cursor_visible(bool visible);
 void set_mouse_cursor_grabbed(bool grabbed);
+void dasbox_execute(const char * file_name);
 
 
 const char * das_get_key_name(int key_code)
@@ -64,11 +68,75 @@ int das_get_key_code(const string & key_name)
 }
 
 
+float move_to(float from, float to, float dt, float vel)
+{
+  float d = vel * dt;
+  if (fabsf(from - to) < d)
+    return to;
+
+  if (to < from)
+    return from - d;
+  else
+    return from + d;
+}
+
+template <typename T> T approach(T from, T to, float dt, float viscosity)
+{
+  if (viscosity < 1e-9f)
+    return to;
+  else
+    return from + (1.0f - expf(-dt / viscosity)) * (to - from);
+}
+
+
+static unordered_map<std::string, std::string> inmemory_local_storage;
+
+void local_storage_set(const char * key, const char * value)
+{
+  if (!key)
+    return;
+  if (!value)
+    value = "";
+  inmemory_local_storage[std::string(key)] = std::string(value);
+}
+
+const char * local_storage_get(const char * key)
+{
+  if (!key)
+    return "";
+  return inmemory_local_storage[std::string(key)].c_str();
+}
+
+
+void set_clipboard_text(const char * text)
+{
+  if (input::get_key_press(sf::Keyboard::C) &&
+    (input::get_key(sf::Keyboard::LControl) || input::get_key(sf::Keyboard::RControl)))
+  {
+    sf::Clipboard::setString(text);
+  }
+  else
+    print_error("set_clipboard_text can be called only if Ctrl+C is pressed");
+}
+
+const char * get_clipboard_text()
+{
+/*  if (input::get_key_press(sf::Keyboard::V) &&
+    (input::get_key_down(sf::Keyboard::LControl) || input::get_key_down(sf::Keyboard::RControl)))
+  {
+  ...
+  }
+  else */
+    print_error("get_clipboard_text is not implemented");
+  return "";
+}
+
+
+
+
 static char utils_das[] =
 #include "utils.das.inl"
 ;
-
-
 
 class ModuleDasbox : public Module
 {
@@ -244,7 +312,6 @@ public:
     addExtern<DAS_BIND_FUN(input::fetch_entered_symbol)>
       (*this, lib, "fetch_entered_symbol", SideEffects::accessExternal, "input::fetch_entered_symbol");
 
-
     addExtern<DAS_BIND_FUN(das_get_key_name)>
       (*this, lib, "get_key_name", SideEffects::accessExternal, "das_get_key_name")
       ->args({"key_code"});
@@ -281,6 +348,33 @@ public:
       (*this, lib, "get_axis", SideEffects::accessExternal, "das_get_axis")
       ->args({"axis_code"});
 
+    addExtern<DAS_BIND_FUN(set_clipboard_text)>
+      (*this, lib, "set_clipboard_text", SideEffects::accessExternal, "set_clipboard_text")
+      ->args({"text"});
+
+    addExtern<DAS_BIND_FUN(sqr<float>)>
+      (*this, lib, "sqr", SideEffects::accessExternal, "sqr")
+      ->args({"x"});
+
+    addExtern<DAS_BIND_FUN(sqr<double>)>
+      (*this, lib, "sqr", SideEffects::accessExternal, "sqr")
+      ->args({"x"});
+
+    addExtern<DAS_BIND_FUN(sqr<int>)>
+      (*this, lib, "sqr", SideEffects::accessExternal, "sqr")
+      ->args({"x"});
+
+    addExtern<DAS_BIND_FUN(move_to)>
+      (*this, lib, "move_to", SideEffects::accessExternal, "move_to")
+      ->args({"from", "to", "dt", "vel"});
+
+    addExtern<DAS_BIND_FUN(approach<float>)>
+      (*this, lib, "approach", SideEffects::accessExternal, "approach")
+      ->args({"from", "to", "dt", "viscosity"});
+
+    addExtern<DAS_BIND_FUN(approach<double>)>
+      (*this, lib, "approach", SideEffects::accessExternal, "approach")
+      ->args({"from", "to", "dt", "viscosity"});
 
     addExtern<DAS_BIND_FUN(set_window_title)>
       (*this, lib, "set_window_title", SideEffects::modifyExternal, "set_window_title")
@@ -301,12 +395,22 @@ public:
     addExtern<DAS_BIND_FUN(disable_auto_upscale)>
       (*this, lib, "disable_auto_upscale", SideEffects::modifyExternal, "disable_auto_upscale");
 
+    addExtern<DAS_BIND_FUN(local_storage_set)>
+      (*this, lib, "local_storage_set", SideEffects::modifyExternal, "local_storage_set")
+      ->args({"key", "value"});
+
+    addExtern<DAS_BIND_FUN(local_storage_get)>
+      (*this, lib, "local_storage_get", SideEffects::modifyExternal, "local_storage_get")
+      ->args({"key"});
+
     addExtern<DAS_BIND_FUN(schedule_pause)>
       (*this, lib, "schedule_pause", SideEffects::modifyExternal, "schedule_pause");
     addExtern<DAS_BIND_FUN(schedule_quit_game)>
       (*this, lib, "schedule_quit_game", SideEffects::modifyExternal, "schedule_quit_game");
     addExtern<DAS_BIND_FUN(get_time_after_start)>
       (*this, lib, "get_time_after_start", SideEffects::modifyExternal, "get_time_after_start");
+    addExtern<DAS_BIND_FUN(reset_time_after_start)>
+      (*this, lib, "reset_time_after_start", SideEffects::modifyExternal, "reset_time_after_start");
     addExtern<DAS_BIND_FUN(get_delta_time)>
       (*this, lib, "get_delta_time", SideEffects::modifyExternal, "get_delta_time");
     addExtern<DAS_BIND_FUN(is_window_active)>
@@ -339,7 +443,6 @@ public:
 REGISTER_MODULE(ModuleDasbox);
 
 
-
 namespace das {
   void builtin_sleep(uint32_t msec);
   void builtin_exit(int32_t ec);
@@ -359,6 +462,14 @@ namespace das {
       addExtern<DAS_BIND_FUN(builtin_exit)>(*this, lib, "exit",
         SideEffects::modifyExternal, "builtin_exit")
         ->arg("exitCode")->unsafeOperation = true;
+
+      addExtern<DAS_BIND_FUN(fs::is_file_exists)>(*this, lib, "is_file_exists",
+        SideEffects::modifyExternal, "fs::is_file_exists")
+        ->arg("file_name");
+
+      addExtern<DAS_BIND_FUN(dasbox_execute)>(*this, lib, "dasbox_execute",
+        SideEffects::modifyExternal, "dasbox_execute")
+        ->arg("file_name");
 
       uint32_t verifyFlags = uint32_t(VerifyBuiltinFlags::verifyAll);
       verifyFlags &= ~VerifyBuiltinFlags::verifyHandleTypes;

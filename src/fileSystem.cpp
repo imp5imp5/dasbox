@@ -5,6 +5,7 @@
 #ifdef _WIN32
 #include <direct.h>
 #define chdir _chdir
+#define getcwd _getcwd
 #else
 #include "unistd.h"
 #include <sys/stat.h>
@@ -23,6 +24,44 @@ static unordered_map<std::string, das::FileInfo> daslib_inc_files;
 void initialize()
 {
 #include "resources/daslib_str/daslib_init.cpp.inl"
+}
+
+
+bool read_whole_file(const char * file_name, std::vector<uint8_t> & bytes)
+{
+  if (!file_name || !file_name[0])
+  {
+    print_error("Cannot open file. File name is empty.");
+    return false;
+  }
+
+  if (!is_path_string_valid(file_name))
+  {
+    print_error("Cannot open file '%s'. Absolute paths or access to the parent directory is prohibited.", file_name);
+    return false;
+  }
+
+  FILE * f = fopen(file_name, "rb");
+  if (!f)
+  {
+    print_error("Cannot open file '%s'", file_name);
+    return false;
+  }
+
+  fseek(f, 0, SEEK_END);
+  const uint32_t fileLength = uint32_t(ftell(f));
+  fseek(f, 0, SEEK_SET);
+  bytes.resize(fileLength);
+  if (fread((void*)&bytes[0], 1, fileLength, f) != fileLength)
+  {
+    fclose(f);
+    bytes.clear();
+    print_error("Cannot read file '%s'", file_name);
+    return false;
+  }
+
+  fclose(f);
+  return true;
 }
 
 
@@ -94,7 +133,7 @@ das::FileInfo * DasboxFsFileAccess::getNewFileInfo(const das::string & fname)
   info->source = source;
   if (storeOpenedFiles)
   {
-    int64_t fileTime = get_file_time(fname);
+    int64_t fileTime = get_file_time(fname.c_str());
     filesOpened.emplace_back(fname, fileTime);
   }
   return setFileInfo(fname, std::move(info));
@@ -176,18 +215,29 @@ bool change_dir(const string & dir)
   return chdir(s.c_str()) == 0;
 }
 
-bool is_file_exists(const string & file_name)
+std::string get_current_dir()
 {
-  struct stat buffer;
-  return stat(file_name.c_str(), &buffer) == 0;
+  char buffer[512] = { 0 };
+  return std::string(getcwd(buffer, sizeof(buffer)));
 }
 
-uint64_t get_file_time(const string & file_name)
+bool is_file_exists(const char * file_name)
 {
+  if (!file_name)
+    return false;
+  struct stat buffer;
+  return stat(file_name, &buffer) == 0;
+}
+
+uint64_t get_file_time(const char * file_name)
+{
+  if (!file_name)
+    return 0;
   struct stat buf;
-  if (!stat(file_name.c_str(), &buf))
+  if (!stat(file_name, &buf))
     return uint64_t(buf.st_mtime);
   return 0;
 }
+
 
 }

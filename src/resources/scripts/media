@@ -1,0 +1,10 @@
+options gc = true
+options indenting = 4
+require graphics
+require dasbox
+require math
+require strings
+require daslib/strings_boost
+require daslib/random
+require daslib/safe_addr
+

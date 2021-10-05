@@ -64,5 +64,3 @@ template <typename T> inline T lerp(T a, T b, T t)
 {
   return (b - a) * t + a;
 }
-
-

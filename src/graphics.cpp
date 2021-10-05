@@ -1,5 +1,6 @@
 #include "globals.h"
 #include "graphics.h"
+#include "fileSystem.h"
 #include <unordered_map>
 #include <SFML/Graphics.hpp>
 #include <daScript/daScript.h>
@@ -566,7 +567,16 @@ Image create_image(int width, int height, const das::TArray<uint32_t> & pixels)
 Image create_image_from_file(const char * file_name)
 {
   if (!file_name || !*file_name)
+  {
+    print_error("Cannot open image. File name is empty.");
     return Image();
+  }
+
+  if (!fs::is_path_string_valid(file_name))
+  {
+    print_error("Cannot open image '%s'. Absolute paths or access to the parent directory is prohibited.", file_name);
+    return Image();
+  }
 
   Image b;
   b.img = new sf::Image();

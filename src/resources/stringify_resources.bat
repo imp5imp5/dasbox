@@ -1,5 +1,6 @@
 @echo off
-set "L=call :add_daslib_file"
+set "L=call :add_external_daslib_file"
+set "I=call :add_internal_daslib_file"
 set init_file=daslib_str\daslib_init.cpp.inl
 del %init_file%
 
@@ -41,17 +42,32 @@ call python stringify.py --array JetBrainsMonoNL-Medium.ttf font.JetBrainsMonoNL
 %L% decs.das
 %L% decs_boost.das
 
+%I% internal_menu_background.das
+%I% media
+
+
 exit/b
 
-:add_daslib_file
+:add_external_daslib_file
 call python stringify.py ../../3rdParty/daScript/daslib/%1 daslib_str/%1.inl
 set name=%1
 set identifier=%name:.=_%
 echo static const char %identifier%[] =>> %init_file%
 echo #include "resources/daslib_str/%name%.inl">> %init_file%
 echo ;>> %init_file%
-echo daslib_inc_files[string("%name%")] = das::FileInfo(%identifier%, sizeof(%identifier%));>> %init_file%
+echo daslib_inc_files[string("%name%")] = das::FileInfo(%identifier%, sizeof(%identifier%) - 1);>> %init_file%
 echo.>> %init_file%
-
-
 exit/b
+
+
+:add_internal_daslib_file
+call python stringify.py scripts/%1 daslib_str/%1.inl
+set name=%1
+set identifier=%name:.=_%
+echo static const char %identifier%[] =>> %init_file%
+echo #include "resources/daslib_str/%name%.inl">> %init_file%
+echo ;>> %init_file%
+echo daslib_inc_files[string("%name%")] = das::FileInfo(%identifier%, sizeof(%identifier%) - 1);>> %init_file%
+echo.>> %init_file%
+exit/b
+

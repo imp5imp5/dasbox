@@ -25,9 +25,13 @@ using namespace das;
 
 string root_dir = "";
 string main_das_file_name = "";
+string return_to_file_name = "";
+string return_to_root = "";
 bool has_errors = false;
 bool recreate_window = false;
 bool inside_initialization = false;
+bool exec_script_scheduled = false;
+
 locale * g_locale;
 static jmp_buf eval_buf;
 static bool use_separate_render_target = false;
@@ -59,7 +63,7 @@ sf::Sprite * render_texture_sprite = nullptr;
 pair<bool, sf::String> delayed_window_title = make_pair(false, sf::String("dasbox"));
 pair<bool, bool> delayed_cursor_visible = make_pair(true, true);
 pair<bool, bool> delayed_cursor_grabbed = make_pair(true, false);
-pair<bool, bool> delayed_vsync = make_pair(true, false);
+pair<bool, bool> delayed_vsync = make_pair(true, true);
 pair<bool, sf::Vector2i> delayed_resolution = make_pair(false, sf::Vector2i(1280, 720));
 pair<bool, int> delayed_upscale = make_pair(false, 0);
 pair<bool, int> delayed_window_antialiasing = make_pair(false, 0);
@@ -315,7 +319,7 @@ bool load_module(const string & file_name)
   fn_draw = nullptr;
   fn_finalize = nullptr;
 
-  if (!fs::is_file_exists(file_name))
+  if (!fs::is_file_exists(file_name.c_str()))
   {
     print_error("File not found: '%s'", file_name.c_str());
     return false;
@@ -408,7 +412,7 @@ void das_file_reload_update(float dt)
     time_to_check = is_window_active() ? 1.0f : 0.4f;
     bool reload = false;
     for (auto f : das_file->fAccess->filesOpened)
-      if (f.second != fs::get_file_time(f.first))
+      if (f.second != fs::get_file_time(f.first.c_str()))
       {
         reload = true;
         break;
@@ -580,11 +584,70 @@ void create_window()
     g_render_target = g_window;
   }
 
+  g_window->setVerticalSyncEnabled(true);
+
   delayed_window_antialiasing.first = false;
   delayed_upscale.first = false;
   delayed_resolution.first = false;
 
   recreate_window = false;
+}
+
+
+void return_to_previous_script()
+{
+  is_quit_scheduled = false;
+  root_dir = return_to_root;
+  main_das_file_name = return_to_file_name;
+  if (!fs::change_dir(root_dir))
+  {
+    print_error("Cannot change directory to '%s'\n", root_dir.c_str());
+    return;
+  }
+  return_to_file_name.clear();
+  return_to_root.clear();
+  das_file_manual_reload();
+}
+
+
+static string scheduled_script_name = "";
+
+void exec_script_impl()
+{
+  exec_script_scheduled = false;
+
+  if (!fs::is_file_exists(scheduled_script_name.c_str()))
+  {
+    print_error("Cannot open file '%s'. File does not exist.", scheduled_script_name.c_str());
+    return;
+  }
+
+  if (!fs::is_path_string_valid(scheduled_script_name.c_str()))
+  {
+    print_error("Cannot open file '%s'. Absolute paths or access to the parent directory is prohibited.",
+      scheduled_script_name.c_str());
+    return;
+  }
+
+  return_to_root = fs::get_current_dir();
+  return_to_file_name = main_das_file_name;
+
+
+  root_dir = fs::extract_dir(scheduled_script_name.c_str());
+  if (!fs::change_dir(root_dir))
+  {
+    print_error("Cannot change directory to '%s'\n", root_dir.c_str());
+    return;
+  }
+
+  main_das_file_name = fs::extract_file_name(scheduled_script_name.c_str());
+  das_file_manual_reload();
+}
+
+void dasbox_execute(const char * file_name)
+{
+  scheduled_script_name = std::string(file_name);
+  exec_script_scheduled = true;
 }
 
 
@@ -608,7 +671,14 @@ int main(int argc, char **argv)
 
   sf::err().rdbuf(logger.cerrStream.rdbuf());
 
-  if (argc == 1)
+  const char * default_menu_script_path = nullptr;
+  if (fs::is_file_exists("samples/dasbox_initial_menu.das"))
+    default_menu_script_path = "samples/dasbox_initial_menu.das";
+  if (fs::is_file_exists("../samples/dasbox_initial_menu.das"))
+    default_menu_script_path = "../samples/dasbox_initial_menu.das";
+
+
+  if (argc == 1 && !default_menu_script_path)
   {
     print_usage();
     return 0;
@@ -618,9 +688,11 @@ int main(int argc, char **argv)
   if (has_errors)
     return 1;
 
-
-  if (!root_dir.empty() && main_das_file_name.empty())
-    main_das_file_name = "main.das";
+  if (root_dir.empty() && main_das_file_name.empty())
+  {
+    main_das_file_name = "dasbox_initial_menu.das";
+    root_dir = fs::extract_dir(default_menu_script_path);
+  }
 
   fs::initialize();
   graphics::initialize();
@@ -632,7 +704,7 @@ int main(int argc, char **argv)
     return 1;
   }
 
-  if (!fs::is_file_exists(main_das_file_name))
+  if (!fs::is_file_exists(main_das_file_name.c_str()))
   {
     print_error("File does not exists '%s'\n", main_das_file_name.c_str());
     return 1;
@@ -741,7 +813,7 @@ int main(int argc, char **argv)
       update_log_screen(dt);
 
     if (!window_is_active)
-      builtin_sleep(20);
+      builtin_sleep(8);
     else
       builtin_sleep(0);
 
@@ -790,6 +862,12 @@ int main(int argc, char **argv)
     g_window->display();
 
     input::post_update_input();
+
+    if (is_quit_scheduled && !return_to_file_name.empty())
+      return_to_previous_script();
+
+    if (exec_script_scheduled)
+      exec_script_impl();
 
     if (recreate_window)
     {

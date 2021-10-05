@@ -91,6 +91,45 @@ var
               "";
               "Source: samples/space_rocks_and_lasers/rocks_and_lasers.das"
               }]
+        ]];
+
+    new [[MenuItem name = "Keyboard Input",
+          image <- create_image("controls/_preview_keyboard.png"),
+          source = "controls/keyboard_input_demo.das",
+          description <- [{string[]
+              "Example of functions for processing keyboard input.";
+              "";
+              "Controls:";
+              "Esc - Return to this menu";
+              "";
+              "Source: controls/keyboard_input_demo.das"
+              }]
+        ]];
+
+    new [[MenuItem name = "Mouse Input",
+          image <- create_image("controls/_preview_mouse.png"),
+          source = "controls/mouse_input_demo.das",
+          description <- [{string[]
+              "Example of functions for processing mouse input.";
+              "";
+              "Controls:";
+              "Esc - Return to this menu";
+              "";
+              "Source: controls/mouse_input_demo.das"
+              }]
+        ]];
+
+    new [[MenuItem name = "Gamepad Input",
+          image <- create_image("controls/_preview_gamepad.png"),
+          source = "controls/gamepad_input_demo.das",
+          description <- [{string[]
+              "Example of functions for processing gampad input.";
+              "";
+              "Controls:";
+              "Esc - Return to this menu";
+              "";
+              "Source: controls/gamepad_input_demo.das"
+              }]
         ]]
 }]
 

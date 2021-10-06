@@ -80,6 +80,7 @@ def act(dt: float)
 
 [export]
 def draw()
+    set_font_size(16)
     var y = 40
     var delta = 18.0 * sin(get_time_after_start() * 0.4)
 
@@ -170,13 +171,11 @@ def draw()
     text_out(700, y, "draw_triangle_strip(screen_coord, tex_coord, color)", 0xF0F0F0)
     y += 50
 
-
     let screen_coord2 <- [{auto float2(630, 35 + y); float2(624, y); float2(650, 10 + y); float2(654, y - 16); float2(678, y) }]
     let colors <- [{auto 0xFF00FF00; 0xFF00FF00; 0xFFEEFF00; 0xFFFF3FA0; 0xFFFFFFFF}]
     texture |> draw_triangle_strip(screen_coord2, tex_coord, colors)
     text_out(700, y, "draw_triangle_strip(screen_coord, tex_coord, colors)", 0xF0F0F0)
     y += 50
-
 
     enable_alpha_blend()
     fill_circle(660, y, 15, 0xFF80F08F)
@@ -190,7 +189,6 @@ def draw()
     text_out(700, y, "disable_alpha_blend()", 0xFFF0F0F0)
     y += 50
 
-
     let color_1 = make_color(0.5) // make_color(0.5, 0.3)
     fill_rect(630, y, 50, 20, color_1)
     text_out(700, y, "make_color(brightness)   make_color(brightness, alpha)", 0xF0F0F0)
@@ -201,9 +199,31 @@ def draw()
     text_out(700, y, "make_color(r, g, b)      make_color(r, g, b, a)", 0xF0F0F0)
     y += 50
 
-    let color_3 = make_color(float3(0.8, 1.0, 0.3)) // make_color(0.5, 0.7, 1.0, 1.0)
+    let color_3 = make_color(float3(0.7, 0.3, 1.0)) // make_color(0.5, 0.7, 1.0, 1.0)
     fill_rect(630, y, 50, 20, color_3)
     text_out(700, y, "make_color(float3(...))  make_color(float4(...))", 0xF0F0F0)
+    y += 50
+
+
+    set_font_size(11)
+    text_out(582, y - 8, "A", 0xFFFFFF)
+    set_font_size(16)
+    text_out(600, y - 8, "A", 0xFFFFFF)
+    set_font_size(30)
+    text_out(620, y - 8, "A", 0xFFFFFF)
+    set_font_size(46)
+    text_out(648, y - 8, "A", 0xFFFFFF)
+    set_font_size(16)
+
+    text_out(700, y, "set_font_size(size)", 0xF0F0F0)
+    y += 50
+
+    set_font_name("sans")
+    text_out(700, y, "set_font_name(\"sans\")", 0xF0F0F0)
+    y += 50
+
+    set_font_name("mono")
+    text_out(700, y, "set_font_name(\"mono\")", 0xF0F0F0)
     y += 50
 
 
@@ -213,8 +233,3 @@ def draw()
     text_out(700, y, "get_screen_height() = {get_screen_height()}", 0xF0F0F0)
     y += 50
 
-    text_out(700, y, "get_desktop_width() = {get_desktop_width()}", 0xF0F0F0)
-    y += 50
-
-    text_out(700, y, "get_desktop_height() = {get_desktop_height()}", 0xF0F0F0)
-    y += 50

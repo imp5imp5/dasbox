@@ -143,6 +143,19 @@ var
               "";
               "Source: samples/graphics/graphics_demo.das"
               }]
+        ]];
+
+    new [[MenuItem name = "Images",
+          image <- create_image("images/_preview_images.png"),
+          source = "images/images_demo.das",
+          description <- [{string[]
+              "How to work with 'Image'";
+              "";
+              "Controls:";
+              "Esc - Return to this menu";
+              "";
+              "Source: samples/images/images_demo.das"
+              }]
         ]]
 }]
 

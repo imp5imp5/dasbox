@@ -1256,10 +1256,10 @@ public:
     addExtern<DAS_BIND_FUN(set_image_data)>(*this, lib, "set_image_data", SideEffects::modifyExternal, "set_image_data")
       ->args({"image", "pixels"});
 
-    addExtern<DAS_BIND_FUN(set_image_pixel)>(*this, lib, "set_image_pixel", SideEffects::modifyExternal, "set_image_pixel")
+    addExtern<DAS_BIND_FUN(set_image_pixel)>(*this, lib, "set_pixel", SideEffects::modifyExternal, "set_pixel")
       ->args({"image", "x", "y", "color"});
 
-    addExtern<DAS_BIND_FUN(get_image_pixel)>(*this, lib, "get_image_pixel", SideEffects::accessExternal, "get_image_pixel")
+    addExtern<DAS_BIND_FUN(get_image_pixel)>(*this, lib, "get_pixel", SideEffects::accessExternal, "get_pixel")
       ->args({"image", "x", "y"});
 
 

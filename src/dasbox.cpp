@@ -196,19 +196,19 @@ void set_mouse_cursor_grabbed(bool grabbed)
     delayed_cursor_grabbed = make_pair(true, grabbed);
 }
 
-void set_vsync_enabled(bool enalbe)
+void set_vsync_enabled(bool enable)
 {
   if (g_window && !inside_initialization)
   {
     fetch_cerr();
     reinterpret_error_as_note(true);
-    g_window->setVerticalSyncEnabled(enalbe);
+    g_window->setVerticalSyncEnabled(enable);
     fetch_cerr();
     reinterpret_error_as_note(false);
     delayed_vsync.first = false;
   }
   else
-    delayed_vsync = make_pair(true, enalbe);
+    delayed_vsync = make_pair(true, enable);
 }
 
 void prepare_delayed_variables()
@@ -808,6 +808,8 @@ int main(int argc, char **argv)
 
     float dt = deltaClock.restart().asSeconds();
     time_after_start += double(dt);
+
+    cur_dt = dt;
 
     input::update_mouse_input(dt, window_is_active);
 

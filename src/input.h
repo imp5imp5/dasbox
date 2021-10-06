@@ -31,6 +31,7 @@ das::float2 get_mouse_position_delta();
 das::float2 get_mouse_velocity();
 void set_relative_mouse_movement(bool is_relative);
 float get_axis(int axis);
+int get_pressed_key_index();
 
 
 void release_input();

@@ -30,6 +30,15 @@ bool das_get_mouse_button_up(int button_code) { return input::get_mouse_button_u
 bool das_get_mouse_button_down(int button_code) { return input::get_mouse_button_down(button_code - MOUSE_CODE_OFFSET); }
 float das_get_axis(int axis_code) { return input::get_axis(axis_code); }
 
+int das_get_pressed_key_index()
+{
+  int i = input::get_pressed_key_index();
+  if (i < 0)
+    return 0;
+  else
+    return i + KEY_CODE_OFFSET;
+}
+
 
 void set_window_title(const char * title);
 void set_antialiasing(int a);
@@ -53,7 +62,7 @@ const char * das_get_key_name(int key_code)
 {
   auto it = code_to_key_name.find(key_code);
   if (it == code_to_key_name.end())
-    return "unknown";
+    return "";
   else
     return it->second;
 }
@@ -312,9 +321,15 @@ public:
     addExtern<DAS_BIND_FUN(input::fetch_entered_symbol)>
       (*this, lib, "fetch_entered_symbol", SideEffects::accessExternal, "input::fetch_entered_symbol");
 
+    addExtern<DAS_BIND_FUN(das_get_pressed_key_index)>
+      (*this, lib, "get_pressed_key_index", SideEffects::accessExternal, "das_get_pressed_key_index");
+
     addExtern<DAS_BIND_FUN(das_get_key_name)>
       (*this, lib, "get_key_name", SideEffects::accessExternal, "das_get_key_name")
       ->args({"key_code"});
+
+    addExtern<DAS_BIND_FUN(das_get_key_code)>
+      (*this, lib, "get_key_code", SideEffects::accessExternal, "das_get_key_code");
 
     addExtern<DAS_BIND_FUN(das_get_key_press)>
       (*this, lib, "get_key_press", SideEffects::accessExternal, "das_get_key_press")

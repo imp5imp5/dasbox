@@ -126,8 +126,8 @@ def draw()
     fill_rect(50, 200, 20, 18, make_color(space_press))
     text_out(80, 200, "get_key_press(VK_SPACE)", 0xF0F0F0)
 
-    fill_rect(50, 200, 20, 18, make_color(space_press))
-    text_out(80, 250, "Entered text: {string(entered_text)}_", 0xF0F0F0)
+    text_out(80, 250, "get_key_name(get_pressed_key_index()) = {get_key_name(get_pressed_key_index())}", 0xF0F0F0)
 
+    text_out(80, 300, "Entered text: {string(entered_text)}_", 0xF0F0F0)
 
 

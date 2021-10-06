@@ -149,6 +149,12 @@ uint32_t fetch_entered_symbol()
   }
 }
 
+int get_pressed_key_index()
+{
+  return last_key_index;
+}
+
+
 bool get_mouse_button(int button_code)
 {
   if (button_code < 0 || button_code >= MOUSE_BUTTONS_COUNT)

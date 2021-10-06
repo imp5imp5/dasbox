@@ -542,6 +542,24 @@ void delete_image(Image * image)
   image_pointers.erase(image);
 }
 
+Image create_image_wh(int width, int height)
+{
+  if (width <= 0 || height <= 0)
+    return Image();
+
+  Image b;
+  b.img = new sf::Image();
+  b.img->create(width, height);
+
+  b.cached_pixels = (uint32_t *)b.img->getPixelsPtr();
+  b.width = width;
+  b.height = height;
+
+  b.tex = new sf::Texture();
+  b.tex->loadFromImage(*b.img);
+  return b;
+}
+
 Image create_image(int width, int height, const das::TArray<uint32_t> & pixels)
 {
   if (width <= 0 || height <= 0)
@@ -1189,6 +1207,10 @@ public:
     addExtern<DAS_BIND_FUN(set_image_clamp)>(*this, lib, "set_image_clamp", SideEffects::modifyExternal, "set_image_clamp")
       ->args({"image", "is_clamped"});
 
+
+    addExtern<DAS_BIND_FUN(create_image_wh), SimNode_ExtFuncCallAndCopyOrMove>
+      (*this, lib, "create_image", SideEffects::modifyExternal, "create_image_wh")
+      ->args({"width", "height"});
 
     addExtern<DAS_BIND_FUN(create_image), SimNode_ExtFuncCallAndCopyOrMove>
       (*this, lib, "create_image", SideEffects::modifyExternal, "create_image")

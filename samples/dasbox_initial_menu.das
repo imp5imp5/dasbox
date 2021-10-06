@@ -102,7 +102,7 @@ var
               "Controls:";
               "Esc - Return to this menu";
               "";
-              "Source: controls/keyboard_input_demo.das"
+              "Source: samples/controls/keyboard_input_demo.das"
               }]
         ]];
 
@@ -115,7 +115,7 @@ var
               "Controls:";
               "Esc - Return to this menu";
               "";
-              "Source: controls/mouse_input_demo.das"
+              "Source: samples/controls/mouse_input_demo.das"
               }]
         ]];
 
@@ -128,7 +128,20 @@ var
               "Controls:";
               "Esc - Return to this menu";
               "";
-              "Source: controls/gamepad_input_demo.das"
+              "Source: samples/controls/gamepad_input_demo.das"
+              }]
+        ]];
+
+    new [[MenuItem name = "Graphics",
+          image <- create_image("graphics/_preview_graphics.png"),
+          source = "graphics/graphics_demo.das",
+          description <- [{string[]
+              "Simple graphics primitives and text.";
+              "";
+              "Controls:";
+              "Esc - Return to this menu";
+              "";
+              "Source: samples/graphics/graphics_demo.das"
               }]
         ]]
 }]

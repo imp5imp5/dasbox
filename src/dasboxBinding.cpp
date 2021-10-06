@@ -290,7 +290,7 @@ public:
     addConstant(*this, "AXIS_TRIGGERS", AXIS_CODE_OFFSET + 2);
     addConstant(*this, "AXIS_TRIGGERS_2", AXIS_CODE_OFFSET + 3);
     addConstant(*this, "AXIS_SECONDARY_X", AXIS_CODE_OFFSET + 4);
-    addConstant(*this, "AXIS_SECONDARY_Y", 5 + AXIS_CODE_OFFSET + 5);
+    addConstant(*this, "AXIS_SECONDARY_Y", AXIS_CODE_OFFSET + 5);
     addConstant(*this, "AXIS_POV_X", AXIS_CODE_OFFSET + 6);
     addConstant(*this, "AXIS_POV_Y", AXIS_CODE_OFFSET + 7);
 

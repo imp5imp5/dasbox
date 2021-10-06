@@ -5,6 +5,7 @@
 "options gc = true\n"
 "options indenting = 4\n"
 "require graphics\n"
+"require sound\n"
 "require dasbox\n"
 "require math\n"
 "require strings\n"

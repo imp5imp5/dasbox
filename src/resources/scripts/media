@@ -1,6 +1,7 @@
 options gc = true
 options indenting = 4
 require graphics
+require sound
 require dasbox
 require math
 require strings

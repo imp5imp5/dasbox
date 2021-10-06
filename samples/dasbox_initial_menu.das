@@ -156,6 +156,19 @@ var
               "";
               "Source: samples/images/images_demo.das"
               }]
+        ]];
+
+    new [[MenuItem name = "Sound",
+          image <- create_image("sound/_preview_sound.png"),
+          source = "sound/sound_demo.das",
+          description <- [{string[]
+              "How to work with 'PcmSound'";
+              "";
+              "Controls:";
+              "Esc - Return to this menu";
+              "";
+              "Source: samples/sound/sound_demo.das"
+              }]
         ]]
 }]
 

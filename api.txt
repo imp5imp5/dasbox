@@ -1,0 +1,304 @@
+==========================================================================
+=== Graphics =============================================================
+==========================================================================
+
+  get_screen_width(): int
+  get_screen_height(): int
+
+--------------------------------------------------------------------------
+
+  enable_premultiplied_alpha_blend()
+  enable_alpha_blend()
+  disable_alpha_blend()
+
+--------------------------------------------------------------------------
+
+  set_pixel(x, y, color)
+  line(x0, y0, x1, y1, color)
+  rect(x, y, width, height, color)
+  fill_rect(x, y, width, height, color)
+  circle(x, y, radius, color)
+  fill_circle(x, y, radius, color)
+
+  set_font_name(font_name)  // set_font_name("mono"), set_font_name("sans")
+  set_font_size(size_px)
+
+  text_out(x, y, text, color)
+  get_text_size(text)  // now only for monospaced fonts
+
+  polygon(points_array, color)
+  fill_convex_polygon(points_array, color)
+
+--------------------------------------------------------------------------
+
+class Image
+
+  var img: Image
+  var img <- create_image(width, height)
+  var img <- create_image("file_name")  // .png .jpg .tga
+  var img <- create_image(width, height, [[uint[] 0xFF000000; 0xFF002042 ... ]])
+  var img <- create_image(width, height, ".ABC", {{ '.' => 0x0; 'A' => 0xFFA0AFFF; 'B' => 0xFFFFFFFF }})
+
+  img.valid
+  img.width
+  img.height
+
+  img |> set_pixel(x, y, color)
+  img |> get_pixel(x, y)
+  img |> set_image_data([[uint[] 0xFF000000; 0xFF002042; ... ]])
+  img |> get_image_data(data)  // var data: array<uint>; data.resize(img.width * img.height)
+
+  img |> premultiply_alpha()
+  img |> make_image_color_transparent(img |> get_pixel(0, 0))
+
+  img |> set_image_smooth(true)  // set filter to 'linear'
+  img |> set_image_clamp(true)  // true - 'clamp', false - repeat
+
+  img |> flip_image_x()
+  img |> flip_image_y()
+
+  img2 := img // clone
+  delete img
+
+--------------------------------------------------------------------------
+
+  img |> draw(x, y)
+  img |> draw(x, y)
+  img |> draw(x, y, color)
+  img |> draw(x, y, color, size: float)
+  img |> draw(x, y, color, size: float2)
+  img |> draw_quad(float2(0, 0), float2(0, 64), float2(64, 64), float2(64, 0), color)
+  img |> draw_quad(array_of_float2, color)
+
+--------------------------------------------------------------------------
+
+  make_color(brightness: float): uint
+  make_color(brightness, alpha: float): uint
+  make_color(r, g, b: float): uint
+  make_color(r, g, b, a: float): uint
+  make_color(c: float3): uint
+  make_color(c: float4): uint
+
+  make_color32(r, g, b: int): uint
+  make_color32(r, g, b, a: int): uint
+  make_color32(r, g, b: uint): uint
+  make_color32(r, g, b, a: uint): uint
+
+  premultiply_color(c: uint): uint
+  desaturate_color(c: uint): uint
+  multiply_colors(c1, c2: uint): uint
+  add_colors(c1, c2: uint): uint
+
+
+
+
+
+==========================================================================
+=== Input ================================================================
+==========================================================================
+
+  get_key(key_code)
+  get_key_down(key_code)
+  get_key_up(key_code)
+  get_key_press(key_code)
+  var unicode_symbol: uint = fetch_entered_symbol()
+
+  get_mouse_button(mouse_button)
+  get_mouse_button_down(MB_LEFT)
+  get_mouse_button_up(MB_LEFT)
+  get_mouse_scroll_delta(): float
+  get_mouse_position(): float2
+  get_mouse_position_delta()
+  get_mouse_velocity()
+
+  get_axis(axis_code)
+
+  get_key_code(key_name: string): int
+  get_key_name(key_code: int): string
+
+
+  Mouse button codes:
+
+    MB_LEFT
+    MB_RIGHT
+    MB_MIDDLE
+
+
+  Keyboard key codes:
+
+    VK_0, VK_1, ...
+    VK_A, VK_B, ...
+    VK_F1, VK_F2, ...
+    VK_NUMPAD0, VK_NUMPAD1, ...
+
+    VK_ESCAPE
+    VK_RETURN      // Enter
+    VK_SPACE
+    VK_LEFT
+    VK_RIGHT
+    VK_UP
+    VK_DOWN
+    VK_LSHIFT      // Left Shift
+    VK_RSHIFT      // Right Shift
+    VK_LCONTROL    // Left Control
+    VK_RCONTROL    // Rright Control
+    VK_LALT        // Left Alt
+    VK_RALT        // Right Alt
+    VK_LSYSTEM     // Left System (Win)
+    VK_RSYSTEM     // Right System (Win)
+    VK_MENU
+    VK_TAB
+    VK_HOME
+    VK_PRIOR       // PageUp
+    VK_END
+    VK_NEXT        // PageDown
+    VK_INSERT
+    VK_DELETE
+    VK_TILDE       // ~
+    VK_MINUS       // Hyphen
+    VK_EQUALS      // =
+    VK_BACK        // BackSpace
+    VK_LBRACKET    // [
+    VK_RBRACKET    // ]
+    VK_SEMICOLON   // ;
+    VK_APOSTROPHE  // '
+    VK_BACKSLASH   // \
+    VK_COMMA       // ,
+    VK_PERIOD      // .
+    VK_SLASH       // /
+    VK_DIVIDE      // '/' on Numpad
+    VK_MULTIPLY    // '*' on Numpad
+    VK_SUBTRACT    // '-' on Numpad
+    VK_ADD         // '+' on Numpad
+    VK_PAUSE
+
+
+  Gamepad key codes:
+    GP_A
+    GP_B
+    GP_X
+    GP_Y
+    GP_LEFT_SHOULDER
+    GP_RIGHT_SHOULDER
+    GP_BACK
+    GP_START
+    GP_LEFT_STICK
+    GP_RIGHT_STICK
+
+
+  Gamepad axes codes:
+
+    AXIS_PRIMARY_X
+    AXIS_PRIMARY_Y
+    AXIS_TRIGGERS
+    AXIS_TRIGGERS_2
+    AXIS_SECONDARY_X
+    AXIS_SECONDARY_Y
+    AXIS_POV_X
+    AXIS_POV_Y
+
+
+
+
+
+==========================================================================
+=== Sound ================================================================
+==========================================================================
+
+class PcmSound
+
+  var snd: PcmSound
+  var snd <- create_sound("file_name") // .wav .flac .mp3
+  var snd <- create_sound(44100, monoSamples: array<float>)
+  var snd <- create_sound(44100, stereoSamples: array<float2>)
+
+  snd.duration     // in seconds
+  snd.frequency    // samples per seconds
+  snd.samples
+  snd.channels
+  snd.valid
+
+  snd |> set_sound_data(data)  // data: array<float> or data: array<float2>
+  snd |> get_sound_data(data)  // var data: array<float>; data.resize(snd.samples)
+  snd |> get_sound_data(data)  // var data: array<float2>; data.resize(snd.samples)
+
+  delete snd
+
+
+  snd |> play()
+  snd |> play(volume)
+  snd |> play(volume, pitch)
+  snd |> play(volume, pitch, pan)
+  snd |> play(volume, pitch, pan, start_time, stop_time)
+
+  snd |> play_loop()
+  snd |> play_loop(volume)
+  snd |> play_loop(volume, pitch)
+  snd |> play_loop(volume, pitch, pan)
+  snd |> play_loop(volume, pitch, pan, start_time, stop_time)
+
+  snd |> play_deferred(defer_seconds)
+  snd |> play_deferred(defer_seconds, volume)
+  snd |> play_deferred(defer_seconds, volume, pitch)
+  snd |> play_deferred(defer_seconds, volume, pitch, pan)
+  snd |> play_deferred(defer_seconds, volume, pitch, pan, start_time, stop_time)
+
+--------------------------------------------------------------------------
+
+  var handle: PlayingSoundHandle = snd |> play...(...)
+  var handle = snd |> play...(...)
+
+  is_playing(handle): bool
+  get_sound_play_pos(handle): float
+
+  set_sound_volume(handle, volume)  // 1.0 - default volume
+  set_sound_pitch(handle, pitch)    // 1.0 - default pitch
+  set_sound_pan(handle, pan)        // 0.0 - default pitch  (pan = -1.0..1.0)
+  set_sound_play_pos(handle, pos_in_seconds)
+
+
+
+
+
+==========================================================================
+=== Utils ================================================================
+==========================================================================
+
+  print("x = {x}\n")
+  debug(x)
+  panic("error_text")
+
+  schedule_pause()          // pause after act() and go to 'Log Screen'
+  schedule_quit_game()
+
+  is_window_active()
+
+  set_window_title("title")
+  set_resolution(1280, 720)
+  set_rendering_upscale(1)
+  disable_auto_upscale()    // enabled by default
+  set_antialiasing(4)       // 0 - disable
+  set_vsync_enabled(vsync)  // vertical synchronization is enabled by default
+
+  get_desktop_width(): int
+  get_desktop_height(): int
+
+  get_time_after_start()    // in seconds
+  reset_time_after_start()
+  get_delta_time()
+
+
+
+
+
+==========================================================================
+=== Additional Math ======================================================
+==========================================================================
+
+  sqr(x)
+  move_to(from, to, dt, vel)
+  approach(from, to, dt, viscosity)
+  cvt(value, from_range_1, from_range_2, to_range_1, to_range_2)
+
+
+

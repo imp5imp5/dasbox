@@ -19,6 +19,9 @@
 #include "fileSystem.h"
 #include "sound.h"
 
+#ifdef _WIN32
+#include <../SFML/extlibs/headers/glad/include/glad/gl.h>
+#endif
 
 using namespace std;
 using namespace das;
@@ -35,6 +38,7 @@ bool exec_script_scheduled = false;
 locale * g_locale;
 static jmp_buf eval_buf;
 static bool use_separate_render_target = false;
+static bool vsync_enabled = false;
 
 int screen_global_scale = 0;
 int screen_width = 1280;
@@ -204,6 +208,7 @@ void set_vsync_enabled(bool enable)
     fetch_cerr();
     reinterpret_error_as_note(true);
     g_window->setVerticalSyncEnabled(enable);
+    vsync_enabled = enable;
     fetch_cerr();
     reinterpret_error_as_note(false);
     delayed_vsync.first = false;
@@ -868,6 +873,11 @@ int main(int argc, char **argv)
       g_window->draw(*render_texture_sprite, sf::BlendNone);
     }
 
+#ifdef _WIN32
+    // Workaround unstable vsync on Windows 10
+    if (vsync_enabled)
+      glFinish();
+#endif
     g_window->display();
 
     input::post_update_input();

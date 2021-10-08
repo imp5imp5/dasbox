@@ -44,8 +44,8 @@ var
     fadeout = 0.0
     fadeoutTrend = -1.0
 
-    menuItems: array<MenuItem?> <- [{ auto
-    new [[MenuItem name = "About",
+    menuItems: array<MenuItem> <- [{ auto
+        [[MenuItem name = "About",
           description <- [{string[]
               "Dasbox {get_dasbox_version()}";
               "Build date: {get_dasbox_build_date()}";
@@ -53,7 +53,7 @@ var
               }]
         ]];
 
-    new [[MenuItem name = "New Application",
+        [[MenuItem name = "New Application",
           clipboardText = minimal_sample,
           description <- [{string[]
               "Press Ctrl+C to copy code of the minimal sample to clipboard.";
@@ -62,7 +62,7 @@ var
               }]
         ]];
 
-    new [[MenuItem name = "Flappy Box",
+        [[MenuItem name = "Flappy Box",
           image <- create_image("flappy_box/_preview.png"),
           source = "flappy_box/flappy_box.das",
           description <- [{string[]
@@ -77,7 +77,7 @@ var
               }]
         ]];
 
-    new [[MenuItem name = "Space, Rocks and Lasers",
+        [[MenuItem name = "Space, Rocks and Lasers",
           image <- create_image("space_rocks_and_lasers/_preview.png"),
           source = "space_rocks_and_lasers/rocks_and_lasers.das",
           description <- [{string[]
@@ -93,7 +93,7 @@ var
               }]
         ]];
 
-    new [[MenuItem name = "Keyboard Input",
+        [[MenuItem name = "Keyboard Input",
           image <- create_image("controls/_preview_keyboard.png"),
           source = "controls/keyboard_input_demo.das",
           description <- [{string[]
@@ -106,7 +106,7 @@ var
               }]
         ]];
 
-    new [[MenuItem name = "Mouse Input",
+        [[MenuItem name = "Mouse Input",
           image <- create_image("controls/_preview_mouse.png"),
           source = "controls/mouse_input_demo.das",
           description <- [{string[]
@@ -119,7 +119,7 @@ var
               }]
         ]];
 
-    new [[MenuItem name = "Gamepad Input",
+        [[MenuItem name = "Gamepad Input",
           image <- create_image("controls/_preview_gamepad.png"),
           source = "controls/gamepad_input_demo.das",
           description <- [{string[]
@@ -132,7 +132,7 @@ var
               }]
         ]];
 
-    new [[MenuItem name = "Graphics",
+        [[MenuItem name = "Graphics",
           image <- create_image("graphics/_preview_graphics.png"),
           source = "graphics/graphics_demo.das",
           description <- [{string[]
@@ -145,7 +145,7 @@ var
               }]
         ]];
 
-    new [[MenuItem name = "Images",
+        [[MenuItem name = "Images",
           image <- create_image("images/_preview_images.png"),
           source = "images/images_demo.das",
           description <- [{string[]
@@ -158,7 +158,7 @@ var
               }]
         ]];
 
-    new [[MenuItem name = "Sound",
+        [[MenuItem name = "Sound",
           image <- create_image("sound/_preview_sound.png"),
           source = "sound/sound_demo.das",
           description <- [{string[]
@@ -200,8 +200,8 @@ def act(dt: float)
     if get_key_press(VK_UP)
         scrollAccum -= 1.0
 
-    if (get_key(VK_LCONTROL) || get_key(VK_RCONTROL)) && get_key_press(VK_C) && length(deref(menuItems[menuIndex]).clipboardText) > 0
-        set_clipboard_text(deref(menuItems[menuIndex]).clipboardText)
+    if (get_key(VK_LCONTROL) || get_key(VK_RCONTROL)) && get_key_press(VK_C) && length(menuItems[menuIndex].clipboardText) > 0
+        set_clipboard_text(menuItems[menuIndex].clipboardText)
 
     if abs(scrollAccum) >= 1.0 && fadeout <= 0.0
         let next = clamp(nextIndex + int(scrollAccum), 0, length(menuItems) - 1)
@@ -226,13 +226,13 @@ def act(dt: float)
     selectBoxPos = approach(selectBoxPos, wishSelectBoxPos, dt, 0.06)
 
     if (get_key_press(VK_RETURN) || get_key_press(VK_SPACE)) && fadeout <= 0.0
-        if is_file_exists(deref(menuItems[nextIndex]).source)
+        if is_file_exists(menuItems[nextIndex].source)
             fadeoutTrend = 1.0
 
     fadeout = saturate(fadeout + dt * fadeoutTrend * 8.0)
 
     if fadeout >= 1.0 && fadeoutTrend > 0.0
-        dasbox_execute(deref(menuItems[nextIndex]).source)
+        dasbox_execute(menuItems[nextIndex].source)
 
 
 [export]
@@ -245,14 +245,14 @@ def draw()
 
     for s, i in menuItems, range(999)
         text_out(60.0, SELECT_Y + 9.0 + (float(i) - scrollPos) * LIST_LINE_HEIGHT,
-                deref(s).name, make_color(1.0, i == nextIndex ? 1.0 : 0.4))
+                s.name, make_color(1.0, i == nextIndex ? 1.0 : 0.4))
 
     set_font_size(get_screen_height() / 42)
 
-    for s, i in deref(menuItems[menuIndex]).description, range(999)
+    for s, i in menuItems[menuIndex].description, range(999)
         text_out(700, 324 + i * DESCRIPTION_LINE_HEIGHT, s, make_color(1.0, 0.7 * itemAlpha))
 
-    deref(menuItems[menuIndex]).image |> draw_image(700, 27, make_color(1.0, itemAlpha))
+    menuItems[menuIndex].image |> draw_image(700, 27, make_color(1.0, itemAlpha))
 
     if (fadeout > 0.0)
         fill_rect(0, 0, get_screen_width(), get_screen_height(), make_color(0.0, fadeout))

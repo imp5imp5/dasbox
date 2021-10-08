@@ -414,7 +414,8 @@ void fill_convex_polygon(const das::TArray<das::float2> & points, uint32_t color
 
 
 struct Image;
-static unordered_set<Image *> image_pointers;
+static unordered_set<sf::Image *> image_pointers;
+static unordered_set<sf::Texture *> texture_pointers;
 
 
 struct Image
@@ -449,7 +450,6 @@ struct Image
     cached_pixels = nullptr;
     width = 0;
     height = 0;
-    image_pointers.insert(this);
   }
 
   Image(const Image & b)
@@ -460,7 +460,8 @@ struct Image
     width = 0;
     height = 0;
     applied = false;
-    image_pointers.insert(this);
+    image_pointers.insert(img);
+    texture_pointers.insert(tex);
   }
 
   Image(Image && b)
@@ -477,12 +478,12 @@ struct Image
     b.img = nullptr;
     b.tex = nullptr;
     b.cached_pixels = nullptr;
-    image_pointers.erase(&b);
-    image_pointers.insert(this);
   }
 
   Image& operator=(const Image & b)
   {
+    image_pointers.erase(img);
+    texture_pointers.erase(tex);
     delete img;
     delete tex;
     img = b.img ? new sf::Image(*b.img) : nullptr;
@@ -491,7 +492,8 @@ struct Image
     width = b.width;
     height = b.height;
     applied = false;
-    image_pointers.insert(this);
+    image_pointers.insert(img);
+    texture_pointers.insert(tex);
     return *this;
   }
 
@@ -509,13 +511,13 @@ struct Image
     b.img = nullptr;
     b.tex = nullptr;
     b.cached_pixels = nullptr;
-    image_pointers.erase(&b);
-    image_pointers.insert(this);
     return *this;
   }
 
   ~Image()
   {
+    image_pointers.erase(img);
+    texture_pointers.erase(tex);
     delete img;
     img = nullptr;
     delete tex;
@@ -524,13 +526,14 @@ struct Image
     cached_pixels = nullptr;
     width = 0;
     height = 0;
-    image_pointers.erase(this);
   }
 };
 
 
 void delete_image(Image * image)
 {
+  image_pointers.erase(image->img);
+  texture_pointers.erase(image->tex);
   delete image->img;
   image->img = nullptr;
   delete image->tex;
@@ -539,7 +542,6 @@ void delete_image(Image * image)
   image->width = 0;
   image->height = 0;
   image->applied = false;
-  image_pointers.erase(image);
 }
 
 Image create_image_wh(int width, int height)
@@ -1002,12 +1004,12 @@ void initialize()
 
 void delete_allocated_images()
 {
+  for (auto && texture : texture_pointers)
+    delete texture;
+  texture_pointers.clear();
+  
   for (auto && image : image_pointers)
-  {
-    delete image->img;
-    delete image->tex;
-  }
-
+    delete image;
   image_pointers.clear();
 }
 
@@ -1072,6 +1074,7 @@ struct ImageAnnotation : ManagedStructureAnnotation<Image, true, true>
   virtual bool canNew() const override { return true; }
   virtual bool canDelete() const override { return true; }
   virtual bool needDelete() const override { return true; }
+  virtual bool canBePlacedInContainer() const override { return true; }
 
   virtual SimNode * simulateDelete(Context & context, const LineInfo & at, SimNode * sube, uint32_t count) const override
   {

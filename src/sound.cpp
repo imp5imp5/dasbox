@@ -1163,6 +1163,7 @@ struct PcmSoundAnnotation : ManagedStructureAnnotation<sound::PcmSound, true, tr
   virtual bool canNew() const override { return true; }
   virtual bool canDelete() const override { return true; }
   virtual bool needDelete() const override { return true; }
+  virtual bool canBePlacedInContainer() const override { return true; }
 
   virtual SimNode * simulateDelete(Context & context, const LineInfo & at, SimNode * sube, uint32_t count) const override
   {
@@ -1209,6 +1210,7 @@ struct PlayingSoundHandleAnnotation final: das::ManagedValueAnnotation<sound::Pl
   virtual bool canClone() const override { return true; }
   virtual bool canMove() const override { return true; }
   virtual bool canNew() const override { return true; }
+  virtual bool canBePlacedInContainer() const override { return true; }
 };
 
 

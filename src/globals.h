@@ -1,5 +1,7 @@
 #pragma once
 
+#define DASBOX_VERSION "0.1.3"
+
 namespace sf
 {
   class RenderTarget;

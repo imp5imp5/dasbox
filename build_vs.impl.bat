@@ -51,6 +51,10 @@ if exist "%programfiles%\Microsoft Visual Studio\%VS_NUMBER%\WDExpress" (
 
 set "INCLUDE=%CD%\src;%INCLUDE%"
 
+for /f %%x in ('wmic path win32_localtime get /format:list ^| findstr "="') do set %%x
+echo #pragma once> src\buildDate.h
+echo #define DASBOX_BUILD_DATE "%Day%.%Month%.%Year%">> src\buildDate.h
+
 
 rem ============ daScript ==============
 pushd 3rdParty\daScript

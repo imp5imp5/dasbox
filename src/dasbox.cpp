@@ -402,7 +402,7 @@ void das_file_manual_reload()
 
   set_application_screen();
   logger.clear();
-  input::reset_input();  
+  input::reset_input();
   reset_time_after_start();
   load_module(main_das_file_name);
 }

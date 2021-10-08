@@ -47,8 +47,8 @@ var
     menuItems: array<MenuItem?> <- [{ auto
     new [[MenuItem name = "About",
           description <- [{string[]
-              "Dasbox 0.1.2";   // TODO: get from .exe
-              "Build date: 06.10.2021";
+              "Dasbox {get_dasbox_version()}";
+              "Build date: {get_dasbox_build_date()}";
               "https://github.com/imp5imp5/dasbox"
               }]
         ]];

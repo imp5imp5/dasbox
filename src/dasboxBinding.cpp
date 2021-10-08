@@ -2,6 +2,7 @@
 #include "sound.h"
 #include "logger.h"
 #include "fileSystem.h"
+#include "buildDate.h"
 #include <daScript/daScript.h>
 #include <daScript/ast/ast.h>
 #include <daScript/simulate/interop.h>
@@ -131,7 +132,7 @@ void set_clipboard_text(const char * text)
 const char * get_clipboard_text()
 {
 /*  if (input::get_key_press(sf::Keyboard::V) &&
-    (input::get_key_down(sf::Keyboard::LControl) || input::get_key_down(sf::Keyboard::RControl)))
+    (input::get_key(sf::Keyboard::LControl) || input::get_key(sf::Keyboard::RControl)))
   {
   ...
   }
@@ -141,6 +142,15 @@ const char * get_clipboard_text()
 }
 
 
+const char * get_dasbox_version()
+{
+  return DASBOX_VERSION;
+}
+
+const char * get_dasbox_build_date()
+{
+  return DASBOX_BUILD_DATE;
+}
 
 
 static char utils_das[] =
@@ -441,6 +451,13 @@ public:
     addExtern<DAS_BIND_FUN(set_mouse_cursor_grabbed)>
       (*this, lib, "set_mouse_cursor_grabbed", SideEffects::modifyExternal, "set_mouse_cursor_grabbed")
       ->args({"grabbed"});
+
+
+    addExtern<DAS_BIND_FUN(get_dasbox_version)>
+      (*this, lib, "get_dasbox_version", SideEffects::accessExternal, "get_dasbox_version");
+
+    addExtern<DAS_BIND_FUN(get_dasbox_build_date)>
+      (*this, lib, "get_dasbox_build_date", SideEffects::accessExternal, "get_dasbox_build_date");
 
     compileBuiltinModule("utils.das", (unsigned char *)utils_das, sizeof(utils_das));
 

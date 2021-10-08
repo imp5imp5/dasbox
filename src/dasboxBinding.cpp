@@ -68,9 +68,9 @@ const char * das_get_key_name(int key_code)
     return it->second;
 }
 
-int das_get_key_code(const string & key_name)
+int das_get_key_code(const char * key_name)
 {
-  auto it = key_name_to_code.find(key_name);
+  auto it = key_name_to_code.find(string(key_name));
   if (it == key_name_to_code.end())
     return -1;
   else
@@ -97,6 +97,26 @@ template <typename T> T approach(T from, T to, float dt, float viscosity)
   else
     return from + (1.0f - expf(-dt / viscosity)) * (to - from);
 }
+
+
+inline float lerpf(float a, float b, float t)
+{
+  return a + (b - a) * t;
+}
+
+inline float clampf(float v, float minv, float maxv)
+{
+  return v < maxv ? (v > minv ? v : minv) : maxv;
+}
+
+float cvt(float v, float i0, float i1, float o0, float o1)
+{
+  if (i0 < i1)
+    return lerpf(o0, o1, clampf((v - i0) / max(i1 - i0, 1e-6f), 0.0f, 1.0f));
+  else
+    return lerpf(o1, o0, clampf((v - i1) / max(i0 - i1, 1e-6f), 0.0f, 1.0f));
+}
+
 
 
 static unordered_map<std::string, std::string> inmemory_local_storage;
@@ -339,7 +359,8 @@ public:
       ->args({"key_code"});
 
     addExtern<DAS_BIND_FUN(das_get_key_code)>
-      (*this, lib, "get_key_code", SideEffects::accessExternal, "das_get_key_code");
+      (*this, lib, "get_key_code", SideEffects::accessExternal, "das_get_key_code")
+      ->args({"key_name"});
 
     addExtern<DAS_BIND_FUN(das_get_key_press)>
       (*this, lib, "get_key_press", SideEffects::accessExternal, "das_get_key_press")
@@ -388,6 +409,10 @@ public:
     addExtern<DAS_BIND_FUN(sqr<int>)>
       (*this, lib, "sqr", SideEffects::accessExternal, "sqr")
       ->args({"x"});
+
+    addExtern<DAS_BIND_FUN(cvt)>
+      (*this, lib, "cvt", SideEffects::accessExternal, "cvt")
+      ->args({"value", "from_range_1", "from_range_2", "to_range_1", "to_range_2"});
 
     addExtern<DAS_BIND_FUN(move_to)>
       (*this, lib, "move_to", SideEffects::accessExternal, "move_to")

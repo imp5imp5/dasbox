@@ -400,7 +400,6 @@ void das_file_manual_reload()
   set_font_name(nullptr);
   set_font_size_i(16);
 
-  time_to_check = 0.8f;
   set_application_screen();
   logger.clear();
   input::reset_input();  
@@ -415,13 +414,14 @@ void das_file_reload_update(float dt)
     (input::get_key(sf::Keyboard::LControl) || input::get_key(sf::Keyboard::RControl))))
   {
     das_file_manual_reload();
+    time_to_check += 0.1f;
     return;
   }
 
   time_to_check -= dt;
   if (time_to_check < 0)
   {
-    time_to_check = is_window_active() ? 1.0f : 0.4f;
+    time_to_check = is_window_active() ? 999999.0f : 0.4f;
     bool reload = false;
     for (auto f : das_file->fAccess->filesOpened)
       if (f.second != fs::get_file_time(f.first.c_str()))
@@ -760,6 +760,7 @@ int main(int argc, char **argv)
       case sf::Event::LostFocus:
         window_is_active = false;
         input::release_input();
+        time_to_check = 0.4f;
         break;
 
       case sf::Event::MouseWheelScrolled:

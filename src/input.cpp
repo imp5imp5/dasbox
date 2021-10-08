@@ -109,18 +109,18 @@ static void release_input(char * keys, int count)
     }
 }
 
-bool get_key(int key_code)
-{
-  if (key_code < 0 || key_code >= KEY_COUNT)
-    return false;
-  return (key[key_code] == K_PRESSED);
-}
-
 bool get_key_down(int key_code)
 {
   if (key_code < 0 || key_code >= KEY_COUNT)
     return false;
   return (key[key_code] == K_PRESSED_THIS_FRAME || key[key_code] == K_CLICKED_THIS_FRAME);
+}
+
+bool get_key(int key_code)
+{
+  if (key_code < 0 || key_code >= KEY_COUNT)
+    return false;
+  return (key[key_code] == K_PRESSED || get_key_down(key_code));
 }
 
 bool get_key_up(int key_code)
@@ -155,18 +155,18 @@ int get_pressed_key_index()
 }
 
 
-bool get_mouse_button(int button_code)
-{
-  if (button_code < 0 || button_code >= MOUSE_BUTTONS_COUNT)
-    return false;
-  return (mouse_button[button_code] == K_PRESSED);
-}
-
 bool get_mouse_button_down(int button_code)
 {
   if (button_code < 0 || button_code >= MOUSE_BUTTONS_COUNT)
     return false;
   return (mouse_button[button_code] == K_PRESSED_THIS_FRAME || mouse_button[button_code] == K_CLICKED_THIS_FRAME);
+}
+
+bool get_mouse_button(int button_code)
+{
+  if (button_code < 0 || button_code >= MOUSE_BUTTONS_COUNT)
+    return false;
+  return (mouse_button[button_code] == K_PRESSED || get_mouse_button_down(button_code));
 }
 
 bool get_mouse_button_up(int button_code)

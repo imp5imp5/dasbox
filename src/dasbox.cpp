@@ -407,7 +407,7 @@ void das_file_reload_update(float dt)
 {
   if (input::get_key_down(sf::Keyboard::F5) ||
     (input::get_key_down(sf::Keyboard::R) &&
-    (input::get_key_down(sf::Keyboard::LControl) || input::get_key_down(sf::Keyboard::RControl))))
+    (input::get_key(sf::Keyboard::LControl) || input::get_key(sf::Keyboard::RControl))))
   {
     das_file_manual_reload();
     return;

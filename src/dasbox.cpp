@@ -818,6 +818,7 @@ int main(int argc, char **argv)
     float dt = deltaClock.restart().asSeconds();
     time_after_start += double(dt);
 
+    dt = min(dt, 0.1f);
     cur_dt = dt;
 
     input::update_mouse_input(dt, window_is_active);

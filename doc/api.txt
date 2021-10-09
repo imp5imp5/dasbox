@@ -177,6 +177,7 @@ class Image
 
 
   Gamepad key codes:
+
     GP_A
     GP_B
     GP_X
@@ -295,13 +296,146 @@ class PcmSound
 
 
 ==========================================================================
-=== Additional Math ======================================================
+=== Additional dasbox Math ===============================================
 ==========================================================================
 
   sqr(x)
   move_to(from, to, dt, vel)
   approach(from, to, dt, viscosity)
   cvt(value, from_range_1, from_range_2, to_range_1, to_range_2)
+
+
+
+
+
+==========================================================================
+=== daScript Math ========================================================
+==========================================================================
+
+  PI
+
+  abs(x)
+  sign(x)
+  min(a, b)
+  max(a, b)
+  clamp(value, min_v, max_v)
+  saturate(x) = clamp(x, 0.0, 1.0)
+  lerp(a, b, t)
+
+  ceil(x)
+  floor(x)
+  ceili(x): int
+  floori(x): int
+  roundi(x): int
+
+  sin(x)
+  cos(x)
+  sincos(x: float const; s: float& implicit; c: float& implicit)
+  tan(x)
+
+  asin(x)
+  acos(x)
+  atan(x)
+  atan2(y, x)
+
+  sqrt(x)
+  rsqrt(x) = 1.0 / sqrt(x)
+  rsqrt_est(x)
+
+  exp(x)
+  exp2(x)
+  log(x)
+  log2(x)
+  rcp(x) = 1.0 / x
+
+  is_nan(x)
+  is_finite(x)
+
+
+Noise functions:
+
+  uint32_hash(seed: uint const): uint
+  uint_noise_1D(position: int const; seed: uint const): uint
+  uint_noise_2D(position: int2 const; seed: uint const): uint
+  uint_noise_3D(position: int3 const; seed: uint const): uint
+
+
+Random numbers:
+
+  random_float(seed: int4& implicit): float
+  random_float4(seed: int4& implicit): float4
+  random_int(seed: int4& implicit): int
+  random_int4(seed: int4& implicit): int4
+  random_seed(seed: int const): int4
+
+  random_in_unit_disk(seed: int4& implicit): float3
+  random_in_unit_sphere(seed: int4& implicit): float3
+  random_unit_vector(seed: int4& implicit): float3
+
+
+
+Only float3:
+
+  cross(x: float3 const; y: float3 const)
+  distance(x: float3 const; y: float3 const)
+  distance_sq(x: float3 const; y: float3 const)
+  inv_distance(x: float3 const; y: float3 const)
+  inv_distance_sq(x: float3 const; y: float3 const)
+  reflect(v: float3 const; n: float3 const)
+  refract(v: float3 const; n: float3 const; nint: float const; outRefracted: float3&)
+
+
+float2, float3, float4:
+
+  dot(x, y)
+  normalize(x)
+  fast_normalize(x)
+  length(x)
+  length_sq(x)
+  inv_length(x)
+  inv_length_sq(x)
+            
+
+Matrix operations:
+
+  float3x4 - floating point matrix with 4 rows and 3 columns
+  float4x4 - floating point matrix with 4 rows and 4 columns
+
+  float3x4() - returns empty matrix, where each component is 0
+  float4x4() - returns empty matrix, where each component is 0
+
+  == (x: float4x4 const implicit; y: float4x4 const implicit): bool
+  != (x: float4x4 const implicit; y: float4x4 const implicit): bool
+  *  (x: float3x4 const implicit; y: float3x4 const implicit): float3x4
+  *  (x: float4x4 const implicit; y: float4x4 const implicit): float4x4
+  *  (x: float3x4 const implicit; y: float3 const) : float3
+  *  (x: float4x4 const implicit; y: float4 const) : float4
+
+  identity(x: float3x4 implicit)
+  identity(x: float4x4 implicit)
+
+  compose(pos: float4 const; rot: float4 const; scale: float4 const): float4x4
+  decompose(mat: float4x4 const implicit; pos: float3& implicit; rot: float4& implicit; scale: float4& implicit): void
+  inverse(x: float3x4 const implicit): float3x4
+  inverse(m: float4x4 const implicit): float4x4
+  look_at(eye: float4 const; at: float4 const; up: float4 const): float4x4
+  orthonormal_inverse(m: float4x4 const implicit): float4x4
+  persp_forward(wk: float const; hk: float const; zn: float const; zf: float const): float4x4
+  persp_reverse(wk: float const; hk: float const; zn: float const; zf: float const): float4x4
+  rotate(x: float3x4 const implicit; y: float3 const): float3
+  translation(xyz: float3 const): float4x4
+  transpose(x: float4x4 const implicit): float4x4
+
+
+Quaternion operations:
+
+  quat_conjugate(q: float4 const): float4
+  quat_mul(q1: float4 const; q2: float4 const): float4
+  quat_mul_vec(q: float4 const; v: float3 const): float3
+  un_quat(m: float4x4 const implicit): float4
+  un_quat_from_unit_arc(v0: float3 const; v1: float3 const): float4
+  un_quat_from_unit_vec_ang(v: float3 const; ang: float const): float4
+
 
 
 

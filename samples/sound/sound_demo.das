@@ -42,7 +42,7 @@ def is_cursor_inside(s)
 
 
 def update(var s: Slider &): bool
-    let mdown = (get_mouse_button(MB_LEFT) || get_mouse_button_down(MB_LEFT))
+    let mdown = (get_mouse_button(MB_LEFT))
     if !mdown
         currentControlName = ""
     if mdown && is_cursor_inside(s)
@@ -59,7 +59,7 @@ def render(s: Slider & const)
 
 
 def update(var s: Button &): bool
-    let mdown = (get_mouse_button(MB_LEFT) || get_mouse_button_down(MB_LEFT))
+    let mdown = (get_mouse_button(MB_LEFT))
     if !mdown
         currentControlName = ""
     if mdown && is_cursor_inside(s)

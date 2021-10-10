@@ -46,6 +46,7 @@ var
 
     menuItems: array<MenuItem> <- [{ auto
         [[MenuItem name = "About",
+          clipboardText = "https://github.com/imp5imp5/dasbox",
           description <- [{string[]
               "Dasbox {get_dasbox_version()}";
               "Build date: {get_dasbox_build_date()}";
@@ -199,6 +200,14 @@ def act(dt: float)
         scrollAccum += 1.0
     if get_key_press(VK_UP)
         scrollAccum -= 1.0
+    if get_key_press(VK_NEXT)
+        scrollAccum += get_key(VK_LCONTROL) || get_key(VK_RCONTROL) ? 99999.0 : 5.0
+    if get_key_press(VK_PRIOR)
+        scrollAccum -= get_key(VK_LCONTROL) || get_key(VK_RCONTROL) ? 99999.0 : 5.0
+    if get_key_press(VK_END)
+        scrollAccum += 99999.0
+    if get_key_press(VK_HOME)
+        scrollAccum -= 99999.0
 
     if (get_key(VK_LCONTROL) || get_key(VK_RCONTROL)) && get_key_press(VK_C) && length(menuItems[menuIndex].clipboardText) > 0
         set_clipboard_text(menuItems[menuIndex].clipboardText)
@@ -243,13 +252,13 @@ def draw()
     let selectorAlpha = 1.0 - clamp(abs((selectBoxPos - SELECT_Y) * 0.02), 0.0, 1.0)
     fill_rect(30.0, SELECT_Y, 640.0, LIST_LINE_HEIGHT, make_color(1.0, 0.1 * selectorAlpha))
 
-    for s, i in menuItems, range(999)
+    for s, i in menuItems, range(99999)
         text_out(60.0, SELECT_Y + 9.0 + (float(i) - scrollPos) * LIST_LINE_HEIGHT,
                 s.name, make_color(1.0, i == nextIndex ? 1.0 : 0.4))
 
     set_font_size(get_screen_height() / 42)
 
-    for s, i in menuItems[menuIndex].description, range(999)
+    for s, i in menuItems[menuIndex].description, range(99999)
         text_out(700, 324 + i * DESCRIPTION_LINE_HEIGHT, s, make_color(1.0, 0.7 * itemAlpha))
 
     menuItems[menuIndex].image |> draw_image(700, 27, make_color(1.0, itemAlpha))

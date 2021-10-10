@@ -69,11 +69,6 @@ def draw()
     draw_trigger(650, 50, max(-get_axis(AXIS_TRIGGERS), 0.0))
     draw_dirpad(850, 150, get_axis(AXIS_POV_X), get_axis(AXIS_POV_Y))
 
-    fill_rect(0, 0, 2, 2, 0xFFFFFFFF)
-    fill_rect(1280 - 2, 720 - 2, 2, 2, 0xFFFFFFFF)
-
-    fill_rect(1280 - 2, 720 - 2, 2, 2, 0xFFEFFFFF)
-
     fill_rect(50, 350, 20, 18, make_color(button))
     text_out(80, 350, "get_key(GP_A)", 0xF0F0F0)
 

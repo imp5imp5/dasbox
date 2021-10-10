@@ -33,9 +33,8 @@ if(MSVC)
 endif()
 
 
-add_executable(dasbox ${SRC})
-
 if(WIN32)
+  add_executable(dasbox WIN32 ${SRC})
   set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT dasbox)
   set(CMAKE_FIND_LIBRARY_SUFFIXES ".lib")
   target_link_libraries(
@@ -59,6 +58,7 @@ if(WIN32)
 endif()
 
 if(UNIX)
+  add_executable(dasbox ${SRC})
   set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
   set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fno-rtti -fno-exceptions -fomit-frame-pointer -fno-stack-protector -s -DDAS_FUSION=2 -DDAS_DEBUGGER=0 -DNDEBUG=1")
   target_link_libraries(

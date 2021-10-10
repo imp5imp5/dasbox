@@ -53,6 +53,7 @@ void set_font_size_i(int);
 void os_debug_break()
 {
 //  freopen( stdout);
+  fetch_cerr();
   print_error("Script break\n");
   longjmp(eval_buf, 1);
 }
@@ -413,9 +414,12 @@ void das_file_reload_update(float dt)
     (input::get_key_down(sf::Keyboard::R) &&
     (input::get_key(sf::Keyboard::LControl) || input::get_key(sf::Keyboard::RControl))))
   {
-    das_file_manual_reload();
-    time_to_check += 0.1f;
-    return;
+    if (!main_das_file_name.empty())
+    {
+      das_file_manual_reload();
+      time_to_check += 0.1f;
+      return;
+    }
   }
 
   time_to_check -= dt;
@@ -689,18 +693,9 @@ int main(int argc, char **argv)
   if (fs::is_file_exists("../samples/dasbox_initial_menu.das"))
     default_menu_script_path = "../samples/dasbox_initial_menu.das";
 
-
-  if (argc == 1 && !default_menu_script_path)
-  {
-    print_usage();
-    return 0;
-  }
-
   process_args(argc, argv);
-  if (has_errors)
-    return 1;
 
-  if (root_dir.empty() && main_das_file_name.empty())
+  if (default_menu_script_path && root_dir.empty() && main_das_file_name.empty())
   {
     main_das_file_name = "dasbox_initial_menu.das";
     root_dir = fs::extract_dir(default_menu_script_path);
@@ -718,8 +713,10 @@ int main(int argc, char **argv)
 
   if (!fs::is_file_exists(main_das_file_name.c_str()))
   {
-    print_error("File does not exists '%s'\n", main_das_file_name.c_str());
-    return 1;
+    if (main_das_file_name.empty())
+      print_error("File name is not specified\n\nUsage:\n  dasbox.exe <your_application.das>", main_das_file_name.c_str());
+    else
+      print_error("File does not exists '%s'\n", main_das_file_name.c_str());
   }
 
   NEED_MODULE(Module_BuiltIn);
@@ -733,7 +730,8 @@ int main(int argc, char **argv)
   NEED_MODULE(ModuleDasbox);
   NEED_MODULE(ModuleSound);
 
-  load_module(main_das_file_name);
+  if (!main_das_file_name.empty())
+    load_module(main_das_file_name);
   fetch_cerr();
 
   /////////////////////////////////////////////////////////

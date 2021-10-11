@@ -486,7 +486,7 @@ static void fill_buffer_cb(float * __restrict out_buf, int frequency, int channe
 
 
 static ma_device miniaudio_device;
-static bool device_initialized = false;
+static volatile bool device_initialized = false;
 static ma_log ma_log_struct = { 0 };
 static ma_context context = { 0 };
 
@@ -503,6 +503,13 @@ void on_error_log(void * user_data, ma_uint32 level, const char * message)
 static void miniaudio_data_callback(ma_device* p_device, void* p_output, const void* p_input, ma_uint32 frame_count)
 {
   G_UNUSED(p_input);
+
+  if (!device_initialized)
+  {
+    memset(p_output, 0, frame_count * ma_get_bytes_per_frame(p_device->playback.format, p_device->playback.channels));
+    return;
+  }
+
   fill_buffer_cb((float *)p_output, OUTPUT_SAMPLE_RATE, p_device->playback.channels, frame_count);
 }
 
@@ -510,8 +517,6 @@ void init_sound_lib_internal()
 {
   if (device_initialized)
     return;
-
-  WinAutoLock lock(&sound_cs);
 
   ma_log_init(nullptr, &ma_log_struct);
   ma_log_register_callback(&ma_log_struct, {on_error_log, nullptr});
@@ -553,9 +558,9 @@ void initialize()
 
 void finalize()
 {
+  device_initialized = false;
   WinAutoLock lock(&sound_cs);
   ma_device_uninit(&miniaudio_device);
-  device_initialized = false;
 }
 
 

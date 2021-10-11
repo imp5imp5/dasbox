@@ -496,8 +496,8 @@ void on_error_log(void * user_data, ma_uint32 level, const char * message)
   G_UNUSED(user_data);
   if (level <= 1)
     print_error("%s", message);
-/*  else
-    print_note("%s", message);*/
+  else
+    print_note("%s", message);
 }
 
 static void miniaudio_data_callback(ma_device* p_device, void* p_output, const void* p_input, ma_uint32 frame_count)

@@ -135,6 +135,11 @@ uint32_t Logger::setLogColor(uint32_t color)
 
 void Logger::addString(const string & s)
 {
+#ifndef NDEBUG
+  printf("%s", s.c_str());
+#endif
+
+
   if (logStrings.empty())
   {
     logStrings.push_back(string(""));

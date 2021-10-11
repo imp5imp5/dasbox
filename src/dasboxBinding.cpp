@@ -504,9 +504,9 @@ namespace das {
   void builtin_sleep(uint32_t msec);
   void builtin_exit(int32_t ec);
 
-  class ModuleFio : public Module {
+  class ModuleSafeFio : public Module {
   public:
-    ModuleFio() : Module("fio") {
+    ModuleSafeFio() : Module("fio") {
       ModuleLibrary lib;
       lib.addModule(this);
       lib.addBuiltInModule();
@@ -541,4 +541,4 @@ namespace das {
   };
 }
 
-REGISTER_MODULE_IN_NAMESPACE(ModuleFio, das);
+REGISTER_MODULE_IN_NAMESPACE(ModuleSafeFio, das);

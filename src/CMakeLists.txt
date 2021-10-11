@@ -34,7 +34,13 @@ endif()
 
 
 if(WIN32)
-  add_executable(dasbox WIN32 ${SRC})
+
+  if (CMAKE_BUILD_TYPE STREQUAL Debug)
+    add_executable(dasbox ${SRC})
+  else()
+    add_executable(dasbox WIN32 ${SRC})
+  endif()
+
   set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT dasbox)
   set(CMAKE_FIND_LIBRARY_SUFFIXES ".lib")
   target_link_libraries(
@@ -43,6 +49,8 @@ if(WIN32)
     winmm
     Opengl32
     libDaScript
+    libUriParser
+    libDasModuleUriparser
     freetype
     optimized sfml-main
     optimized sfml-graphics-s
@@ -64,6 +72,8 @@ if(UNIX)
   target_link_libraries(
     dasbox
     libDaScript
+    libUriParser
+    libDasModuleUriparser
     sfml-network-s
     sfml-graphics-s
     sfml-window-s

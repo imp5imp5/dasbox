@@ -34,6 +34,9 @@ bool has_errors = false;
 bool recreate_window = false;
 bool inside_initialization = false;
 bool exec_script_scheduled = false;
+bool trust_mode = false;
+bool run_for_plugin = false;
+string plugin_main_function = "main";
 
 locale * g_locale;
 static jmp_buf eval_buf;
@@ -491,13 +494,15 @@ void process_args(int argc, char **argv)
           else
             print_error("Main .das file is already set ('%s')\n", main_das_file_name.c_str());
         }
-        else
-        {
-          if (root_dir.empty())
-            root_dir = arg;
-          else
-            print_error("Root directory is already set ('%s')\n", root_dir.c_str());
-        }
+      }
+
+      if (arg == "--trust")
+        trust_mode = true;
+
+      if ((arg == "-main" || arg == "--main") && i < argc - 1)
+      {
+        plugin_main_function = argv[i + 1];
+        run_for_plugin = true;
       }
     }
   }
@@ -511,6 +516,7 @@ void print_usage()
 
 void create_window()
 {
+  fetch_cerr();
   input::reset_input();
 
   sf::Vector2i pos(INT_MAX, INT_MAX);
@@ -679,60 +685,54 @@ void fetch_cerr()
 }
 
 
-int main(int argc, char **argv)
+void run_das_for_plugin(const string & file_name, const string & main_func_name)
 {
-  //setlocale(LC_ALL, "C");
-  locale utf8Locale("en_US.UTF-8");
-  g_locale = &utf8Locale;
-
-  sf::err().rdbuf(logger.cerrStream.rdbuf());
-
-  const char * default_menu_script_path = nullptr;
-  if (fs::is_file_exists("samples/dasbox_initial_menu.das"))
-    default_menu_script_path = "samples/dasbox_initial_menu.das";
-  if (fs::is_file_exists("../samples/dasbox_initial_menu.das"))
-    default_menu_script_path = "../samples/dasbox_initial_menu.das";
-
-  process_args(argc, argv);
-
-  if (default_menu_script_path && root_dir.empty() && main_das_file_name.empty())
+  auto access = make_smart<fs::DasboxFsFileAccess>();
+  ModuleGroup dummyGroup;
+  if (auto program = compileDaScript(file_name, access, logger, dummyGroup))
   {
-    main_das_file_name = "dasbox_initial_menu.das";
-    root_dir = fs::extract_dir(default_menu_script_path);
-  }
-
-  fs::initialize();
-  graphics::initialize();
-  sound::initialize();
-
-  if (!fs::change_dir(root_dir))
-  {
-    print_error("Cannot change directory to '%s'\n", root_dir.c_str());
-    return 1;
-  }
-
-  if (!fs::is_file_exists(main_das_file_name.c_str()))
-  {
-    if (main_das_file_name.empty())
-      print_error("File name is not specified\n\nUsage:\n  dasbox.exe <your_application.das>", main_das_file_name.c_str());
+    if (program->failed())
+    {
+      for (auto & err : program->errors)
+        logger << reportError(err.at, err.what, err.extra, err.fixme, err.cerr);
+    }
     else
-      print_error("File does not exists '%s'\n", main_das_file_name.c_str());
+    {
+      Context ctx(program->getContextStackSize());
+      if (!program->simulate(ctx, logger))
+      {
+        logger << "Failed to simulate\n";
+        for (auto & err : program->errors)
+          logger << reportError(err.at, err.what, err.extra, err.fixme, err.cerr );
+      }
+      else
+      {
+        if (auto fnTest = ctx.findFunction(main_func_name.c_str()))
+        {
+          if (verifyCall<void>(fnTest->debugInfo, dummyGroup) || verifyCall<bool>(fnTest->debugInfo, dummyGroup))
+          {
+            ctx.restart();
+            ctx.eval(fnTest, nullptr);
+          }
+          else
+          {
+            logger << "function '"  << main_func_name << "' call arguments do not match, expecting 'main(): void' or 'main(): bool'\n";
+          }
+        }
+        else
+        {
+          logger << "function '"  << main_func_name << "' not found\n";
+        }
+      }
+    }
   }
+}
 
-  NEED_MODULE(Module_BuiltIn);
-  NEED_MODULE(Module_Math);
-  NEED_MODULE(Module_Strings);
-  NEED_MODULE(Module_Rtti);
-  NEED_MODULE(Module_Ast);
-  NEED_MODULE(Module_Debugger);
-  NEED_MODULE(ModuleFio);
-  NEED_MODULE(ModuleGraphics);
-  NEED_MODULE(ModuleDasbox);
-  NEED_MODULE(ModuleSound);
 
+void run_das_for_ui()
+{
   if (!main_das_file_name.empty())
     load_module(main_das_file_name);
-  fetch_cerr();
 
   /////////////////////////////////////////////////////////
   create_window();
@@ -906,6 +906,85 @@ int main(int argc, char **argv)
   delete render_texture;
   delete render_texture_sprite;
   delete g_window;
+}
+
+
+int main(int argc, char **argv)
+{
+  //setlocale(LC_ALL, "C");
+  locale utf8Locale("en_US.UTF-8");
+  g_locale = &utf8Locale;
+
+  sf::err().rdbuf(logger.cerrStream.rdbuf());
+
+  const char * default_menu_script_path = nullptr;
+  if (fs::is_file_exists("samples/dasbox_initial_menu.das"))
+    default_menu_script_path = "samples/dasbox_initial_menu.das";
+  if (fs::is_file_exists("../samples/dasbox_initial_menu.das"))
+    default_menu_script_path = "../samples/dasbox_initial_menu.das";
+
+  setCommandLineArguments(argc, argv);
+  process_args(argc, argv);
+
+  if (default_menu_script_path && root_dir.empty() && main_das_file_name.empty())
+  {
+    main_das_file_name = "dasbox_initial_menu.das";
+    root_dir = fs::extract_dir(default_menu_script_path);
+  }
+
+  fs::initialize();
+  graphics::initialize();
+  sound::initialize();
+
+  if (!run_for_plugin)
+  {
+    if (!fs::change_dir(root_dir))
+    {
+      print_error("Cannot change directory to '%s'\n", root_dir.c_str());
+      return 1;
+    }
+
+    if (!fs::is_file_exists(main_das_file_name.c_str()))
+    {
+      if (main_das_file_name.empty())
+        print_error("File name is not specified\n\nUsage:\n  dasbox.exe <your_application.das>", main_das_file_name.c_str());
+      else
+        print_error("File does not exists '%s'\n", main_das_file_name.c_str());
+    }
+  }
+
+  NEED_MODULE(Module_BuiltIn);
+  NEED_MODULE(Module_Math);
+  NEED_MODULE(Module_Strings);
+  NEED_MODULE(Module_Rtti);
+  NEED_MODULE(Module_Ast);
+  NEED_MODULE(Module_Debugger);
+
+  if (trust_mode)
+  {
+    NEED_MODULE(Module_Network);
+    NEED_MODULE(Module_UriParser);
+    NEED_MODULE(Module_JobQue);
+    NEED_MODULE(Module_FIO);
+  }
+  else
+  {
+    NEED_MODULE(ModuleSafeFio);
+  }
+
+  NEED_MODULE(ModuleGraphics);
+  NEED_MODULE(ModuleDasbox);
+  NEED_MODULE(ModuleSound);
+
+  if (run_for_plugin && trust_mode)
+  {
+    run_das_for_plugin(fs::combine_path(root_dir, main_das_file_name), plugin_main_function);
+    return 0;
+  }
+  else
+  {
+    run_das_for_ui();
+  }
 
   return 0;
 }

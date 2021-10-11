@@ -156,6 +156,9 @@ inline bool is_slash(char c)
 
 bool is_path_string_valid(const char * path)
 {
+  if (trust_mode)
+    return true;
+
   if (!path || !path[0])
     return true;
   if (strchr(path, ':'))

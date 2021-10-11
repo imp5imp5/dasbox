@@ -22,6 +22,7 @@ extern sf::RenderWindow * g_window;
 extern int screen_width;
 extern int screen_height;
 extern bool has_errors;
+extern bool trust_mode;
 
 void print_error(const char * format, ...);
 void print_exception(const char * format, ...);

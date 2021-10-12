@@ -23,21 +23,6 @@ std::string get_current_dir();
 uint64_t get_file_time(const char * file_name);
 
 
-class DasboxFsFileInfo final : public das::FileInfo
-{
-public:
-  virtual void freeSourceData() override
-  {
-    if (source)
-      das_aligned_free16((void*)source);
-    source = nullptr;
-  }
-
-  virtual ~DasboxFsFileInfo()
-  {
-    freeSourceData();
-  }
-};
 
 
 class DasboxFsFileAccess final : public das::ModuleFileAccess

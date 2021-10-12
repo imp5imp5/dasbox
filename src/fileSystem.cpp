@@ -100,7 +100,7 @@ das::FileInfo * DasboxFsFileAccess::getNewFileInfo(const das::string & fname)
   if (!f)
   {
     const char * ptr = fname.c_str();
-    if (!strncmp(fname.c_str(), "daslib/", 7) || strstr(fname.c_str(), "/daslib/"))
+    if (!strncmp(fname.c_str(), "daslib/", 7) || strstr(fname.c_str(), "/daslib/") || strstr(fname.c_str(), "\\daslib/"))
       ptr = std::max(strrchr(ptr, '/'), strrchr(ptr, '\\')) + 1;
 
     std::string key(ptr);
@@ -116,10 +116,8 @@ das::FileInfo * DasboxFsFileAccess::getNewFileInfo(const das::string & fname)
   const uint32_t fileLength = uint32_t(ftell(f));
   fseek(f, 0, SEEK_SET);
 
-  auto info = das::make_unique<DasboxFsFileInfo>();
-  info->sourceLength = fileLength;
-  char * source = (char *)das_aligned_alloc16(info->sourceLength + 1);
-  if (fread((void*)source, 1, info->sourceLength, f) != info->sourceLength)
+  char * source = (char *)das_aligned_alloc16(fileLength + 1);
+  if (fread((void*)source, 1, fileLength, f) != fileLength)
   {
     fclose(f);
     free(source);
@@ -129,8 +127,8 @@ das::FileInfo * DasboxFsFileAccess::getNewFileInfo(const das::string & fname)
 
   fclose(f);
 
-  source[info->sourceLength] = 0;
-  info->source = source;
+  source[fileLength] = 0;
+  auto info = das::make_unique<das::FileInfo>(source, fileLength);
   if (storeOpenedFiles)
   {
     int64_t fileTime = get_file_time(fname.c_str());

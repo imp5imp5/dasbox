@@ -1,7 +1,7 @@
 #include <daScript/daScript.h>
-#include <daScript/daScript.h>
 #include <daScript/simulate/interop.h>
 #include <daScript/simulate/simulate_visit_op.h>
+#include <daScript/das_project_specific.h>
 #include <SFML/Graphics.hpp>
 #include <SFML/Graphics/BlendMode.hpp>
 #include <SFML/System.hpp>
@@ -245,6 +245,7 @@ void check_delayed_variables()
 struct PlaygroundContext final : das::Context
 {
   PlaygroundContext(uint32_t stackSize) : das::Context(stackSize) {}
+  PlaygroundContext(Context & ctx, uint32_t category) : das::Context(ctx, category) {}
 
   void to_out(const char * message)
   {
@@ -279,6 +280,25 @@ struct DasFile
     ctx = nullptr;
   }
 };
+
+
+smart_ptr<das::FileAccess> dasbox_get_file_access(char * pak) {
+  if ( pak ) {
+    return make_smart<fs::DasboxFsFileAccess>(pak, make_smart<fs::DasboxFsFileAccess>());
+  } else {
+    return make_smart<fs::DasboxFsFileAccess>();
+  }
+}
+
+
+Context * dasbox_get_new_context(int stackSize) {
+  return new PlaygroundContext(stackSize);
+}
+
+
+Context * dasbox_get_clone_context(Context * ctx, uint32_t category) {
+  return new PlaygroundContext(*ctx, category);
+}
 
 
 static DasFile * das_file = new DasFile();
@@ -922,6 +942,9 @@ int main(int argc, char **argv)
     default_menu_script_path = "samples/dasbox_initial_menu.das";
   if (fs::is_file_exists("../samples/dasbox_initial_menu.das"))
     default_menu_script_path = "../samples/dasbox_initial_menu.das";
+
+  das::set_project_specific_fs_callbacks(dasbox_get_file_access);
+  das::set_project_specific_ctx_callbacks(dasbox_get_new_context, dasbox_get_clone_context);
 
   setCommandLineArguments(argc, argv);
   process_args(argc, argv);

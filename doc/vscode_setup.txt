@@ -12,12 +12,10 @@ Create file with VS Code settings: {your_project_dir}/.vscode/settings.json
         "x",
         "-main",
         "main",
-        "--trust"
+        "--trust",
         "--",
         "--port",
         "${port}",
-        "--config",
-        "aot_config.blk",
         "--project",
         "plugin.das_project"
     ],

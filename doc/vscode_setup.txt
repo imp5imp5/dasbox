@@ -1,0 +1,41 @@
+Install extensions: "daScript", "daScript language support"
+
+Create file with VS Code settings: {your_project_dir}/.vscode/settings.json
+
+-------------------------------------------------------------
+{
+   // path to dasbox.exe
+   "dascript.compiler": "C:/......./dasbox.exe",
+
+   "dascript.server.args": [
+        "${file}",
+        "x",
+        "-main",
+        "main",
+        "--trust"
+        "--",
+        "--port",
+        "${port}",
+        "--config",
+        "aot_config.blk",
+        "--project",
+        "plugin.das_project"
+    ],
+    "dascript.project.roots": [
+    ],
+    "dascript.policies.no_global_variables": false,
+    "dascript.policies.fail_on_lack_of_aot_export": false,
+    "dascript.project.scanWorkspace": true,
+ 
+    // additional settings
+    "editor.semanticHighlighting.enabled": true,
+    "editor.semanticTokenColorCustomizations": {
+        "rules": {
+            "modifier": "#58a16f",
+        }
+    },
+}
+-------------------------------------------------------------
+
+Open folder with your project (not a single .das-file)
+Font (optionally) : https://www.jetbrains.com/lp/mono/

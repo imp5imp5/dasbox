@@ -1,6 +1,6 @@
 [submodule "3rdParty/daScript"]
 	path = 3rdParty/daScript
-	url = https://github.com/GaijinEntertainment/daScript
+	url = https://github.com/imp5imp5/daScript-1
 [submodule "3rdParty/miniaudio"]
 	path = 3rdParty/miniaudio
 	url = https://github.com/mackron/miniaudio

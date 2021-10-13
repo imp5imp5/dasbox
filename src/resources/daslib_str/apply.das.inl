@@ -19,6 +19,7 @@
 "        invoke(arg_field2,\"field2\",self.field2)\n"
 "        ...\n"
 "*/\n"
+"[macro_function]\n"
 "def generateApplyVisitStruct ( stype:TypeDeclPtr; fnname:string; at:LineInfo )\n"
 "    assert(stype.baseType==Type tStructure)\n"
 "    assert(stype.dim.length==0)\n"

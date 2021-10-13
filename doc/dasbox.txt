@@ -2,7 +2,7 @@ Run your application:
   dasbox.exe <path_to_application_folder/file_name.das>
 
 Optional comand line arguments:
-  --dasbox-console - duplicate output to console
+  --dasbox-console - duplicate output to console ('--' is also acceptable)
   --trust - allow access to any file on this computer
 
 Once the application is running, all the sources ('file_name.das' and all the sources requested from it) will be checked for changes and automatically reloaded.

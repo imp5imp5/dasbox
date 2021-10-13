@@ -945,9 +945,6 @@ void hide_console()
 
   if (consolePid == curPid)
     ShowWindow(::GetConsoleWindow(), SW_HIDE);
-
-#else
-  G_UNUSED(exe_name);
 #endif
 }
 

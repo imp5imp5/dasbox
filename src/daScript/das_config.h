@@ -24,6 +24,9 @@
 
 
 void print_error(const char * format, ...);
+namespace fs { bool is_path_string_valid(const char * path); }
+
+#define DAS_IS_PATH_VALID(path) fs::is_path_string_valid(path)
 
 #ifndef DAS_STD_HAS_BIND
 #  define DAS_STD_HAS_BIND 1

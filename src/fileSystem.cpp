@@ -18,6 +18,7 @@ using namespace std;
 namespace fs
 {
 
+// TODO: free at 'finalize'
 static unordered_map<std::string, das::TextFileInfo *> daslib_inc_files;
 
 

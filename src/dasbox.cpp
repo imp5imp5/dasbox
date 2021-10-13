@@ -529,7 +529,7 @@ void process_args(int argc, char **argv)
         run_for_plugin = true;
       }
 
-      if (arg == "--dasbox-console")
+      if (arg == "--dasbox-console" || arg == "--")
         log_to_console = true;
     }
   }
@@ -1011,16 +1011,7 @@ int main(int argc, char **argv)
   NEED_MODULE(Module_Network);
   NEED_MODULE(Module_UriParser);
   NEED_MODULE(Module_JobQue);
-
-  if (trust_mode)
-  {
-    NEED_MODULE(Module_FIO);
-  }
-  else
-  {
-    NEED_MODULE(ModuleSafeFio);
-  }
-
+  NEED_MODULE(Module_FIO);
   NEED_MODULE(ModuleGraphics);
   NEED_MODULE(ModuleDasbox);
   NEED_MODULE(ModuleSound);

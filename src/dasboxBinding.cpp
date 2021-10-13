@@ -7,6 +7,7 @@
 #include <daScript/ast/ast.h>
 #include <daScript/simulate/interop.h>
 #include <daScript/simulate/simulate_visit_op.h>
+#include <daScript/simulate/aot_builtin_fio.h>
 #include <SFML/System.hpp>
 #include <SFML/Window/Keyboard.hpp>
 #include <SFML/Window/Joystick.hpp>
@@ -477,6 +478,13 @@ public:
       (*this, lib, "set_mouse_cursor_grabbed", SideEffects::modifyExternal, "set_mouse_cursor_grabbed")
       ->args({"grabbed"});
 
+    addExtern<DAS_BIND_FUN(fs::is_file_exists)>(*this, lib, "is_file_exists",
+      SideEffects::modifyExternal, "fs::is_file_exists")
+      ->arg("file_name");
+
+    addExtern<DAS_BIND_FUN(dasbox_execute)>(*this, lib, "dasbox_execute",
+      SideEffects::modifyExternal, "dasbox_execute")
+      ->arg("file_name");
 
     addExtern<DAS_BIND_FUN(get_dasbox_version)>
       (*this, lib, "get_dasbox_version", SideEffects::accessExternal, "get_dasbox_version");
@@ -498,47 +506,3 @@ public:
 };
 
 REGISTER_MODULE(ModuleDasbox);
-
-
-namespace das {
-  void builtin_sleep(uint32_t msec);
-  void builtin_exit(int32_t ec);
-
-  class ModuleSafeFio : public Module {
-  public:
-    ModuleSafeFio() : Module("fio") {
-      ModuleLibrary lib;
-      lib.addModule(this);
-      lib.addBuiltInModule();
-      lib.addModule(Module::require("strings"));
-
-      addExtern<DAS_BIND_FUN(builtin_sleep)>(*this, lib, "sleep",
-        SideEffects::modifyExternal, "builtin_sleep")
-        ->arg("msec");
-
-      addExtern<DAS_BIND_FUN(builtin_exit)>(*this, lib, "exit",
-        SideEffects::modifyExternal, "builtin_exit")
-        ->arg("exitCode")->unsafeOperation = true;
-
-      addExtern<DAS_BIND_FUN(fs::is_file_exists)>(*this, lib, "is_file_exists",
-        SideEffects::modifyExternal, "fs::is_file_exists")
-        ->arg("file_name");
-
-      addExtern<DAS_BIND_FUN(dasbox_execute)>(*this, lib, "dasbox_execute",
-        SideEffects::modifyExternal, "dasbox_execute")
-        ->arg("file_name");
-
-      uint32_t verifyFlags = uint32_t(VerifyBuiltinFlags::verifyAll);
-      verifyFlags &= ~VerifyBuiltinFlags::verifyHandleTypes;
-      verifyBuiltinNames(verifyFlags);
-      verifyAotReady();
-    }
-    virtual ModuleAotType aotRequire ( TextWriter & tw ) const override {
-      //tw << "#include \"daScript/misc/performance_time.h\"\n";
-      //tw << "#include \"daScript/simulate/aot_builtin_fio.h\"\n";
-      return ModuleAotType::cpp;
-    }
-  };
-}
-
-REGISTER_MODULE_IN_NAMESPACE(ModuleSafeFio, das);

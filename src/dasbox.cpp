@@ -21,6 +21,9 @@
 
 #ifdef _WIN32
 #include <../SFML/extlibs/headers/glad/include/glad/gl.h>
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <Windows.h>
 #endif
 
 using namespace std;
@@ -36,6 +39,7 @@ bool inside_initialization = false;
 bool exec_script_scheduled = false;
 bool trust_mode = false;
 bool run_for_plugin = false;
+bool log_to_console = false;
 string plugin_main_function = "main";
 
 locale * g_locale;
@@ -255,9 +259,9 @@ struct PlaygroundContext final : das::Context
   void to_err(const char * message)
   {
     logger.setTopErrorLine();
-    uint32_t savedColor = logger.setLogColor(ERROR_LINE_COLOR);
+    logger.setState(LOGGER_ERROR);
     logger << message << "\n";
-    logger.setLogColor(savedColor);
+    logger.setState(LOGGER_NORMAL);
   }
 };
 
@@ -524,6 +528,9 @@ void process_args(int argc, char **argv)
         plugin_main_function = argv[i + 1];
         run_for_plugin = true;
       }
+
+      if (arg == "--dasbox-console")
+        log_to_console = true;
     }
   }
 }
@@ -929,13 +936,33 @@ void run_das_for_ui()
 }
 
 
+void hide_console()
+{
+#ifdef _WIN32
+  DWORD consolePid = -1;
+  GetWindowThreadProcessId(::GetConsoleWindow(), &consolePid);
+  DWORD curPid = GetCurrentProcessId();
+
+  if (consolePid == curPid)
+    ShowWindow(::GetConsoleWindow(), SW_HIDE);
+
+#else
+  G_UNUSED(exe_name);
+#endif
+}
+
+
 int main(int argc, char **argv)
 {
-  //setlocale(LC_ALL, "C");
+  sf::err().rdbuf(logger.cerrStream.rdbuf());
+
+  process_args(argc, argv);
+  if (!log_to_console)
+    hide_console();
+
   locale utf8Locale("en_US.UTF-8");
   g_locale = &utf8Locale;
 
-  sf::err().rdbuf(logger.cerrStream.rdbuf());
 
   const char * default_menu_script_path = nullptr;
   if (fs::is_file_exists("samples/dasbox_initial_menu.das"))
@@ -947,7 +974,6 @@ int main(int argc, char **argv)
   das::set_project_specific_ctx_callbacks(dasbox_get_new_context, dasbox_get_clone_context);
 
   setCommandLineArguments(argc, argv);
-  process_args(argc, argv);
 
   if (default_menu_script_path && root_dir.empty() && main_das_file_name.empty())
   {
@@ -982,12 +1008,12 @@ int main(int argc, char **argv)
   NEED_MODULE(Module_Rtti);
   NEED_MODULE(Module_Ast);
   NEED_MODULE(Module_Debugger);
+  NEED_MODULE(Module_Network);
+  NEED_MODULE(Module_UriParser);
+  NEED_MODULE(Module_JobQue);
 
   if (trust_mode)
   {
-    NEED_MODULE(Module_Network);
-    NEED_MODULE(Module_UriParser);
-    NEED_MODULE(Module_JobQue);
     NEED_MODULE(Module_FIO);
   }
   else

@@ -34,12 +34,7 @@ endif()
 
 
 if(WIN32)
-
-  if (CMAKE_BUILD_TYPE STREQUAL Debug)
-    add_executable(dasbox ${SRC})
-  else()
-    add_executable(dasbox WIN32 ${SRC})
-  endif()
+  add_executable(dasbox ${SRC})
 
   set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT dasbox)
   set(CMAKE_FIND_LIBRARY_SUFFIXES ".lib")

@@ -10,6 +10,14 @@
 #define NOTE_LINE_COLOR       0xFFFFA0A0
 #define SCROLL_POSITION_COLOR 0xFF909090
 
+enum
+{
+  LOGGER_NORMAL,
+  LOGGER_ERROR,
+  LOGGER_NOTE,
+};
+
+
 class Logger : public das::TextWriter
 {
 public:
@@ -21,17 +29,26 @@ public:
   int topLine = 0;
 
   virtual void output() override;
-  uint32_t setLogColor(uint32_t color);
 
   void setTopErrorLine();
   void clear();
 
+  void setState(int state_)
+  {
+    state = state_;
+    applyStateColor();
+  }
+
 protected:
   int pos = 0;
+  int state = LOGGER_NORMAL;
   uint32_t curColor = NORMAL_LINE_COLOR;
   std::string buf;
 
+  uint32_t setLogColor(uint32_t color);
   void addString(const std::string & s);
+
+  void applyStateColor();
 };
 
 extern Logger logger;

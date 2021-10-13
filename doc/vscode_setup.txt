@@ -13,6 +13,7 @@ Create file with VS Code settings: {your_project_dir}/.vscode/settings.json
         "-main",
         "main",
         "--trust",
+        "--dasbox-console",
         "--",
         "--port",
         "${port}",
@@ -29,7 +30,7 @@ Create file with VS Code settings: {your_project_dir}/.vscode/settings.json
     "editor.semanticHighlighting.enabled": true,
     "editor.semanticTokenColorCustomizations": {
         "rules": {
-            "modifier": "#58a16f",
+            "modifier": "#58a16f"
         }
     },
 }

@@ -48,21 +48,21 @@ void print_error(const char * format, ...)
 
   if (error_as_note)
   {
-    uint32_t savedColor = logger.setLogColor(NOTE_LINE_COLOR);
+    logger.setState(LOGGER_NOTE);
     logger << "Note: ";
     logger << buf;
     if (!ends_with_newline(buf))
       logger << "\n";
-    logger.setLogColor(savedColor);
+    logger.setState(LOGGER_NORMAL);
   }
   else
   {
     logger.setTopErrorLine();
-    uint32_t savedColor = logger.setLogColor(ERROR_LINE_COLOR);
+    logger.setState(LOGGER_ERROR);
     logger << "\nERROR: ";
     logger << buf;
     logger << "\n";
-    logger.setLogColor(savedColor);
+    logger.setState(LOGGER_NORMAL);
     has_errors = true;
   }
 }
@@ -76,11 +76,11 @@ void print_exception(const char * format, ...)
   buf[sizeof(buf) - 1] = 0;
   va_end(args);
   logger.setTopErrorLine();
-  uint32_t savedColor = logger.setLogColor(ERROR_LINE_COLOR);
+  logger.setState(LOGGER_ERROR);
   logger << "\nEXCEPTION: ";
   logger << buf;
   logger << "\n";
-  logger.setLogColor(savedColor);
+  logger.setState(LOGGER_NORMAL);
 }
 
 void print_note(const char * format, ...)
@@ -91,12 +91,12 @@ void print_note(const char * format, ...)
   vsnprintf(buf, sizeof(buf), format, args);
   buf[sizeof(buf) - 1] = 0;
   va_end(args);
-  uint32_t savedColor = logger.setLogColor(NOTE_LINE_COLOR);
+  logger.setState(LOGGER_NOTE);
   logger << "Note: ";
   logger << buf;
   if (!ends_with_newline(buf))
     logger << "\n";
-  logger.setLogColor(savedColor);
+  logger.setState(LOGGER_NORMAL);
 }
 
 
@@ -133,12 +133,31 @@ uint32_t Logger::setLogColor(uint32_t color)
   return c;
 }
 
+void Logger::applyStateColor()
+{
+  switch (state)
+  {
+  case LOGGER_ERROR: curColor = ERROR_LINE_COLOR; break;
+  case LOGGER_NOTE: curColor = NOTE_LINE_COLOR; break;
+  default: curColor = NORMAL_LINE_COLOR; break;
+  }
+}
+
+
 void Logger::addString(const string & s)
 {
 #ifndef NDEBUG
-  printf("%s", s.c_str());
+  bool duplicateLog = true;
+#else
+  bool duplicateLog = log_to_console;
 #endif
-
+  if (duplicateLog)
+  {
+    if (state == LOGGER_ERROR)
+      cerr << s;
+    else
+      cout << s;
+  }
 
   if (logStrings.empty())
   {

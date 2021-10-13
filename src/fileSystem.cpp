@@ -18,7 +18,7 @@ using namespace std;
 namespace fs
 {
 
-static unordered_map<std::string, das::FileInfo> daslib_inc_files;
+static unordered_map<std::string, das::TextFileInfo *> daslib_inc_files;
 
 
 void initialize()
@@ -106,7 +106,7 @@ das::FileInfo * DasboxFsFileAccess::getNewFileInfo(const das::string & fname)
     std::string key(ptr);
     auto it = daslib_inc_files.find(key);
     if (it != daslib_inc_files.end())
-      return &it->second;
+      return it->second;
 
     print_error("Script file '%s' not found", fname.c_str());
     return nullptr;
@@ -128,7 +128,7 @@ das::FileInfo * DasboxFsFileAccess::getNewFileInfo(const das::string & fname)
   fclose(f);
 
   source[fileLength] = 0;
-  auto info = das::make_unique<das::FileInfo>(source, fileLength);
+  auto info = das::make_unique<das::TextFileInfo>(source, fileLength, true);
   if (storeOpenedFiles)
   {
     int64_t fileTime = get_file_time(fname.c_str());

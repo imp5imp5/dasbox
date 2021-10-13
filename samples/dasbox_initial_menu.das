@@ -7,7 +7,7 @@ let
     DESCRIPTION_LINE_HEIGHT = 23
 
 
-let minimal_sample = "include daslib/media
+let minimal_sample = "require daslib/media
 
 [export]
 def initialize

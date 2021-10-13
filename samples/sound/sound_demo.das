@@ -1,4 +1,4 @@
-include daslib/media
+require daslib/media
 
 // The easiest way to play sound:
 //

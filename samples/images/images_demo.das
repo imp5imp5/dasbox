@@ -1,4 +1,4 @@
-include daslib/media
+require daslib/media
 
 var image_tga: Image
 var image_png: Image

@@ -1,4 +1,4 @@
-include daslib/media
+require daslib/media
 
 
 var

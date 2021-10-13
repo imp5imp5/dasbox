@@ -2,7 +2,7 @@
 // AUTO-GENERATED FILE - DO NOT EDIT!!
 //
 
-"include daslib/media\n"
+"require daslib/media\n"
 "\n"
 "\n"
 "var\n"

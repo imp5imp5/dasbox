@@ -1,4 +1,4 @@
-include daslib/media
+require daslib/media
 
 var points: array<float2>
 var points2: array<float2>

@@ -43,7 +43,7 @@ call python stringify.py --array JetBrainsMonoNL-Medium.ttf font.JetBrainsMonoNL
 %L% decs_boost.das
 
 %I% internal_menu_background.das
-%I% media
+%I% media.das
 
 
 exit/b
@@ -55,7 +55,7 @@ set identifier=%name:.=_%
 echo static const char %identifier%[] =>> %init_file%
 echo #include "resources/daslib_str/%name%.inl">> %init_file%
 echo ;>> %init_file%
-echo daslib_inc_files[string("%name%")] = das::FileInfo(%identifier%, sizeof(%identifier%) - 1);>> %init_file%
+echo daslib_inc_files[string("%name%")] = new das::TextFileInfo(%identifier%, sizeof(%identifier%) - 1, false);>> %init_file%
 echo.>> %init_file%
 exit/b
 
@@ -67,7 +67,7 @@ set identifier=%name:.=_%
 echo static const char %identifier%[] =>> %init_file%
 echo #include "resources/daslib_str/%name%.inl">> %init_file%
 echo ;>> %init_file%
-echo daslib_inc_files[string("%name%")] = das::FileInfo(%identifier%, sizeof(%identifier%) - 1);>> %init_file%
+echo daslib_inc_files[string("%name%")] = new das::TextFileInfo(%identifier%, sizeof(%identifier%) - 1, false);>> %init_file%
 echo.>> %init_file%
 exit/b
 

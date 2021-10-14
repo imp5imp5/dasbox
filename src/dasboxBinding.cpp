@@ -15,6 +15,11 @@
 #include <unordered_map>
 #include <string>
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <Windows.h>
+#endif
 
 
 using namespace das;
@@ -162,6 +167,50 @@ const char * get_clipboard_text()
   return "";
 }
 
+void dasbox_execute_editor(const char * dir, const char * file_name)
+{
+  if (!trust_mode)
+    return;
+  if (!dir)
+    dir = "";
+  if (!file_name)
+    return;
+
+#if _WIN32
+  int res = system("where code.cmd");
+  if (!res)
+  {
+    char buf[512] = { 0 };
+    snprintf(buf, sizeof(buf), "code \"%s\"", dir, file_name);
+    system(buf);
+  }
+#endif
+}
+
+const char * get_dasbox_exe_path()
+{
+  static string path;
+  if (!path.empty())
+    return path.c_str();
+#if defined(PLATFORM_POSIX) || defined(__linux__)
+  std::ifstream("/proc/self/comm") >> path;
+  return path.c_str();
+#elif defined(_WIN32)
+  char buf[512];
+  GetModuleFileNameA(nullptr, buf, sizeof(buf));
+  char * p = buf;
+  while (*p)
+  {
+    if (*p == '\\')
+      *p = '/';
+    p++;
+  }
+  path = string(buf);
+  return path.c_str();
+#else
+  static_assert(false, "unrecognized platform");
+#endif
+}
 
 const char * get_dasbox_version()
 {
@@ -171,6 +220,11 @@ const char * get_dasbox_version()
 const char * get_dasbox_build_date()
 {
   return DASBOX_BUILD_DATE;
+}
+
+const char * get_dasbox_initial_dir()
+{
+  return initial_dir;
 }
 
 
@@ -491,6 +545,16 @@ public:
 
     addExtern<DAS_BIND_FUN(get_dasbox_build_date)>
       (*this, lib, "get_dasbox_build_date", SideEffects::accessExternal, "get_dasbox_build_date");
+
+    addExtern<DAS_BIND_FUN(get_dasbox_initial_dir)>
+      (*this, lib, "get_dasbox_initial_dir", SideEffects::accessExternal, "get_dasbox_initial_dir");
+
+    addExtern<DAS_BIND_FUN(get_dasbox_exe_path)>
+      (*this, lib, "get_dasbox_exe_path", SideEffects::accessExternal, "get_dasbox_exe_path");
+
+    addExtern<DAS_BIND_FUN(dasbox_execute_editor)>
+      (*this, lib, "dasbox_execute_editor", SideEffects::modifyExternal, "dasbox_execute_editor");
+    
 
     compileBuiltinModule("utils.das", (unsigned char *)utils_das, sizeof(utils_das));
 

@@ -6,6 +6,8 @@ def initialize
 
 [export]
 def act(dt: float)
+    if get_key(VK_ESCAPE)
+        schedule_quit_game()
     return
 
 [export]

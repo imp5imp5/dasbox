@@ -97,6 +97,16 @@ DasboxFsFileAccess::~DasboxFsFileAccess()
 
 das::FileInfo * DasboxFsFileAccess::getNewFileInfo(const das::string & fname)
 {
+  /*{
+    FILE * f = fopen("d://1.txt", "at");
+    if (f)
+    {
+      fprintf(f, "getNewFileInfo:  %s\n", fname.c_str());
+      fclose(f);
+    }
+  }*/
+
+
   FILE * f = fopen(fname.c_str(), "rb");
   if (!f)
   {

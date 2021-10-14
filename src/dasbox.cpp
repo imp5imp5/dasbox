@@ -33,6 +33,8 @@ string root_dir = "";
 string main_das_file_name = "";
 string return_to_file_name = "";
 string return_to_root = "";
+bool return_to_trust_mode = false;
+const char * initial_dir = ".";
 bool has_errors = false;
 bool recreate_window = false;
 bool inside_initialization = false;
@@ -655,6 +657,8 @@ void return_to_previous_script()
   }
   return_to_file_name.clear();
   return_to_root.clear();
+  trust_mode = return_to_trust_mode;
+  return_to_trust_mode = false;
   das_file_manual_reload();
 }
 
@@ -680,6 +684,7 @@ void exec_script_impl()
 
   return_to_root = fs::get_current_dir();
   return_to_file_name = main_das_file_name;
+  return_to_trust_mode = trust_mode;
 
 
   root_dir = fs::extract_dir(scheduled_script_name.c_str());
@@ -695,6 +700,8 @@ void exec_script_impl()
 
 void dasbox_execute(const char * file_name)
 {
+  if (!trust_mode)
+    return;
   scheduled_script_name = std::string(file_name);
   exec_script_scheduled = true;
 }
@@ -960,22 +967,29 @@ int main(int argc, char **argv)
   locale utf8Locale("en_US.UTF-8");
   g_locale = &utf8Locale;
 
-
-  const char * default_menu_script_path = nullptr;
-  if (fs::is_file_exists("samples/dasbox_initial_menu.das"))
-    default_menu_script_path = "samples/dasbox_initial_menu.das";
-  if (fs::is_file_exists("../samples/dasbox_initial_menu.das"))
-    default_menu_script_path = "../samples/dasbox_initial_menu.das";
+  
+  string initialDirString = fs::get_current_dir();
+  initial_dir = initialDirString.c_str();
 
   das::set_project_specific_fs_callbacks(dasbox_get_file_access);
   das::set_project_specific_ctx_callbacks(dasbox_get_new_context, dasbox_get_clone_context);
 
   setCommandLineArguments(argc, argv);
 
-  if (default_menu_script_path && root_dir.empty() && main_das_file_name.empty())
+  if (root_dir.empty() && main_das_file_name.empty())
   {
-    main_das_file_name = "dasbox_initial_menu.das";
-    root_dir = fs::extract_dir(default_menu_script_path);
+    const char * default_menu_script_path = nullptr;
+    if (fs::is_file_exists("samples/dasbox_initial_menu.das"))
+      default_menu_script_path = "samples/dasbox_initial_menu.das";
+    if (fs::is_file_exists("../samples/dasbox_initial_menu.das"))
+      default_menu_script_path = "../samples/dasbox_initial_menu.das";
+
+    if (default_menu_script_path)
+    {
+      main_das_file_name = "dasbox_initial_menu.das";
+      root_dir = fs::extract_dir(default_menu_script_path);
+      trust_mode = true;
+    }
   }
 
   fs::initialize();

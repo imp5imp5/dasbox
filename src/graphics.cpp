@@ -45,7 +45,7 @@ int get_desktop_height()
 
 sf::Color conv_color(uint32_t c)
 {
-  return sf::Color(c & 0xFF, (c >> 8) & 0xFF, (c >> 16) & 0xFF, c >> 24);
+  return sf::Color(c & 0xFF, c >> 24, (c >> 16) & 0xFF, (c >> 8) & 0xFF);
 }
 
 void fill_rect(float x, float y, float width, float height, uint32_t color)
@@ -673,10 +673,10 @@ void premultiply_alpha(Image & image)
   {
     uint32_t p = image.cached_pixels[i];
     uint32_t a = (p >> 24) & 0xFFU;
-    uint32_t r = (((p >> 0) & 0xFFU) * a) / 255U;
+    uint32_t b = (((p >> 0) & 0xFFU) * a) / 255U;
     uint32_t g = (((p >> 8) & 0xFFU) * a) / 255U;
-    uint32_t b = (((p >> 16) & 0xFFU) * a) / 255U;
-    image.cached_pixels[i] = (a << 24) | (b << 16) | (g << 8) | (r << 0);
+    uint32_t r = (((p >> 16) & 0xFFU) * a) / 255U;
+    image.cached_pixels[i] = (a << 24) | (r << 16) | (g << 8) | (b);
   }
 }
 

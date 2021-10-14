@@ -6,8 +6,8 @@
 #include <sstream>
 
 #define NORMAL_LINE_COLOR     0xFFFFFFFF
-#define ERROR_LINE_COLOR      0xFF80D0FF
-#define NOTE_LINE_COLOR       0xFFFFA0A0
+#define ERROR_LINE_COLOR      0xFFFFD080
+#define NOTE_LINE_COLOR       0xFFA0A0FF
 #define SCROLL_POSITION_COLOR 0xFF909090
 
 enum

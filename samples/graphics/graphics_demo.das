@@ -33,8 +33,8 @@ def initialize()
         "........................",
 
         {{ '.' => 0x000000;
-           'a' => 0xA0AFFF;
-           '-' => 0xF00000;
+           'a' => 0xFFAFA0;
+           '-' => 0x0000F0;
            'x' => 0xFFFFFF
         }}
         )
@@ -59,8 +59,8 @@ def initialize()
         "..aa...........aa.......",
 
         {{ '.' => 0x000000;
-           'a' => 0xA0AFFF;
-           '-' => 0xF00000;
+           'a' => 0xFFAFA0;
+           '-' => 0x0000F0;
            'x' => 0xFFFFFF
         }}
         )
@@ -84,27 +84,27 @@ def draw()
     var y = 40
     var delta = 18.0 * sin(get_time_after_start() * 0.4)
 
-    set_pixel(70, y + 9, 0x80FFFF)
+    set_pixel(70, y + 9, 0xFFFF80)
     text_out(100, y, "set_pixel(x, y, color)", 0xF0F0F0)
     y += 50
 
-    rect(60, y, 23, 18, 0x80FFFF)
+    rect(60, y, 23, 18, 0xFFFF80)
     text_out(100, y, "rect(x, y, width, height, color)", 0xF0F0F0)
     y += 50
 
-    fill_rect(60, y, 23, 18, 0x80FFFF)
+    fill_rect(60, y, 23, 18, 0xFFFF80)
     text_out(100, y, "fill_rect(x, y, width, height, color)", 0xF0F0F0)
     y += 50
 
-    circle(70, y + 10, 14, 0x80FFFF)
+    circle(70, y + 10, 14, 0xFFFF80)
     text_out(100, y, "circle(x, y, radius, color)", 0xF0F0F0)
     y += 50
 
-    fill_circle(70, y + 10, 14, 0x80FFFF)
+    fill_circle(70, y + 10, 14, 0xFFFF80)
     text_out(100, y, "fill_circle(x, y, radius, color)", 0xF0F0F0)
     y += 50
 
-    line(50, y + int(delta), 85, y + 10 - int(delta), 0x80FFFF)
+    line(50, y + int(delta), 85, y + 10 - int(delta), 0xFFFF80)
     text_out(100, y, "line(x1, y1, x2, y2, color)", 0xF0F0F0)
     y += 50
 
@@ -112,8 +112,8 @@ def draw()
         points |> push(float2(50.0, float(y)))
         points |> push(float2(60.0, float(y) - 3.0))
         points |> push(float2(78.0, float(y) + 20.0))
-    polygon(points, 0x80FFFF)
-    polygon([[auto float2(74.0, float(y)); float2(80.0, -1.0 + float(y)); float2(85.0, 20.0 + float(y))]], 0x80FFFF)
+    polygon(points, 0xFFFF80)
+    polygon([[auto float2(74.0, float(y)); float2(80.0, -1.0 + float(y)); float2(85.0, 20.0 + float(y))]], 0xFFFF80)
     text_out(100, y, "polygon(points, color)", 0xF0F0F0)
     y += 50
 
@@ -121,12 +121,12 @@ def draw()
         points2 |> push(float2(50.0, float(y)))
         points2 |> push(float2(60.0, float(y) - 3.0))
         points2 |> push(float2(78.0, float(y) + 20.0))
-    fill_convex_polygon(points2, 0x80FFFF)
-    fill_convex_polygon([[auto float2(74.0, float(y)); float2(80.0, -1.0 + float(y)); float2(85.0, 20.0 + float(y))]], 0x80FFFF)
+    fill_convex_polygon(points2, 0xFFFF80)
+    fill_convex_polygon([[auto float2(74.0, float(y)); float2(80.0, -1.0 + float(y)); float2(85.0, 20.0 + float(y))]], 0xFFFF80)
     text_out(100, y, "fill_convex_polygon(points, color)", 0xF0F0F0)
     y += 50
 
-    text_out(52, y, "Abc", 0x80FFFF)
+    text_out(52, y, "Abc", 0xFFFF80)
     text_out(100, y, "text_out(x, y, text, color)", 0xF0F0F0)
     y += 50
 
@@ -172,20 +172,20 @@ def draw()
     y += 50
 
     let screen_coord2 <- [{auto float2(630, 35 + y); float2(624, y); float2(650, 10 + y); float2(654, y - 16); float2(678, y) }]
-    let colors <- [{auto 0xFF00FF00; 0xFF00FF00; 0xFFEEFF00; 0xFFFF3FA0; 0xFFFFFFFF}]
+    let colors <- [{auto 0xFF00FF00; 0xFF00FF00; 0xFF00FFEE; 0xFFFA0FF3; 0xFFFFFFFF}]
     texture |> draw_triangle_strip(screen_coord2, tex_coord, colors)
     text_out(700, y, "draw_triangle_strip(screen_coord, tex_coord, colors)", 0xF0F0F0)
     y += 50
 
     enable_alpha_blend()
-    fill_circle(660, y, 15, 0xFF80F08F)
-    fill_circle(647, y + 10, 15, 0xA08000FF)
+    fill_circle(660, y, 15, 0xFF8FF080)
+    fill_circle(647, y + 10, 15, 0xA0FF0080)
     text_out(700, y, "enable_alpha_blend()", 0xFFF0F0F0)
     y += 50
 
     disable_alpha_blend()
-    fill_circle(660, y, 15, 0xFF80F08F)
-    fill_circle(647, y + 10, 15, 0xA08000FF)
+    fill_circle(660, y, 15, 0xFF8FF080)
+    fill_circle(647, y + 10, 15, 0xA0FF0080)
     text_out(700, y, "disable_alpha_blend()", 0xFFF0F0F0)
     y += 50
 

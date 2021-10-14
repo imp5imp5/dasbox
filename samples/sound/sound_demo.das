@@ -54,7 +54,7 @@ def update(var s: Slider &): bool
 
 def render(s: Slider & const)
     text_out(s.pos.x, s.pos.y - 20.0, "{s.name} = {s.curVal}", 0xFFFFFF)
-    fill_rect(s.pos.x, s.pos.y, s.size.x, s.size.y, currentControlName == s.name ? 0x609030 : 0x606030)
+    fill_rect(s.pos.x, s.pos.y, s.size.x, s.size.y, currentControlName == s.name ? 0x309060 : 0x306060)
     fill_rect(s.pos.x + (s.curVal - s.minVal) / (s.maxVal - s.minVal) * s.size.x, s.pos.y, 3.0, s.size.y, 0xFFFFFF)
 
 

@@ -6,11 +6,11 @@ require daslib/random
 require strings
 
 let
-    BIRD_COLOR      = 0x703FFF
-    GROUND_COLOR    = 0x224050
-    COLUMN_COLOR    = 0x889944
-    SKY_COLOR       = 0xFFE0B0
-    BACKGROUND_COLOR= 0xD6D6A6
+    BIRD_COLOR      = 0xFF3F70
+    GROUND_COLOR    = 0x504022
+    COLUMN_COLOR    = 0x449988
+    SKY_COLOR       = 0xB0E0FF
+    BACKGROUND_COLOR= 0xA6D6D6
 
     FONT_WIDTH = 4
     FONT_HEIGHT = 5

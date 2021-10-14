@@ -10,6 +10,7 @@
 
 using namespace das;
 
+#define SWAP_RB(c) (((c) & 0xFF00FF00) | (((c) & 0x000000FF) << 16) | (((c) & 0x00FF0000) >> 16))
 
 static sf::RenderStates primitive_rs;
 static sf::Font * font_mono = nullptr;
@@ -45,7 +46,7 @@ int get_desktop_height()
 
 sf::Color conv_color(uint32_t c)
 {
-  return sf::Color(c & 0xFF, c >> 24, (c >> 16) & 0xFF, (c >> 8) & 0xFF);
+  return sf::Color((c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF, c >> 24);
 }
 
 void fill_rect(float x, float y, float width, float height, uint32_t color)
@@ -573,7 +574,10 @@ Image create_image(int width, int height, const das::TArray<uint32_t> & pixels)
   uint32_t *data = (uint32_t *)b.img->getPixelsPtr();
   int size = std::min(width * height, int(pixels.size));
   for (int i = 0; i < size; i++)
-    data[i] = pixels[i];
+  {
+    uint32_t c = pixels[i];
+    data[i] = SWAP_RB(c);
+  }
 
   b.cached_pixels = (uint32_t *)b.img->getPixelsPtr();
   b.width = width;
@@ -628,7 +632,14 @@ void get_image_data(const Image & b, das::TArray<uint32_t> & out_pixels)
     count = out_pixels.size;
 
   if (count && b.cached_pixels)
-    memcpy(out_pixels.data, b.cached_pixels, count * sizeof(uint32_t));
+  {
+    int size = std::min(b.width * b.height, int(out_pixels.size));
+    for (int i = 0; i < size; i++)
+    {
+      uint32_t c = b.cached_pixels[i];
+      out_pixels.data[i] = SWAP_RB(c);
+    }
+  }
 }
 
 void set_image_data(Image & b, const das::TArray<uint32_t> & pixels)
@@ -642,7 +653,14 @@ void set_image_data(Image & b, const das::TArray<uint32_t> & pixels)
     count = pixels.size;
 
   if (count && b.cached_pixels)
-    memcpy(b.cached_pixels, pixels.data, count * sizeof(uint32_t));
+  {
+    int size = std::min(b.width * b.height, int(pixels.size));
+    for (int i = 0; i < size; i++)
+    {
+      uint32_t c = pixels[i];
+      b.cached_pixels[i] = SWAP_RB(c);
+    }
+  }
 }
 
 void set_image_pixel(Image & b, int x, int y, uint32_t color)
@@ -650,14 +668,17 @@ void set_image_pixel(Image & b, int x, int y, uint32_t color)
   if (x >= 0 && y >= 0 && x < b.width && y < b.height && b.cached_pixels)
   {
     b.applied = false;
-    b.cached_pixels[y * b.width + x] = color;
+    b.cached_pixels[y * b.width + x] = SWAP_RB(color);
   }
 }
 
 uint32_t get_image_pixel(const Image & b, int x, int y)
 {
   if (x >= 0 && y >= 0 && x < b.width && y < b.height && b.cached_pixels)
-    return b.cached_pixels[y * b.width + x];
+  {
+    uint32_t c = b.cached_pixels[y * b.width + x];
+    return SWAP_RB(c);
+  }
   else
     return 0;
 }
@@ -686,6 +707,7 @@ void make_image_color_transparent(Image & image, uint32_t color)
     return;
 
   color = color & 0x00FFFFFF;
+  color = SWAP_RB(color);
   image.applied = false;
   int count = image.width * image.height;
   for (int i = 0; i < count; i++)

@@ -38,3 +38,15 @@ Create file with VS Code settings: {your_project_dir}/.vscode/settings.json
 
 Open folder with your project (not a single .das-file)
 Font (optionally) : https://www.jetbrains.com/lp/mono/
+
+
+Debugging (experimental):
+Add these 2 lines after the 'require' section. Then press F5.
+----------------------------
+options debugger
+require daslib/debug
+----------------------------
+
+
+
+

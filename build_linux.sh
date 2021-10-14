@@ -8,6 +8,8 @@ rm -rf ./build/ 2>/dev/null
 mkdir build
 pushd build
 cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DDAS_CONFIG_INCLUDE_DIR=$INCLUDE_DAS ..
+make libUriParser -j $CPU_COUNT
+make libDasModuleUriparser -j $CPU_COUNT
 make libDaScript -j $CPU_COUNT
 popd
 popd

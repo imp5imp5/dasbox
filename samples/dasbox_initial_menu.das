@@ -167,9 +167,9 @@ def fill_menu_items()
           clipboardText = minimal_sample,
           newApplication = true,
           description <- [{string[]
+              "Press Enter to create new project.";
               "Press Ctrl+C to copy code of the minimal sample to clipboard.";
-              "Execution: run from command line \"dasbox.exe <your_app.das>\"";
-              "Source: samples/minimal.das"
+              "Execution: run from command line \"dasbox.exe <your_app.das>\""
               }]
         ]])
 

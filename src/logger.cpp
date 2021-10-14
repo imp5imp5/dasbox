@@ -154,9 +154,15 @@ void Logger::addString(const string & s)
   if (duplicateLog)
   {
     if (state == LOGGER_ERROR)
+    {
       cerr << s;
+      cerr.flush();
+    }
     else
+    {
       cout << s;
+      cout.flush();
+    }
   }
 
   if (logStrings.empty())

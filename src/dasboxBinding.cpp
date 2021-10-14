@@ -14,6 +14,7 @@
 #include <SFML/Window/Clipboard.hpp>
 #include <unordered_map>
 #include <string>
+#include <fstream>
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN

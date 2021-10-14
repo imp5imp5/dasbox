@@ -122,9 +122,9 @@ def create_project(name: string): bool
     fopen(d + "/" + name + "/.vscode/settings.json", "wt") <| $(f)
         if f != null
             fwrite(f, vscode_settings)
-            
+
     return result
-    
+
 
 def add_projects_to_menu()
     let atdir = find_projects_dir()
@@ -149,9 +149,9 @@ def add_projects_to_menu()
                               }]
                     ]])
 
-    
-def fill_menu_items()     
-    menuItems |> clear() 
+
+def fill_menu_items()
+    menuItems |> clear()
     menuItems |> emplace(
         [[MenuItem name = "About",
                   clipboardText = "https://github.com/imp5imp5/dasbox",

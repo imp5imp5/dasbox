@@ -521,6 +521,39 @@ void process_args(int argc, char **argv)
           else
             print_error("Main .das file is already set ('%s')\n", main_das_file_name.c_str());
         }
+        else
+        {
+          if (arg.back() == '\\' || arg.back() == '/')
+            arg.pop_back();
+
+          if (!arg.empty())
+          {
+            const char * p = std::max(strrchr(arg.c_str(), '\\'), strrchr(arg.c_str(), '/'));
+            string projectName(p ? string(p + 1) : arg);
+
+            if (fs::is_file_exists((arg + "/main.das").c_str()))
+            {
+              main_das_file_name = "main.das";
+              root_dir = arg;
+            }
+            else if (fs::is_file_exists((arg + "/" + projectName + "_main.das").c_str()))
+            {
+              main_das_file_name = projectName + "_main.das";
+              root_dir = arg;
+            }
+            else
+            {
+              for (auto & ch: projectName)
+                ch = tolower(ch);
+
+              if (fs::is_file_exists((arg + "/" + projectName + "_main.das").c_str()))
+              {
+                main_das_file_name = projectName + "_main.das";
+                root_dir = arg;
+              }
+            }
+          }
+        }
       }
 
       if (arg == "--trust")
@@ -534,6 +567,9 @@ void process_args(int argc, char **argv)
 
       if (arg == "--dasbox-console" || arg == "--")
         log_to_console = true;
+
+      if (arg == "--")
+        break;
     }
   }
 }

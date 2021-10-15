@@ -560,6 +560,10 @@ Image create_image_wh(int width, int height)
 
   b.tex = new sf::Texture();
   b.tex->loadFromImage(*b.img);
+
+  image_pointers.insert(b.img);
+  texture_pointers.insert(b.tex);
+
   return b;
 }
 
@@ -570,6 +574,7 @@ Image create_image(int width, int height, const das::TArray<uint32_t> & pixels)
 
   Image b;
   b.img = new sf::Image();
+  image_pointers.insert(b.img);
   b.img->create(width, height);
   uint32_t *data = (uint32_t *)b.img->getPixelsPtr();
   int size = std::min(width * height, int(pixels.size));
@@ -585,6 +590,8 @@ Image create_image(int width, int height, const das::TArray<uint32_t> & pixels)
 
   b.tex = new sf::Texture();
   b.tex->loadFromImage(*b.img);
+  texture_pointers.insert(b.tex);
+
   return b;
 }
 
@@ -619,6 +626,10 @@ Image create_image_from_file(const char * file_name)
 
   b.tex = new sf::Texture();
   b.tex->loadFromImage(*b.img);
+
+  image_pointers.insert(b.img);
+  texture_pointers.insert(b.tex);
+
   return b;
 }
 
@@ -757,8 +768,10 @@ inline void apply_texture(const Image & image)
   {
     bool repeat = b->tex->isRepeated();
     bool smooth = b->tex->isSmooth();
+    texture_pointers.erase(b->tex);
     delete b->tex;
     b->tex = new sf::Texture();
+    texture_pointers.insert(b->tex);
     b->tex->setRepeated(repeat);
     b->tex->setSmooth(smooth);
     b->tex->loadFromImage(*b->img);

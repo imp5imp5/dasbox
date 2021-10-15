@@ -63,16 +63,21 @@ endif()
 if(UNIX)
   add_executable(dasbox ${SRC})
   set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
-  set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fno-rtti -fno-exceptions -fomit-frame-pointer -fno-stack-protector -s -DDAS_FUSION=2 -DDAS_DEBUGGER=0 -DNDEBUG=1")
+  set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fno-rtti -fno-exceptions -fomit-frame-pointer -fno-stack-protector -s -DDAS_FUSION=2 -DDAS_DEBUGGER=1 -DNDEBUG=1")
+  set(CMAKE_CXX_FLAGS_DEBUG "-O0 -fno-rtti -fno-exceptions -fomit-frame-pointer -fno-stack-protector")
   target_link_libraries(
     dasbox
     libDasModuleUriparser
     libUriParser
     libDaScript
-    sfml-network-s
-    sfml-graphics-s
-    sfml-window-s
-    sfml-system-s
+    optimized sfml-network-s
+    optimized sfml-graphics-s
+    optimized sfml-window-s
+    optimized sfml-system-s
+    debug sfml-network-s-d
+    debug sfml-graphics-s-d
+    debug sfml-window-s-d
+    debug sfml-system-s-d
     X11
     udev
     pthread
@@ -83,4 +88,3 @@ if(UNIX)
     Xcursor
   )
 endif()
-

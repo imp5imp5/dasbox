@@ -11,7 +11,7 @@ let minimal_sample = "require daslib/media
 
 [export]
 def initialize
-    return
+    set_window_title(\"__TITLE__\")
 
 [export]
 def act(dt: float)
@@ -108,18 +108,21 @@ def create_project(name: string): bool
     if empty(d)
         mkdir(get_dasbox_initial_dir() + "/projects")
     d = find_projects_dir()
+
+    let fsName = replace(name, " ", "_")
+
     if empty(d)
         panic("Cannot create direcory 'projects'")
-    if is_file_exists(d + "/" + name)
+    if is_file_exists(d + "/" + fsName)
         panic("Cannot create project '{name}'. Directory is already exists")
-    mkdir(d + "/" + name)
-    fopen(d + "/" + name + "/" + name + "_main.das", "wt") <| $(f)
+    mkdir(d + "/" + fsName)
+    fopen(d + "/" + fsName + "/" + to_lower(fsName) + "_main.das", "wt") <| $(f)
         if f != null
-            fwrite(f, minimal_sample)
+            fwrite(f, replace(minimal_sample, "__TITLE__", name))
             result = true
 
-    mkdir(d + "/" + name + "/.vscode")
-    fopen(d + "/" + name + "/.vscode/settings.json", "wt") <| $(f)
+    mkdir(d + "/" + fsName + "/.vscode")
+    fopen(d + "/" + fsName + "/.vscode/settings.json", "wt") <| $(f)
         if f != null
             fwrite(f, vscode_settings)
 
@@ -138,10 +141,10 @@ def add_projects_to_menu()
             if st.is_dir && fname != "." && fname != ".."
                 menuItems |> emplace(
                     [[MenuItem
-                          name = fname,
+                          name = replace(fname, "_", " "),
                           clipboardText = dirName,
                           editorDir = dirName,
-                          source = dirName + "/" + fname + "_main.das",
+                          source = dirName + "/" + to_lower(fname) + "_main.das",
                           description <- [{string[]
                               "{dirName}";
                               "Enter - Execute";
@@ -386,10 +389,8 @@ def update_enter_name(dt: float)
             if length(enteredName) > 0
                 enteredName |> resize(length(enteredName) - 1)
         elif length(enteredName) < 32
-            if code == uint(' ')
-                enteredName |> push(uint8('_'))
-            elif ((code >= uint('A') && code <= uint('Z')) || (code >= uint('a') && code <= uint('z')) ||
-                (code >= uint('0') && code <= uint('9')) || code == uint('-') || code == uint('_'))
+            if ((code >= uint('A') && code <= uint('Z')) || (code >= uint('a') && code <= uint('z')) ||
+                (code >= uint('0') && code <= uint('9')) || code == uint('-') || code == uint('_') || code == uint(' '))
                 enteredName |> push(uint8(code))
             elif code > 0x20
                 enteredName |> push(uint8('?'))

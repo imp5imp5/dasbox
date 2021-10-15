@@ -26,12 +26,12 @@ const sf::BlendMode BlendPremultipliedAlpha(sf::BlendMode::One, sf::BlendMode::O
 
 int get_screen_width()
 {
-  return g_render_target ? g_render_target->getSize().x : 1280;
+  return screen_width;
 }
 
 int get_screen_height()
 {
-  return g_render_target ? g_render_target->getSize().y : 720;
+  return screen_height;
 }
 
 int get_desktop_width()

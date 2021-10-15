@@ -155,12 +155,13 @@ void set_resolution(int width, int height)
 {
   delayed_resolution_set = (width != 1280 && height != 720);
 
+  screen_width = width;
+  screen_height = height;
+
   sf::Vector2i res = sf::Vector2i(width, height);
   if (res != delayed_resolution.second)
   {
     delayed_resolution = make_pair(true, res);
-    screen_width = width;
-    screen_height = height;
     recreate_window = true;
   }
 }

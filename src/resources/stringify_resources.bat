@@ -10,6 +10,8 @@ call python stringify.py --array OpenSans-Regular.ttf font.OpenSans-Regular.ttf.
 call python stringify.py --array JetBrainsMonoNL-Medium.ttf font.JetBrainsMonoNL-Medium.ttf.inl
 
 %L% algorithm.das
+%L% array_boost.das
+%L% ast_block_to_loop.das
 %L% apply.das
 %L% apply_in_context.das
 %L% assert_once.das
@@ -28,6 +30,7 @@ call python stringify.py --array JetBrainsMonoNL-Medium.ttf font.JetBrainsMonoNL
 %L% jobque_boost.das
 %L% json.das
 %L% json_boost.das
+%L% live.das
 %L% lpipe.das
 %L% random.das
 %L% regex.das

@@ -3,6 +3,16 @@ static const char algorithm_das[] =
 ;
 daslib_inc_files[string("algorithm.das")] = new das::TextFileInfo(algorithm_das, sizeof(algorithm_das) - 1, false);
 
+static const char array_boost_das[] =
+#include "resources/daslib_str/array_boost.das.inl"
+;
+daslib_inc_files[string("array_boost.das")] = new das::TextFileInfo(array_boost_das, sizeof(array_boost_das) - 1, false);
+
+static const char ast_block_to_loop_das[] =
+#include "resources/daslib_str/ast_block_to_loop.das.inl"
+;
+daslib_inc_files[string("ast_block_to_loop.das")] = new das::TextFileInfo(ast_block_to_loop_das, sizeof(ast_block_to_loop_das) - 1, false);
+
 static const char apply_das[] =
 #include "resources/daslib_str/apply.das.inl"
 ;
@@ -92,6 +102,11 @@ static const char json_boost_das[] =
 #include "resources/daslib_str/json_boost.das.inl"
 ;
 daslib_inc_files[string("json_boost.das")] = new das::TextFileInfo(json_boost_das, sizeof(json_boost_das) - 1, false);
+
+static const char live_das[] =
+#include "resources/daslib_str/live.das.inl"
+;
+daslib_inc_files[string("live.das")] = new das::TextFileInfo(live_das, sizeof(live_das) - 1, false);
 
 static const char lpipe_das[] =
 #include "resources/daslib_str/lpipe.das.inl"

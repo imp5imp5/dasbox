@@ -270,21 +270,14 @@ struct PlaygroundContext final : das::Context
 
 struct DasFile
 {
-  PlaygroundContext * ctx;
+  das::smart_ptr<PlaygroundContext> ctx;
   ModuleGroup dummyLibGroup;
   das::smart_ptr<fs::DasboxFsFileAccess> fAccess;
   ProgramPtr program;
 
   DasFile()
   {
-    ctx = nullptr;
     fAccess = make_smart<fs::DasboxFsFileAccess>();
-  }
-
-  ~DasFile()
-  {
-    delete ctx;
-    ctx = nullptr;
   }
 };
 
@@ -309,6 +302,7 @@ Context * dasbox_get_clone_context(Context * ctx, uint32_t category) {
 
 
 static DasFile * das_file = new DasFile();
+static DasFile * das_live_file = new DasFile();
 static float time_to_check = 1.0f;
 
 SimFunction * fn_initialize = nullptr;
@@ -316,6 +310,31 @@ SimFunction * fn_act = nullptr;
 SimFunction * fn_draw = nullptr;
 SimFunction * fn_finalize = nullptr;
 
+SimFunction * fn_live_set_new_context = nullptr;
+
+
+static void find_live_function(SimFunction ** fn, const char * fn_name)
+{
+  *fn = das_live_file->ctx->findFunction(fn_name);
+  if (!*fn)
+    print_error("Function '%s' not found (live)", fn_name);
+}
+
+static void set_new_live_context(Context * ctx, bool full_reload)
+{  
+  das_live_file->ctx->runWithCatch([&](){
+      das_invoke_function<void>::invoke<smart_ptr<Context>, bool>(das_live_file->ctx.get(), nullptr, fn_live_set_new_context, ctx, full_reload);
+    });
+
+  if (const char * exception_text = das_live_file->ctx->getException())
+  {
+    string s;
+    s += exception_text;
+    s += "\n";
+    s += das_live_file->ctx->getStackWalk(nullptr, true, true);
+    print_exception("%s", s.c_str());
+  }
+}
 
 static void find_function(SimFunction ** fn, const char * fn_name, bool required)
 {
@@ -349,10 +368,10 @@ void exec_function(SimFunction * fn, vec4f * args)
 }
 
 
-bool load_module(const string & file_name)
+bool load_module(const string & file_name, DasFile ** das_file)
 {
-  delete das_file;
-  das_file = new DasFile;
+  delete *das_file;
+  *das_file = new DasFile;
 
   fn_initialize = nullptr;
   fn_act = nullptr;
@@ -367,15 +386,15 @@ bool load_module(const string & file_name)
 
   print_note("Executing file '%s'", file_name.c_str());
 
-  das_file->program = compileDaScript(file_name, das_file->fAccess, logger, das_file->dummyLibGroup);
-  if (das_file->program->failed())
+  (*das_file)->program = compileDaScript(file_name, (*das_file)->fAccess, logger, (*das_file)->dummyLibGroup);
+  if ((*das_file)->program->failed())
   {
     string s;
     s += "Failed to compile: '";
     s += file_name;
     s += "'\n";
 
-    for (Error & e : das_file->program->errors)
+    for (Error & e : (*das_file)->program->errors)
     {
       s += "\n";
       s += reportError(e.at, e.what, e.extra, e.fixme, e.cerr);
@@ -386,15 +405,15 @@ bool load_module(const string & file_name)
   }
 
   // create daScript context
-  das_file->ctx = new PlaygroundContext(das_file->program->getContextStackSize());
-  if (!das_file->program->simulate(*das_file->ctx, logger))
+  (*das_file)->ctx = make_smart<PlaygroundContext>((*das_file)->program->getContextStackSize());
+  if (!(*das_file)->program->simulate(*(*das_file)->ctx, logger))
   {
     string s;
     s += "Failed to simulate '";
     s += file_name;
     s += "'\n";
 
-    for (Error & e : das_file->program->errors)
+    for (Error & e : (*das_file)->program->errors)
     {
       s += "\n";
       s += reportError(e.at, e.what, e.extra, e.fixme, e.cerr);
@@ -405,6 +424,12 @@ bool load_module(const string & file_name)
     return false;
   }
 
+  return true;
+}
+
+
+void find_dasbox_api_functions()
+{
   find_function(&fn_initialize, "initialize", false);
   find_function(&fn_act, "act", true);
   find_function(&fn_draw, "draw", true);
@@ -416,13 +441,17 @@ bool load_module(const string & file_name)
   exec_function(fn_initialize, nullptr);
   inside_initialization = false;
   check_delayed_variables();
+}
 
-  return true;
+
+void find_dasbox_live_api_fnctions()
+{
+  find_live_function(&fn_live_set_new_context, "set_new_context");
 }
 
 void set_application_screen();
 
-void das_file_manual_reload()
+void das_file_manual_reload(bool hard_reload)
 {
   sound::stop_all_sounds();
   builtin_sleep(50);
@@ -435,18 +464,33 @@ void das_file_manual_reload()
   logger.clear();
   input::reset_input();
   reset_time_after_start();
-  load_module(main_das_file_name);
+  load_module(main_das_file_name, &das_file);
+  set_new_live_context(das_file->ctx.get(), hard_reload);
+  find_dasbox_api_functions();
 }
 
 void das_file_reload_update(float dt)
 {
-  if (input::get_key_down(sf::Keyboard::F5) ||
-    (input::get_key_down(sf::Keyboard::R) &&
-    (input::get_key(sf::Keyboard::LControl) || input::get_key(sf::Keyboard::RControl))))
+  bool reload = false;
+  bool hardReload = false;
+  bool ctrl = input::get_key(sf::Keyboard::LControl) || input::get_key(sf::Keyboard::RControl);
+  bool alt = input::get_key(sf::Keyboard::LAlt) || input::get_key(sf::Keyboard::RAlt);
+
+
+  if (input::get_key_down(sf::Keyboard::F5) || (ctrl && input::get_key_down(sf::Keyboard::R)))
+    reload = true;
+
+  if ((ctrl && input::get_key_down(sf::Keyboard::F5)) || (ctrl && alt && input::get_key_down(sf::Keyboard::R)))
+  {
+    reload = true;
+    hardReload = true;
+  }
+
+  if (reload)
   {
     if (!main_das_file_name.empty())
     {
-      das_file_manual_reload();
+      das_file_manual_reload(hardReload);
       time_to_check += 0.1f;
       return;
     }
@@ -456,7 +500,7 @@ void das_file_reload_update(float dt)
   if (time_to_check < 0)
   {
     time_to_check = is_window_active() ? 999999.0f : 0.4f;
-    bool reload = false;
+    reload = false;
     for (auto f : das_file->fAccess->filesOpened)
       if (f.second != fs::get_file_time(f.first.c_str()))
       {
@@ -465,7 +509,7 @@ void das_file_reload_update(float dt)
       }
 
     if (reload)
-      das_file_manual_reload();
+      das_file_manual_reload(false);
   }
 }
 
@@ -696,7 +740,7 @@ void return_to_previous_script()
   return_to_root.clear();
   trust_mode = return_to_trust_mode;
   return_to_trust_mode = false;
-  das_file_manual_reload();
+  das_file_manual_reload(true);
 }
 
 
@@ -732,7 +776,7 @@ void exec_script_impl()
   }
 
   main_das_file_name = fs::extract_file_name(scheduled_script_name.c_str());
-  das_file_manual_reload();
+  das_file_manual_reload(true);
 }
 
 void dasbox_execute(const char * file_name)
@@ -803,7 +847,11 @@ void run_das_for_plugin(const string & file_name, const string & main_func_name)
 void run_das_for_ui()
 {
   if (!main_das_file_name.empty())
-    load_module(main_das_file_name);
+  {
+    load_module(main_das_file_name, &das_file);
+    set_new_live_context(das_file->ctx.get(), false);
+    find_dasbox_api_functions();
+  }
 
   /////////////////////////////////////////////////////////
   create_window();
@@ -969,7 +1017,7 @@ void run_das_for_ui()
       g_window->close();
   }
 
-  exec_function(fn_finalize, nullptr);
+ // exec_function(fn_finalize, nullptr);
 
   sound::finalize();
   graphics::finalize();
@@ -1063,6 +1111,11 @@ int main(int argc, char **argv)
   NEED_MODULE(ModuleGraphics);
   NEED_MODULE(ModuleDasbox);
   NEED_MODULE(ModuleSound);
+
+  das_live_file = new DasFile();
+  load_module("daslib/live.das", &das_live_file);
+  find_dasbox_live_api_fnctions();
+
 
   if (run_for_plugin && trust_mode)
   {

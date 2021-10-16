@@ -237,6 +237,10 @@ bool is_file_exists(const char * file_name)
 {
   if (!file_name)
     return false;
+
+  if (!strcmp(file_name, "daslib/live.das"))  // TODO: FIX ME !!!
+    return true;
+
   struct stat buffer;
   return stat(file_name, &buffer) == 0;
 }

@@ -315,6 +315,9 @@ SimFunction * fn_live_set_new_context = nullptr;
 
 static void find_live_function(SimFunction ** fn, const char * fn_name)
 {
+  if (!das_live_file->ctx.get())
+    return;
+
   *fn = das_live_file->ctx->findFunction(fn_name);
   if (!*fn)
     print_error("Function '%s' not found (live)", fn_name);
@@ -322,6 +325,9 @@ static void find_live_function(SimFunction ** fn, const char * fn_name)
 
 static void set_new_live_context(Context * ctx, bool full_reload)
 {
+  if (!das_live_file->ctx.get())
+    return;
+
   das_live_file->ctx->runWithCatch([&](){
       das_invoke_function<void>::invoke<smart_ptr<Context>, bool>(das_live_file->ctx.get(), nullptr, fn_live_set_new_context, ctx, full_reload);
     });
@@ -338,6 +344,9 @@ static void set_new_live_context(Context * ctx, bool full_reload)
 
 static void find_function(SimFunction ** fn, const char * fn_name, bool required)
 {
+  if (!das_file->ctx.get())
+    return;
+
   *fn = das_file->ctx->findFunction(fn_name);
   if (!*fn)
   {
@@ -463,8 +472,12 @@ void das_file_manual_reload(bool hard_reload)
   input::reset_input();
   reset_time_after_start();
   load_module(main_das_file_name, &das_file);
-  set_new_live_context(das_file->ctx.get(), hard_reload);
-  find_dasbox_api_functions(hard_reload);
+
+  if (das_file->ctx.get())
+  {
+    set_new_live_context(das_file->ctx.get(), hard_reload);
+    find_dasbox_api_functions(hard_reload);
+  }
 }
 
 void das_file_reload_update(float dt)
@@ -847,8 +860,11 @@ void run_das_for_ui()
   if (!main_das_file_name.empty())
   {
     load_module(main_das_file_name, &das_file);
-    set_new_live_context(das_file->ctx.get(), true);
-    find_dasbox_api_functions(true);
+    if (das_file->ctx.get())
+    {
+      set_new_live_context(das_file->ctx.get(), true);
+      find_dasbox_api_functions(true);
+    }
   }
 
   /////////////////////////////////////////////////////////

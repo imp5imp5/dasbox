@@ -11,6 +11,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <math.h>
+#include <float.h>
 #include <setjmp.h>
 #include "input.h"
 #include "graphics.h"
@@ -426,7 +427,7 @@ bool load_module(const string & file_name, DasFile ** das_file)
 }
 
 
-void find_dasbox_api_functions()
+void find_dasbox_api_functions(bool hard_reload)
 {
   find_function(&fn_initialize, "initialize", false);
   find_function(&fn_act, "act", true);
@@ -434,7 +435,8 @@ void find_dasbox_api_functions()
 
   inside_initialization = true;
   prepare_delayed_variables();
-  exec_function(fn_initialize, nullptr);
+  vec4f arg = v_make_vec4f(hard_reload ? (2.0 - FLT_EPSILON) : 0, 0, 0, 0);
+  exec_function(fn_initialize, &arg);
   inside_initialization = false;
   check_delayed_variables();
 }
@@ -462,7 +464,7 @@ void das_file_manual_reload(bool hard_reload)
   reset_time_after_start();
   load_module(main_das_file_name, &das_file);
   set_new_live_context(das_file->ctx.get(), hard_reload);
-  find_dasbox_api_functions();
+  find_dasbox_api_functions(hard_reload);
 }
 
 void das_file_reload_update(float dt)
@@ -845,8 +847,8 @@ void run_das_for_ui()
   if (!main_das_file_name.empty())
   {
     load_module(main_das_file_name, &das_file);
-    set_new_live_context(das_file->ctx.get(), false);
-    find_dasbox_api_functions();
+    set_new_live_context(das_file->ctx.get(), true);
+    find_dasbox_api_functions(true);
   }
 
   /////////////////////////////////////////////////////////

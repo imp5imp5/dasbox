@@ -295,6 +295,21 @@ def fill_menu_items()
               }]
         ]])
 
+    menuItems |> emplace(
+        [[MenuItem name = "Basic ECS Demo",
+          image <- create_image("ecs/_preview_basic.png"),
+          source = "ecs/decs_demo_basic.das",
+          description <- [{string[]
+              "Entity Component System 'DECS'";
+              "";
+              "Controls:";
+              "Esc - Return to this menu";
+              "Click - Create new particle";
+              "";
+              "Source: samples/ecs/decs_demo_basic.das"
+              }]
+        ]])
+
 
 def recreate_menu()
 

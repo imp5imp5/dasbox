@@ -88,6 +88,6 @@ popd
 
 rem ============ copy ==================
 mkdir bin
-copy cmake_tmp\Release\dasbox.exe bin
+copy cmake_tmp\%CONFIGURATION%\dasbox.exe bin
 
 

@@ -319,8 +319,3 @@ def draw()
     if lives >= 0
         ship_render(ship)
 
-
-//[export]
-//def finalize
-//    print("finalize\n")
-

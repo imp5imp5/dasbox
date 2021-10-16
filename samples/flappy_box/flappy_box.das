@@ -197,8 +197,3 @@ def draw()
     render_bird(bird)
     draw_score()
 
-
-//[export]
-//def finalize
-//    print("finalize\n")
-

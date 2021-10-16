@@ -1042,7 +1042,7 @@ void delete_allocated_images()
   for (auto && texture : texture_pointers)
     delete texture;
   texture_pointers.clear();
-  
+
   for (auto && image : image_pointers)
     delete image;
   image_pointers.clear();

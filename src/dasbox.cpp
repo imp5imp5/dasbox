@@ -308,7 +308,6 @@ static float time_to_check = 1.0f;
 SimFunction * fn_initialize = nullptr;
 SimFunction * fn_act = nullptr;
 SimFunction * fn_draw = nullptr;
-SimFunction * fn_finalize = nullptr;
 
 SimFunction * fn_live_set_new_context = nullptr;
 
@@ -321,7 +320,7 @@ static void find_live_function(SimFunction ** fn, const char * fn_name)
 }
 
 static void set_new_live_context(Context * ctx, bool full_reload)
-{  
+{
   das_live_file->ctx->runWithCatch([&](){
       das_invoke_function<void>::invoke<smart_ptr<Context>, bool>(das_live_file->ctx.get(), nullptr, fn_live_set_new_context, ctx, full_reload);
     });
@@ -376,7 +375,6 @@ bool load_module(const string & file_name, DasFile ** das_file)
   fn_initialize = nullptr;
   fn_act = nullptr;
   fn_draw = nullptr;
-  fn_finalize = nullptr;
 
   if (!fs::is_file_exists(file_name.c_str()))
   {
@@ -433,8 +431,6 @@ void find_dasbox_api_functions()
   find_function(&fn_initialize, "initialize", false);
   find_function(&fn_act, "act", true);
   find_function(&fn_draw, "draw", true);
-  find_function(&fn_finalize, "finalize", false);
-  //  find_function(&fn_initialize_ecs, "initialize_ecs", false);
 
   inside_initialization = true;
   prepare_delayed_variables();
@@ -1017,7 +1013,6 @@ void run_das_for_ui()
       g_window->close();
   }
 
- // exec_function(fn_finalize, nullptr);
 
   sound::finalize();
   graphics::finalize();
@@ -1052,7 +1047,7 @@ int main(int argc, char **argv)
   locale utf8Locale("en_US.UTF-8");
   g_locale = &utf8Locale;
 
-  
+
   string initialDirString = fs::get_current_dir();
   initial_dir = initialDirString.c_str();
 

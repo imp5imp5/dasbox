@@ -169,7 +169,7 @@ void set_resolution(int width, int height)
 
 void set_rendering_upscale(int upscale)
 {
-  delayed_upscale_set = (upscale != 0);
+  delayed_upscale_set = (upscale != screen_global_scale);
 
   if (upscale != delayed_upscale.second)
   {
@@ -180,7 +180,8 @@ void set_rendering_upscale(int upscale)
 
 void disable_auto_upscale()
 {
-  set_rendering_upscale(0);
+  set_rendering_upscale(1);
+  delayed_upscale_set = true;
 }
 
 void set_mouse_cursor_visible(bool visible)
@@ -246,7 +247,10 @@ void check_delayed_variables()
     set_resolution(1280, 720);
 
   if (!delayed_upscale_set)
+  {
     set_rendering_upscale(0);
+    delayed_upscale.first = true;
+  }
 }
 //-------------------------------------------------------------------------------------
 
@@ -306,10 +310,8 @@ static DasFile * das_file = new DasFile();
 static DasFile * das_live_file = new DasFile();
 static float time_to_check = 1.0f;
 
-SimFunction * fn_initialize = nullptr;
 SimFunction * fn_act = nullptr;
 SimFunction * fn_draw = nullptr;
-
 SimFunction * fn_live_set_new_context = nullptr;
 
 
@@ -382,7 +384,6 @@ bool load_module(const string & file_name, DasFile ** das_file)
   delete *das_file;
   *das_file = new DasFile;
 
-  fn_initialize = nullptr;
   fn_act = nullptr;
   fn_draw = nullptr;
 
@@ -438,16 +439,8 @@ bool load_module(const string & file_name, DasFile ** das_file)
 
 void find_dasbox_api_functions(bool hard_reload)
 {
-  find_function(&fn_initialize, "initialize", false);
   find_function(&fn_act, "act", true);
   find_function(&fn_draw, "draw", true);
-
-  inside_initialization = true;
-  prepare_delayed_variables();
-  vec4f arg = v_make_vec4f(hard_reload ? (2.0 - FLT_EPSILON) : 0, 0, 0, 0);
-  exec_function(fn_initialize, &arg);
-  inside_initialization = false;
-  check_delayed_variables();
 }
 
 
@@ -457,6 +450,19 @@ void find_dasbox_live_api_fnctions()
 }
 
 void set_application_screen();
+
+void initialize_das_file(bool hard_reload)
+{
+  if (das_file->ctx.get())
+  {
+    inside_initialization = true;
+    prepare_delayed_variables();
+    set_new_live_context(das_file->ctx.get(), hard_reload);
+    find_dasbox_api_functions(hard_reload);
+    inside_initialization = false;
+    check_delayed_variables();
+  }
+}
 
 void das_file_manual_reload(bool hard_reload)
 {
@@ -472,12 +478,7 @@ void das_file_manual_reload(bool hard_reload)
   input::reset_input();
   reset_time_after_start();
   load_module(main_das_file_name, &das_file);
-
-  if (das_file->ctx.get())
-  {
-    set_new_live_context(das_file->ctx.get(), hard_reload);
-    find_dasbox_api_functions(hard_reload);
-  }
+  initialize_das_file(hard_reload);
 }
 
 void das_file_reload_update(float dt)
@@ -870,11 +871,7 @@ void run_das_for_ui()
   if (!main_das_file_name.empty())
   {
     load_module(main_das_file_name, &das_file);
-    if (das_file->ctx.get())
-    {
-      set_new_live_context(das_file->ctx.get(), true);
-      find_dasbox_api_functions(true);
-    }
+    initialize_das_file(true);
   }
 
   /////////////////////////////////////////////////////////

@@ -14,7 +14,7 @@ endif()
 
 add_definitions(-DSFML_STATIC)
 
-file(GLOB SRC *.cpp)
+file(GLOB SRC *.cpp *.h)
 
 include_directories(
   .
@@ -29,6 +29,7 @@ link_directories(
 )
 
 if(MSVC)
+  set(SRC ${SRC} icon/icon.rc)
   link_directories(../3rdParty/SFML/extlibs/libs-msvc/x64)
 endif()
 

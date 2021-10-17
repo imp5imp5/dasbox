@@ -635,6 +635,15 @@ void print_usage()
 }
 
 
+void set_application_icon()
+{
+#if _WIN32
+  HICON hIcon = (HICON) LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(1), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE);
+  unsigned res = SetClassLongPtr((HWND)g_window->getSystemHandle(), GCLP_HICON, (LONG_PTR)hIcon);
+#endif
+}
+
+
 void create_window()
 {
   fetch_cerr();
@@ -694,6 +703,7 @@ void create_window()
   fetch_cerr();
   reinterpret_error_as_note(true);
   g_window = new sf::RenderWindow(videoMode, windowTitle, sf::Style::Close, windowSettings);
+  set_application_icon();
   fetch_cerr();
   reinterpret_error_as_note(false);
 

@@ -392,7 +392,7 @@ def update_enter_name(dt: float)
     if get_key_press(VK_RETURN) && isNameValid
         enteringName = false
         if create_project(string(enteredName))
-            jumpToName = string(enteredName)
+            jumpToName = replace(string(enteredName), "_", " ")
             recreate_menu()
         return
 

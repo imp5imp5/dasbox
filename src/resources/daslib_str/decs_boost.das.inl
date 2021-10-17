@@ -6,6 +6,7 @@
 "options no_unused_block_arguments = false\n"
 "options no_unused_function_arguments = false\n"
 "options no_aot\n"
+"options multiple_contexts\n"
 "\n"
 "module decs_boost shared private\n"
 "\n"

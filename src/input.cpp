@@ -349,7 +349,7 @@ void joy_axis_position(int axis_idx, float axis_pos)
       axis_pos = 0.0f;
     else
       axis_pos = sign(axis_pos) * (fabsf(axis_pos) - 1.0f) * (1.f / 99.f);
-    gamepad_axes[axis_idx] = clamp(axis_pos, -1.0f, 1.0f);
+    gamepad_axes[axis_idx] = ::clamp(axis_pos, -1.0f, 1.0f);
   }
 }
 

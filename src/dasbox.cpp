@@ -678,7 +678,7 @@ void create_window()
   sf::String windowTitle = delayed_window_title.second;
 
   if (delayed_upscale.first)
-    screen_global_scale = clamp(delayed_upscale.second, 0, 16);
+    screen_global_scale = ::clamp(delayed_upscale.second, 0, 16);
 
   screen_width = resolution.x;
   screen_height = resolution.y;

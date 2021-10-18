@@ -24,8 +24,8 @@ include_directories(
 )
 
 link_directories(
-  ../3rdParty/daScript/build
-  ../3rdParty/SFML/build/lib
+  ../3rdParty/daScript-build
+  ../3rdParty/SFML-build/lib
 )
 
 if(MSVC)
@@ -63,22 +63,23 @@ endif()
 
 if(UNIX)
   add_executable(dasbox ${SRC})
+  add_dependencies(dasbox daScript SFML)
   set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
   set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fno-rtti -fno-exceptions -fomit-frame-pointer -fno-stack-protector -s -DDAS_FUSION=2 -DDAS_DEBUGGER=1 -DNDEBUG=1")
-  set(CMAKE_CXX_FLAGS_DEBUG "-O0 -fno-rtti -fno-exceptions -fomit-frame-pointer -fno-stack-protector")
+  set(CMAKE_CXX_FLAGS_DEBUG "-O0 -ggdb3 -fno-rtti -fno-exceptions -fomit-frame-pointer -fno-stack-protector")
   target_link_libraries(
     dasbox
     libDasModuleUriparser
     libUriParser
     libDaScript
-    optimized sfml-network-s
-    optimized sfml-graphics-s
-    optimized sfml-window-s
-    optimized sfml-system-s
-    debug sfml-network-s-d
-    debug sfml-graphics-s-d
-    debug sfml-window-s-d
-    debug sfml-system-s-d
+    optimized sfml-network
+    optimized sfml-graphics
+    optimized sfml-window
+    optimized sfml-system
+    debug sfml-network-d
+    debug sfml-graphics-d
+    debug sfml-window-d
+    debug sfml-system-d
     X11
     udev
     pthread
@@ -88,4 +89,6 @@ if(UNIX)
     Xrandr
     Xcursor
   )
+  install(TARGETS dasbox
+          RUNTIME DESTINATION ${PROJECT_SOURCE_DIR}/../bin)
 endif()

@@ -1,0 +1,42 @@
+cmake_minimum_required(VERSION 3.15)
+project("dasbox")
+
+include (ExternalProject)
+
+ExternalProject_Add (
+  daScript
+  PREFIX         3rdParty
+  SOURCE_DIR     ${PROJECT_SOURCE_DIR}/3rdParty/daScript
+  BINARY_DIR     ${PROJECT_SOURCE_DIR}/3rdParty/daScript-build
+  DOWNLOAD_COMMAND ""
+  INSTALL_COMMAND ""
+  UPDATE_COMMAND ""
+  CMAKE_ARGS
+    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    -DDAS_CONFIG_INCLUDE_DIR=${PROJECT_SOURCE_DIR}/src
+  LOG_DOWNLOAD ON
+  LOG_CONFIGURE ON
+  LOG_BUILD ON
+  STEP_TARGETS build
+)
+
+ExternalProject_Add (
+  SFML
+  PREFIX         3rdParty
+  SOURCE_DIR     ${PROJECT_SOURCE_DIR}/3rdParty/SFML
+  BINARY_DIR     ${PROJECT_SOURCE_DIR}/3rdParty/SFML-build
+  DOWNLOAD_COMMAND ""
+  INSTALL_COMMAND ""
+  UPDATE_COMMAND ""
+  CMAKE_ARGS
+    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    -DSFML_BUILD_AUIDO=FALSE
+    -DSFML_BUILD_EXAMPLES=FALSE
+    -DBUILD_SHARED_LIBS:BOOL=FALSE
+  LOG_DOWNLOAD ON
+  LOG_CONFIGURE ON
+  LOG_BUILD ON
+  STEP_TARGETS build
+)
+
+add_subdirectory(src)

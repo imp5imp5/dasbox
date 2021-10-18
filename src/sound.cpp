@@ -824,12 +824,12 @@ PlayingSoundHandle play_sound_internal(const PcmSound & sound, float volume, flo
 
   PlayingSound & s = playing_sounds[idx];
 
-  pitch = clamp(pitch, 0.00001f, 1000.0f);
-  pan = clamp(pan, -1.0f, 1.0f);
-  volume = clamp(volume, 0.0f, 100000.0f);
+  pitch = ::clamp(pitch, 0.00001f, 1000.0f);
+  pan = ::clamp(pan, -1.0f, 1.0f);
+  volume = ::clamp(volume, 0.0f, 100000.0f);
 
-  double start = clamp(double(int64_t(start_time * sound.frequency)), 0.0, double(sound.samples - 1));
-  double stop = clamp(double(int64_t(end_time * sound.frequency)), start, double(sound.samples - 1));
+  double start = ::clamp(double(int64_t(start_time * sound.frequency)), 0.0, double(sound.samples - 1));
+  double stop = ::clamp(double(int64_t(end_time * sound.frequency)), start, double(sound.samples - 1));
   double pos = start;
   if (defer_time_sec < 0.0f)
     pos = min(double(int(-defer_time_sec * sound.frequency)), stop);
@@ -1000,7 +1000,7 @@ void set_sound_play_pos(PlayingSoundHandle handle, float pos_seconds)
     return;
 
   double p = floor(playing_sounds[idx].sound->frequency * pos_seconds);
-  playing_sounds[idx].pos = clamp(p, playing_sounds[idx].startPos, playing_sounds[idx].stopPos);
+  playing_sounds[idx].pos = ::clamp(p, playing_sounds[idx].startPos, playing_sounds[idx].stopPos);
 }
 
 void stop_sound(PlayingSoundHandle handle)

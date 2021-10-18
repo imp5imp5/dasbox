@@ -282,6 +282,20 @@ def fill_menu_items()
         ]])
 
     menuItems |> emplace(
+        [[MenuItem name = "Will-o'-Wisp",
+          image <- create_image("will_o_wisp/_preview.png"),
+          source = "will_o_wisp/will_o_wisp.das",
+          description <- [{string[]
+              "Alpha blend, gradients, triangle strip";
+              "";
+              "Controls:";
+              "Esc - Return to this menu";
+              "";
+              "Source: samples/will_o_wisp/will_o_wisp.das"
+              }]
+        ]])
+
+    menuItems |> emplace(
         [[MenuItem name = "Sound",
           image <- create_image("sound/_preview_sound.png"),
           source = "sound/sound_demo.das",

@@ -62,11 +62,11 @@ class Image
 
 --------------------------------------------------------------------------
 
-  img |> draw(x, y)
-  img |> draw(x, y)
-  img |> draw(x, y, color)
-  img |> draw(x, y, color, size: float)
-  img |> draw(x, y, color, size: float2)
+  img |> draw_image(x, y)
+  img |> draw_image(x, y)
+  img |> draw_image(x, y, color)
+  img |> draw_image(x, y, color, size: float)
+  img |> draw_image(x, y, color, size: float2)
   img |> draw_quad(float2(0, 0), float2(0, 64), float2(64, 64), float2(64, 0), color)
   img |> draw_quad(array_of_float2, color)
   img |> draw_triangle_strip(coords, texture_coords)

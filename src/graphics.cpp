@@ -337,16 +337,22 @@ das::float2 get_text_size(const char * str)
 
 void enable_premultiplied_alpha_blend()
 {
+  if (!inside_draw_fn)
+    print_error("enable_premultiplied_alpha_blend() must be called from 'draw'");
   primitive_rs.blendMode = BlendPremultipliedAlpha;
 }
 
 void enable_alpha_blend()
 {
+  if (!inside_draw_fn)
+    print_error("enable_alpha_blend() must be called from 'draw'");
   primitive_rs.blendMode = sf::BlendAlpha;
 }
 
 void disable_alpha_blend()
 {
+  if (!inside_draw_fn)
+    print_error("disable_alpha_blend() must be called from 'draw'");
   primitive_rs.blendMode = sf::BlendNone;
 }
 

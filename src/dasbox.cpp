@@ -39,6 +39,7 @@ const char * initial_dir = ".";
 bool has_errors = false;
 bool recreate_window = false;
 bool inside_initialization = false;
+bool inside_draw_fn = true;
 bool exec_script_scheduled = false;
 bool trust_mode = false;
 bool run_for_plugin = false;
@@ -999,18 +1000,23 @@ void run_das_for_ui()
 
 
     // render
-
-    graphics::on_graphics_frame_start();
-
-    if (screen_mode == SM_USER_APPLICATION)
-      exec_function(fn_draw, nullptr);
-    else
-      draw_log_screen();
-
-    if (use_separate_render_target)
     {
-      render_texture->display();
-      g_window->draw(*render_texture_sprite, sf::BlendNone);
+      inside_draw_fn = true;
+
+      graphics::on_graphics_frame_start();
+
+      if (screen_mode == SM_USER_APPLICATION)
+        exec_function(fn_draw, nullptr);
+      else
+        draw_log_screen();
+
+      inside_draw_fn = false;
+
+      if (use_separate_render_target)
+      {
+        render_texture->display();
+        g_window->draw(*render_texture_sprite, sf::BlendNone);
+      }
     }
 
 #ifdef _WIN32

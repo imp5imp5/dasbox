@@ -1,6 +1,6 @@
 #pragma once
 
-#define DASBOX_VERSION "0.1.11"
+#define DASBOX_VERSION "0.1.12"
 
 namespace sf
 {
@@ -24,6 +24,7 @@ extern int screen_height;
 extern bool has_errors;
 extern bool trust_mode;
 extern bool log_to_console;
+extern bool inside_draw_fn;
 extern const char * initial_dir;
 
 void print_error(const char * format, ...);

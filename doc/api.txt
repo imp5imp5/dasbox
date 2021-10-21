@@ -2,7 +2,7 @@
 === Graphics =============================================================
 ==========================================================================
 
-  // color format: 0xAABBGGRR
+  // color format: 0xAARRGGBB
 
   set_pixel(x, y, color)
   line(x0, y0, x1, y1, color)

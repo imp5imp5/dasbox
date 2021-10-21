@@ -2,16 +2,7 @@
 === Graphics =============================================================
 ==========================================================================
 
-  get_screen_width(): int
-  get_screen_height(): int
-
---------------------------------------------------------------------------
-
-  enable_premultiplied_alpha_blend()
-  enable_alpha_blend()
-  disable_alpha_blend()
-
---------------------------------------------------------------------------
+  // color format: 0xAABBGGRR
 
   set_pixel(x, y, color)
   line(x0, y0, x1, y1, color)
@@ -28,6 +19,17 @@
 
   polygon(points_array, color)
   fill_convex_polygon(points_array, color)
+
+--------------------------------------------------------------------------
+
+  get_screen_width(): int
+  get_screen_height(): int
+
+--------------------------------------------------------------------------
+
+  enable_premultiplied_alpha_blend()
+  enable_alpha_blend()
+  disable_alpha_blend()
 
 --------------------------------------------------------------------------
 

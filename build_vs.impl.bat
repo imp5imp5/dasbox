@@ -69,7 +69,7 @@ pushd 3rdParty\daScript
 rd /S /Q build
 mkdir build
 pushd build
-cmake -G %CMAKE_GEN_TARGET% -DDAS_USE_STATIC_STD_LIBS:BOOL=TRUE -DDAS_CONFIG_INCLUDE_DIR:STRING="%CD%/src" -DCMAKE_CXX_FLAGS_DEBUG:STRING="/MTd /Od /DDAS_FUSION=1 /DDAS_DEBUGGER=1 /Zi /EHa" ..
+cmake -G %CMAKE_GEN_TARGET% -DDAS_BUILD_TOOLS:BOOL=NO -DDAS_BUILD_TEST:BOOL=NO -DDAS_BUILD_PROFILE:BOOL=NO -DDAS_BUILD_TUTORIAL:BOOL=NO -DDAS_CONFIG_INCLUDE_DIR:STRING="%CD%/src" -DCMAKE_CXX_FLAGS_DEBUG:STRING="/MTd /Od /DDAS_FUSION=1 /DDAS_DEBUGGER=1 /Zi /EHa" ..
 msbuild libDaScript.vcxproj /p:Configuration=%CONFIGURATION%
 msbuild libDasModuleUriparser.vcxproj /p:Configuration=%CONFIGURATION%
 msbuild libUriParser.vcxproj /p:Configuration=%CONFIGURATION%

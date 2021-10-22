@@ -26,7 +26,7 @@
 "    if td.firstType.baseType != Type tStructure\n"
 "        return false\n"
 "    let st = td.firstType.structType\n"
-"    if !eq(st.name,\"JsonValue\") && !eq(st._module.name,\"json\")\n"
+"    if st.name!=\"JsonValue\" && st._module.name!=\"json\"\n"
 "        return false\n"
 "    return true\n"
 "\n"

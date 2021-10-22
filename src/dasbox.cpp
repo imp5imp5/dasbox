@@ -155,7 +155,7 @@ void set_antialiasing(int a)
 
 void set_resolution(int width, int height)
 {
-  delayed_resolution_set = (width != 1280 && height != 720);
+  delayed_resolution_set = (width != 1280 || height != 720);
 
   screen_width = width;
   screen_height = height;

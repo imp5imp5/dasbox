@@ -54,7 +54,8 @@ class Image
   img |> make_image_color_transparent(img |> get_pixel(0, 0))
 
   img |> set_image_smooth(true)  // set filter to 'linear'
-  img |> set_image_clamp(true)  // true - 'clamp', false - repeat
+  img |> set_image_clamp(true)   // true - 'clamp', false - repeat
+  img |> set_image_use_mipmap()  // generate mipmap
 
   img |> flip_image_x()
   img |> flip_image_y()

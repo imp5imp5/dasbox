@@ -433,6 +433,7 @@ struct Image
   int width;
   int height;
   bool applied;
+  bool useMipmap;
 
   bool isValid() const
   {
@@ -452,6 +453,7 @@ struct Image
   Image()
   {
     applied = false;
+    useMipmap = false;
     img = nullptr;
     tex = nullptr;
     cached_pixels = nullptr;
@@ -467,6 +469,7 @@ struct Image
     width = 0;
     height = 0;
     applied = false;
+    useMipmap = b.useMipmap;
     image_pointers.insert(img);
     texture_pointers.insert(tex);
   }
@@ -479,6 +482,7 @@ struct Image
     width = b.width;
     height = b.height;
     applied = b.applied;
+    useMipmap = b.useMipmap;
 
     b.width = 0;
     b.height = 0;
@@ -499,6 +503,7 @@ struct Image
     width = b.width;
     height = b.height;
     applied = false;
+    useMipmap = b.useMipmap;
     image_pointers.insert(img);
     texture_pointers.insert(tex);
     return *this;
@@ -512,6 +517,7 @@ struct Image
     width = b.width;
     height = b.height;
     applied = b.applied;
+    useMipmap = b.useMipmap;
 
     b.width = 0;
     b.height = 0;
@@ -530,6 +536,7 @@ struct Image
     delete tex;
     tex = nullptr;
     applied = false;
+    useMipmap = false;
     cached_pixels = nullptr;
     width = 0;
     height = 0;
@@ -549,6 +556,7 @@ void delete_image(Image * image)
   image->width = 0;
   image->height = 0;
   image->applied = false;
+  image->useMipmap = false;
 }
 
 Image create_image_wh(int width, int height)
@@ -750,6 +758,12 @@ void set_image_clamp(Image & image, bool clamp)
     image.tex->setRepeated(!clamp);
 }
 
+void set_image_use_mipmap(Image & image)
+{
+  image.applied = false;
+  image.useMipmap = true;
+}
+
 void flip_image_x(Image & image)
 {
   image.applied = false;
@@ -782,6 +796,9 @@ inline void apply_texture(const Image & image)
     b->tex->setSmooth(smooth);
     b->tex->loadFromImage(*b->img);
   }
+
+  if (image.useMipmap && image.tex)
+    image.tex->generateMipmap();
 }
 
 
@@ -1251,6 +1268,8 @@ public:
     addExtern<DAS_BIND_FUN(set_image_clamp)>(*this, lib, "set_image_clamp", SideEffects::modifyExternal, "set_image_clamp")
       ->args({"image", "is_clamped"});
 
+    addExtern<DAS_BIND_FUN(set_image_use_mipmap)>(*this, lib, "set_image_use_mipmap", SideEffects::modifyExternal, "set_image_use_mipmap")
+      ->args({"image"});
 
     addExtern<DAS_BIND_FUN(create_image_wh), SimNode_ExtFuncCallAndCopyOrMove>
       (*this, lib, "create_image", SideEffects::modifyExternal, "create_image_wh")

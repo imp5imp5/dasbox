@@ -281,10 +281,7 @@ struct DasFile
   das::smart_ptr<fs::DasboxFsFileAccess> fAccess;
   ProgramPtr program;
 
-  DasFile()
-  {
-    fAccess = make_smart<fs::DasboxFsFileAccess>();
-  }
+  DasFile() : fAccess(make_smart<fs::DasboxFsFileAccess>()) { }
 };
 
 
@@ -631,17 +628,13 @@ void process_args(int argc, char **argv)
   }
 }
 
-void print_usage()
-{
-  cout << "\nUsage:\n  dasbox [directory] <start-file.das>\n";
-}
-
 
 void set_application_icon()
 {
 #if _WIN32
   HICON hIcon = (HICON) LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(1), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE);
   unsigned res = SetClassLongPtr((HWND)g_window->getSystemHandle(), GCLP_HICON, (LONG_PTR)hIcon);
+  G_UNUSED(res);
 #endif
 }
 

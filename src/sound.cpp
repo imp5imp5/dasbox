@@ -130,6 +130,8 @@ public:
 
   PcmSound& operator=(const PcmSound & b)
   {
+    if (this == &b)
+      return *this;
     deleteData();
     frequency = b.frequency;
     samples = b.samples;
@@ -1084,6 +1086,9 @@ PcmSound::PcmSound(PcmSound && b)
 
 PcmSound& PcmSound::operator=(PcmSound && b)
 {
+  if (this == &b)
+    return *this;
+
   WinAutoLock lock(&sound_cs);
 
   for (auto && s : playing_sounds)

@@ -10,9 +10,11 @@ Install CMake https://cmake.org/install/ \
 
 
 ## Build for Linux (tested only on Ubuntu 20)
-
 `sudo apt update`\
-`sudo apt install g++ make cmake`\
+`sudo apt install g++ make`
+
+update CMake (3.21.3 or newer version required) https://cmake.org/install/
+
 `sudo apt install libudev-dev libasound2-dev libpulse-dev libx11-dev mesa-common-dev libgl1-mesa-dev libglu1-mesa-dev libxrandr-dev libxcursor-dev libfreetype-dev`\
 \
 `git clone --recurse-submodules https://github.com/imp5imp5/dasbox.git `\

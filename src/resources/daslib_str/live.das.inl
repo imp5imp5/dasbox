@@ -128,7 +128,7 @@
 "[export]\n"
 "def public set_new_context ( var ptr : smart_ptr<Context>; full_restart:bool = f"
 "alse )\n"
-"    print(\"set new context {intptr(get_ptr(ptr))}\\n\")\n"
+"    //print(\"set new context {intptr(get_ptr(ptr))}\\n\")\n"
 "    invoke_live(\"shutdown\")\n"
 "    if appPtr != null\n"
 "        unsafe\n"

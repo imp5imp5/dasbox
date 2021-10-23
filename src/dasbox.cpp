@@ -782,6 +782,7 @@ void exec_script_impl()
   return_to_root = fs::get_current_dir();
   return_to_file_name = main_das_file_name;
   return_to_trust_mode = trust_mode;
+  trust_mode = false;
 
 
   root_dir = fs::extract_dir(scheduled_script_name.c_str());

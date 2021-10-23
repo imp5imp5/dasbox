@@ -194,6 +194,8 @@ def initialize()
     print("Screen size: {get_screen_width()} x {get_screen_height()}\n")
     // schedule_pause()
 
+    randomize_seed(seed)
+
     timeToRestart = -1.0
     lives = 3
     ship_reset(ship)

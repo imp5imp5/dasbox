@@ -1,6 +1,6 @@
 #pragma once
 
-#define DASBOX_VERSION "0.1.16"
+#define DASBOX_VERSION "0.1.17"
 
 namespace sf
 {

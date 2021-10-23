@@ -375,6 +375,7 @@ Random numbers:
   random_in_unit_sphere(seed: int4& implicit): float3
   random_unit_vector(seed: int4& implicit): float3
 
+  randomize_seed(seed: int4&)
 
 
 Only float3:

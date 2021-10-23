@@ -142,6 +142,7 @@ def remove_out_of_screen_column()
 [export]
 def initialize
     set_window_title("Flappy Box")
+    randomize_seed(RAND_SEED)
     reset_bird(bird)
     clear(columns)
     score = 0

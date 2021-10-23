@@ -15,6 +15,7 @@
 #include <unordered_map>
 #include <string>
 #include <fstream>
+#include <time.h>
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -217,6 +218,14 @@ const char * get_dasbox_initial_dir()
   return initial_dir;
 }
 
+void randomize_seed(int4 & seed)
+{
+  static int x = 123;
+  x *= 123;
+  int s = time(nullptr) + x;
+  seed = int4(s, s + 3, s + 12, s + 119);
+  x += seed.w;
+}
 
 static char utils_das[] =
 #include "utils.das.inl"
@@ -544,7 +553,9 @@ public:
 
     addExtern<DAS_BIND_FUN(dasbox_execute_editor)>
       (*this, lib, "dasbox_execute_editor", SideEffects::modifyExternal, "dasbox_execute_editor");
-    
+
+    addExtern<DAS_BIND_FUN(randomize_seed)>
+      (*this, lib, "randomize_seed", SideEffects::modifyArgument, "randomize_seed");
 
     compileBuiltinModule("utils.das", (unsigned char *)utils_das, sizeof(utils_das));
 

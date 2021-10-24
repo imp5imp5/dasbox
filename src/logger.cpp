@@ -26,6 +26,18 @@ using namespace std;
 Logger logger;
 static bool error_as_note = false;
 
+std::string replace_all(std::string str, const std::string & from, const std::string & to)
+{
+  size_t startPos = 0;
+  while((startPos = str.find(from, startPos)) != std::string::npos)
+  {
+    str.replace(startPos, from.length(), to);
+    startPos += to.length();
+  }
+  return str;
+}
+
+
 bool ends_with_newline(const char * str)
 {
   size_t len = strlen(str);
@@ -174,7 +186,7 @@ void Logger::addString(const string & s)
   if (logStrings.back().empty())
     lineColors.back() = curColor;
 
-  logStrings.back().append(s);
+  logStrings.back().append(replace_all(s, string("\t"), string("    ")));
 
   for (;;)
   {

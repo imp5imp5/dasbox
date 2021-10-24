@@ -72,6 +72,7 @@ void os_debug_break()
 //-------------------------------------------------------------------------------------
 bool is_quit_scheduled = false;
 bool window_is_active = true;
+bool is_first_frame = true;
 float cur_dt = 0.001f;
 double time_after_start = 0.0;
 
@@ -475,6 +476,7 @@ void das_file_manual_reload(bool hard_reload)
   logger.clear();
   input::reset_input();
   reset_time_after_start();
+  is_first_frame = true;
   load_module(main_das_file_name, &das_file);
   initialize_das_file(hard_reload);
 }
@@ -865,6 +867,7 @@ void run_das_for_ui()
 {
   if (!main_das_file_name.empty())
   {
+    is_first_frame = true;
     load_module(main_das_file_name, &das_file);
     initialize_das_file(true);
   }
@@ -949,9 +952,25 @@ void run_das_for_ui()
     }
 
     float dt = deltaClock.restart().asSeconds();
+    if (is_first_frame)
+    {
+      is_first_frame = false;
+      dt = std::min(dt, 0.01f);
+    }
     time_after_start += double(dt);
 
-    dt = min(dt, 0.1f);
+    dt = std::min(dt, 0.1f);
+
+    if (vsync_enabled)
+    {
+      float dtRate = dt / std::max(cur_dt, 0.0001f);
+      if (dtRate > 0.8f && dtRate < 1.25f)
+        dt = lerp(cur_dt, dt, 0.125f);
+      float dtHighLimit = std::max(cur_dt, 0.01f) * 2.0f;
+      if (dt > dtHighLimit)
+        dt = dtHighLimit;
+    }
+
     cur_dt = dt;
 
     input::update_mouse_input(dt, window_is_active);

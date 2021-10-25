@@ -299,17 +299,17 @@ string get_user_data_dir()
   if (xdgDocumentsDir)
     dir = string(xdgDocumentsDir) + "/dasbox";
   else if (homeDir)
-    dir = string(xdgDocumentsDir) + "/.local/share/dasbox";
+    dir = string(homeDir) + "/.local/share/dasbox";
   else
   {
     dir = get_current_dir() + "/.config";
     if (!fs::is_file_exists(dir.c_str()))
-      mkdir(dir.c_str());
+      mkdir(dir.c_str(), 0777);
     dir += "/dasbox";
   }
 
   if (!fs::is_file_exists(dir.c_str()))
-    mkdir(dir.c_str());
+    mkdir(dir.c_str(), 0777);
 
   return dir + '/';
 }

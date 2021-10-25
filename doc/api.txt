@@ -294,6 +294,9 @@ class PcmSound
   reset_time_after_start()
   get_delta_time()
 
+  local_storage_set(key, value: string)
+  local_storage_get(key: string): string
+
 
 
 

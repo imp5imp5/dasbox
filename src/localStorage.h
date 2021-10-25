@@ -7,6 +7,7 @@ namespace fs
   void flush_local_storage();
   void local_storage_set(const char * key, const char * value);
   const char * local_storage_get(const char * key);
+  bool local_storage_has_key(const char * key);
 }
 
 

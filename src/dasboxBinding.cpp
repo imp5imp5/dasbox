@@ -488,6 +488,10 @@ public:
       (*this, lib, "local_storage_get", SideEffects::modifyExternal, "fs::local_storage_get")
       ->args({"key"});
 
+    addExtern<DAS_BIND_FUN(fs::local_storage_has_key)>
+      (*this, lib, "local_storage_has_key", SideEffects::modifyExternal, "fs::local_storage_has_key")
+      ->args({"key"});
+
     addExtern<DAS_BIND_FUN(schedule_pause)>
       (*this, lib, "schedule_pause", SideEffects::modifyExternal, "schedule_pause");
     addExtern<DAS_BIND_FUN(schedule_quit_game)>

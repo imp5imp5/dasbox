@@ -296,6 +296,7 @@ class PcmSound
 
   local_storage_set(key, value: string)
   local_storage_get(key: string): string
+  local_storage_has_key(key: string): bool
 
 
 

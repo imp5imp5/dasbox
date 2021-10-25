@@ -176,4 +176,12 @@ const char * local_storage_get(const char * key)
   return inmemory_local_storage[std::string(key)].c_str();
 }
 
+bool local_storage_has_key(const char * key)
+{
+  if (!key)
+    return false;
+  ensure_open_storage();
+  return inmemory_local_storage.find(std::string(key)) != inmemory_local_storage.end();
+}
+
 } // namespace fs

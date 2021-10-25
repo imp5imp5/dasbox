@@ -3,6 +3,12 @@
 #include <algorithm>
 
 #ifdef _WIN32
+#define NOMINMAX
+#include <iostream>
+#include <codecvt>
+#include <locale>
+#include <shlwapi.h>
+#include <shlobj.h>
 #include <direct.h>
 #define chdir _chdir
 #define getcwd _getcwd
@@ -255,5 +261,59 @@ uint64_t get_file_time(const char * file_name)
   return 0;
 }
 
+
+#ifdef _WIN32
+
+string convert_to_utf8(wchar_t * ws)
+{
+  wstring_convert<codecvt_utf8<wchar_t>> utf8_conv;
+  wstring str = ws;
+  return utf8_conv.to_bytes(str);
+}
+
+string get_user_data_dir()
+{
+  wchar_t buf[MAX_PATH + 1];
+  buf[0] = 0;
+  HRESULT hr = SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA | CSIDL_FLAG_CREATE, NULL, 0, buf);
+  string s = convert_to_utf8(buf);
+  if (!FAILED(hr))
+  {
+    s += "\\dasbox";
+    if (!is_file_exists(s.c_str()))
+      mkdir(s.c_str());
+    return s + '\\';
+  }
+
+  print_error("Cannot access 'Local AppData' (%s)", s.c_str());
+  return string("");
+}
+
+#else
+
+string get_user_data_dir()
+{
+  string dir;
+  const char * xdgDocumentsDir = getenv("XDG_DATA_HOME");
+  const char * homeDir = getenv("HOME");
+  if (xdgDocumentsDir)
+    dir = string(xdgDocumentsDir) + "/dasbox";
+  else if (homeDir)
+    dir = string(xdgDocumentsDir) + "/.local/share/dasbox";
+  else
+  {
+    dir = get_current_dir() + "/.config";
+    if (!fs::is_file_exists(dir.c_str()))
+      mkdir(dir.c_str());
+    dir += "/dasbox";
+  }
+
+  if (!fs::is_file_exists(dir.c_str()))
+    mkdir(dir.c_str());
+
+  return dir + '/';
+}
+
+#endif
 
 }

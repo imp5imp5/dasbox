@@ -18,6 +18,7 @@
 #include "logger.h"
 #include "globals.h"
 #include "fileSystem.h"
+#include "localStorage.h"
 #include "sound.h"
 
 #ifdef _WIN32
@@ -477,6 +478,8 @@ void das_file_manual_reload(bool hard_reload)
   input::reset_input();
   reset_time_after_start();
   is_first_frame = true;
+  fs::flush_local_storage();
+  fs::initialize_local_storage(main_das_file_name.c_str());
   load_module(main_das_file_name, &das_file);
   initialize_das_file(hard_reload);
 }
@@ -867,6 +870,7 @@ void run_das_for_ui()
 {
   if (!main_das_file_name.empty())
   {
+    fs::initialize_local_storage(main_das_file_name.c_str());
     is_first_frame = true;
     load_module(main_das_file_name, &das_file);
     initialize_das_file(true);
@@ -1034,12 +1038,14 @@ void run_das_for_ui()
 
 #ifdef _WIN32
     // Workaround unstable vsync on Windows 10
-    if (vsync_enabled)
-      glFinish();
+ //   if (vsync_enabled)
+//      glFinish();
 #endif
     g_window->display();
 
     input::post_update_input();
+
+    fs::update_local_storage(dt);
 
     if (is_quit_scheduled && !return_to_file_name.empty())
       return_to_previous_script();
@@ -1058,6 +1064,7 @@ void run_das_for_ui()
   }
 
 
+  fs::flush_local_storage();
   sound::finalize();
   graphics::finalize();
 

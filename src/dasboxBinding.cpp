@@ -2,6 +2,7 @@
 #include "sound.h"
 #include "logger.h"
 #include "fileSystem.h"
+#include "localStorage.h"
 #include "buildDate.h"
 #include <daScript/daScript.h>
 #include <daScript/ast/ast.h>
@@ -112,26 +113,6 @@ float cvt(float v, float i0, float i1, float o0, float o1)
     return ::lerp(o0, o1, ::clamp((v - i0) / max(i1 - i0, 1e-6f), 0.0f, 1.0f));
   else
     return ::lerp(o1, o0, ::clamp((v - i1) / max(i0 - i1, 1e-6f), 0.0f, 1.0f));
-}
-
-
-
-static unordered_map<std::string, std::string> inmemory_local_storage;
-
-void local_storage_set(const char * key, const char * value)
-{
-  if (!key)
-    return;
-  if (!value)
-    value = "";
-  inmemory_local_storage[std::string(key)] = std::string(value);
-}
-
-const char * local_storage_get(const char * key)
-{
-  if (!key)
-    return "";
-  return inmemory_local_storage[std::string(key)].c_str();
 }
 
 
@@ -499,12 +480,12 @@ public:
     addExtern<DAS_BIND_FUN(disable_auto_upscale)>
       (*this, lib, "disable_auto_upscale", SideEffects::modifyExternal, "disable_auto_upscale");
 
-    addExtern<DAS_BIND_FUN(local_storage_set)>
-      (*this, lib, "local_storage_set", SideEffects::modifyExternal, "local_storage_set")
+    addExtern<DAS_BIND_FUN(fs::local_storage_set)>
+      (*this, lib, "local_storage_set", SideEffects::modifyExternal, "fs::local_storage_set")
       ->args({"key", "value"});
 
-    addExtern<DAS_BIND_FUN(local_storage_get)>
-      (*this, lib, "local_storage_get", SideEffects::modifyExternal, "local_storage_get")
+    addExtern<DAS_BIND_FUN(fs::local_storage_get)>
+      (*this, lib, "local_storage_get", SideEffects::modifyExternal, "fs::local_storage_get")
       ->args({"key"});
 
     addExtern<DAS_BIND_FUN(schedule_pause)>

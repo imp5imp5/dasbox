@@ -21,7 +21,7 @@ bool change_dir(const std::string & dir);
 bool is_file_exists(const char *  file_name);
 std::string get_current_dir();
 uint64_t get_file_time(const char * file_name);
-
+std::string get_user_data_dir();
 
 
 

@@ -829,6 +829,33 @@ void draw_image_cs2(const Image & image, float x, float y, uint32_t color, das::
     g_render_target->draw(v, states);
 }
 
+void draw_image_region_cs2(const Image & image, float x, float y, float4 texture_rect, uint32_t color, das::float2 size)
+{
+  if (!image.tex)
+    return;
+  if (!image.applied)
+    apply_texture(image);
+  sf::Color c = conv_color(color);
+  sf::VertexArray v(sf::TriangleStrip, 4);
+  v[0].position = sf::Vector2f(x, y);
+  v[0].color = c;
+  v[0].texCoords = sf::Vector2f(texture_rect.x, texture_rect.y);
+  v[1].position = sf::Vector2f(x, y + size.y);
+  v[1].color = c;
+  v[1].texCoords = sf::Vector2f(texture_rect.x, texture_rect.y + texture_rect.w);
+  v[2].position = sf::Vector2f(x + size.x, y);
+  v[2].color = c;
+  v[2].texCoords = sf::Vector2f(texture_rect.x + texture_rect.z, texture_rect.y);
+  v[3].position = sf::Vector2f(x + size.x, y + size.y);
+  v[3].color = c;
+  v[3].texCoords = sf::Vector2f(texture_rect.x + texture_rect.z, texture_rect.y + texture_rect.w);
+
+  sf::RenderStates states = primitive_rs;
+  states.texture = image.tex;
+  if (g_render_target)
+    g_render_target->draw(v, states);
+}
+
 void draw_image(const Image & image, float x, float y)
 {
   draw_image_cs2(image, x, y, 0xFFFFFFFF, das::float2(image.width, image.height));
@@ -863,6 +890,43 @@ void draw_image_ci(const Image & image, int x, int y, uint32_t color)
 void draw_image_csi(const Image & image, int x, int y, uint32_t color, int size)
 {
   draw_image_cs2(image, (float)x, (float)y, color, das::float2(size, size));
+}
+
+
+void draw_image_region(const Image & image, float x, float y, float4 texture_rect)
+{
+  draw_image_region_cs2(image, x, y, texture_rect, 0xFFFFFFFF, das::float2(texture_rect.z, texture_rect.w));
+}
+
+void draw_image_region_c(const Image & image, float x, float y, float4 texture_rect, uint32_t color)
+{
+  draw_image_region_cs2(image, x, y, texture_rect, color, das::float2(texture_rect.z, texture_rect.w));
+}
+
+void draw_image_region_cs(const Image & image, float x, float y, float4 texture_rect, uint32_t color, float size)
+{
+  draw_image_region_cs2(image, x, y, texture_rect, color, das::float2(size, size));
+}
+
+
+void draw_image_region_cs2i(const Image & image, int x, int y, int4 tr, uint32_t color, das::int2 size)
+{
+  draw_image_region_cs2(image, (float)x, (float)y, das::float4(tr.x, tr.y, tr.z, tr.w), color, das::float2(size.x, size.y));
+}
+
+void draw_image_region_i(const Image & image, int x, int y, int4 tr)
+{
+  draw_image_region_cs2(image, (float)x, (float)y, das::float4(tr.x, tr.y, tr.z, tr.w), 0xFFFFFFFF, das::float2(tr.z, tr.w));
+}
+
+void draw_image_region_ci(const Image & image, int x, int y, int4 tr, uint32_t color)
+{
+  draw_image_region_cs2(image, (float)x, (float)y, das::float4(tr.x, tr.y, tr.z, tr.w), color, das::float2(tr.z, tr.w));
+}
+
+void draw_image_region_csi(const Image & image, int x, int y, int4 tr, uint32_t color, int size)
+{
+  draw_image_region_cs2(image, (float)x, (float)y, das::float4(tr.x, tr.y, tr.z, tr.w), color, das::float2(size, size));
 }
 
 
@@ -920,6 +984,48 @@ void draw_quad_a(const Image & image, das::float2 p[4], uint32_t color)
     g_render_target->draw(v, states);
 
 }
+
+
+void draw_image_transformed(const Image & image, float x, float y, float4 texture_rect, uint32_t color, float2 size,
+  float angle, float relative_pivot_x, float relative_pivot_y)
+{
+  if (!image.tex)
+    return;
+  if (!image.applied)
+    apply_texture(image);
+  sf::Color c = conv_color(color);
+  sf::VertexArray v(sf::TriangleStrip, 4);
+
+  sf::Vector2f center(x, y);
+  float sn = sinf(angle);
+  float cs = -cosf(angle);
+  sf::Vector2f dirX(cs * size.x, -sn * size.x);
+  sf::Vector2f dirY(sn * size.y, cs * size.y);
+
+  v[0].position = center + dirX * (relative_pivot_x) + dirY * (relative_pivot_y);
+  v[0].color = c;
+  v[0].texCoords = sf::Vector2f(texture_rect.x, texture_rect.y);
+  v[1].position = center + dirX * (relative_pivot_x) - dirY * (1.0f - relative_pivot_y);
+  v[1].color = c;
+  v[1].texCoords = sf::Vector2f(texture_rect.x, texture_rect.y + texture_rect.w);
+  v[2].position = center - dirX * (1.0f - relative_pivot_x) + dirY * (relative_pivot_y);
+  v[2].color = c;
+  v[2].texCoords = sf::Vector2f(texture_rect.x + texture_rect.z, texture_rect.y);
+  v[3].position = center - dirX * (1.0f - relative_pivot_x) - dirY * (1.0f - relative_pivot_y);
+  v[3].color = c;
+  v[3].texCoords = sf::Vector2f(texture_rect.x + texture_rect.z, texture_rect.y + texture_rect.w);
+  sf::RenderStates states = primitive_rs;
+  states.texture = image.tex;
+  if (g_render_target)
+    g_render_target->draw(v, states);
+}
+
+void draw_image_transformed_center(const Image & image, float x, float y, float4 texture_rect, uint32_t color,
+  float2 size, float angle)
+{
+  draw_image_transformed(image, x, y, texture_rect, color, size, angle, 0.5f, 0.5f);
+}
+
 
 void draw_triangle_strip_color(const Image & image,
   const das::TArray<das::float2> & coord, const das::TArray<das::float2> & uv, uint32_t color)
@@ -1325,6 +1431,39 @@ public:
 
     addExtern<DAS_BIND_FUN(draw_image_cs2i)>(*this, lib, "draw_image", SideEffects::modifyExternal, "draw_image_cs2i")
       ->args({"image", "x", "y", "color", "size"});
+
+
+    addExtern<DAS_BIND_FUN(draw_image_region)>(*this, lib, "draw_image_region", SideEffects::modifyExternal, "draw_image_region")
+      ->args({"image", "x", "y", "texture_rect"});
+
+    addExtern<DAS_BIND_FUN(draw_image_region_c)>(*this, lib, "draw_image_region", SideEffects::modifyExternal, "draw_image_region_c")
+      ->args({"image", "x", "y", "texture_rect", "color"});
+
+    addExtern<DAS_BIND_FUN(draw_image_region_cs)>(*this, lib, "draw_image_region", SideEffects::modifyExternal, "draw_image_region_cs")
+      ->args({"image", "x", "y", "texture_rect", "color", "size"});
+
+    addExtern<DAS_BIND_FUN(draw_image_region_cs2)>(*this, lib, "draw_image_region", SideEffects::modifyExternal, "draw_image_region_cs2")
+      ->args({"image", "x", "y", "texture_rect", "color", "size"});
+
+    addExtern<DAS_BIND_FUN(draw_image_region_i)>(*this, lib, "draw_image_region", SideEffects::modifyExternal, "draw_image_region_i")
+      ->args({"image", "x", "y", "texture_rect"});
+
+    addExtern<DAS_BIND_FUN(draw_image_region_ci)>(*this, lib, "draw_image_region", SideEffects::modifyExternal, "draw_image_region_ci")
+      ->args({"image", "x", "y", "texture_rect", "color"});
+
+    addExtern<DAS_BIND_FUN(draw_image_region_csi)>(*this, lib, "draw_image_region", SideEffects::modifyExternal, "draw_image_region_csi")
+      ->args({"image", "x", "y", "texture_rect", "color", "size"});
+
+    addExtern<DAS_BIND_FUN(draw_image_region_cs2i)>(*this, lib, "draw_image_region", SideEffects::modifyExternal, "draw_image_region_cs2i")
+      ->args({"image", "x", "y", "texture_rect", "color", "size"});
+
+
+    addExtern<DAS_BIND_FUN(draw_image_transformed)>(*this, lib, "draw_image_transformed", SideEffects::modifyExternal, "draw_image_transformed")
+      ->args({"image", "x", "y", "texture_rect", "color", "size", "angle", "relative_pivot_x", "relative_pivot_y"});
+
+    addExtern<DAS_BIND_FUN(draw_image_transformed_center)>(*this, lib, "draw_image_transformed", SideEffects::modifyExternal, "draw_image_transformed_center")
+      ->args({"image", "x", "y", "texture_rect", "color", "size", "angle"});
+
 
     addExtern<DAS_BIND_FUN(premultiply_alpha)>(*this, lib,
       "premultiply_alpha", SideEffects::modifyExternal, "premultiply_alpha")

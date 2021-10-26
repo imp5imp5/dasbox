@@ -20,3 +20,47 @@ update CMake (3.21.3 or newer version required) https://cmake.org/install/
 `git clone --recurse-submodules https://github.com/imp5imp5/dasbox.git `\
 `cd dasbox`\
 `./build_linux.sh`
+
+##How to use
+
+Run your application:
+
+  `dasbox.exe <path_to_application_folder/file_name.das>`
+
+Optional comand line arguments:
+
+  `--dasbox-console - duplicate output to console ('--' is also acceptable)
+  --trust - allow access to any file on this computer`
+
+Once the application is running, all the sources ('file_name.das' and all the sources requested from it) will be checked for changes and automatically reloaded.
+The current directory will change to 'path_to_application_folder'. For security reasons access to parent directories from within the script will be forbidden.
+
+**F5** or **Ctrl+R** - reload sources in the manual mode
+**Ctrl+F5** or **Ctrl+Alt+R** - hard reload, **ECS** will be reloaded too
+**Tab** - switch to the logging screen and back
+
+In the log screen your application will be paused.
+
+Controls in the log screen:
+
+  **Up, Down, Ctrl+Up, Ctrl+Down, PgUp, PgDown, Mouse Scroll** - scroll log
+  **Left Mouse Button** - text selection
+  **Ctrl+C** - copy to clipboard
+  
+
+## More to read and watch
+
+* See [API][api]
+
+* Watch [videos][]
+
+* See [roadmap][roadmap]
+
+* See [how to setup vs code][vscodesetup]
+
+
+
+[videos]: https://www.youtube.com/playlist?list=PL6Ke-5R5eg2I7oVLR7TJIT5Q0ikGecVrT
+[api]: https://github.com/imp5imp5/dasbox/blob/main/doc/api.txt
+[vscodesetup]: https://github.com/imp5imp5/dasbox/blob/main/doc/vscode_setup.txt
+[roadmap]: https://github.com/imp5imp5/dasbox/blob/main/doc/roadmap.md

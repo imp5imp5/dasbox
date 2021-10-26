@@ -61,6 +61,9 @@ def draw()
     disable_alpha_blend()
     var y = 200
     draw_image(ball2, 100, y, 0xFFFFFFFF, ball2.width * 2)
+    draw_image_region(ball2, 100.0, float(y) + 100.0,
+            float4(0.0, 8.0 + 8.0 * sin(get_time_after_start()), 16.0, 16.0), 0xFFFFFFFF, float2(64.0, 64.0))
+
     text_out(180, y, "image_b := image_a // clone image", 0xFFF0F0F0)
     y += 22
     text_out(180, y, "make_image_color_transparent(image, color)", 0xFFF0F0F0)
@@ -74,6 +77,10 @@ def draw()
     text_out(180, y, "draw_image(image, x, y, color)", 0xFFF0F0F0)
     y += 22
     text_out(180, y, "draw_image(image, x, y, color, size)", 0xFFF0F0F0)
+    y += 22
+    text_out(180, y, "draw_image_region(image, x, y, texture_rect, color, size)", 0xFFF0F0F0)
+    y += 22
+    text_out(180, y, "draw_image_transformed(image, x, y, texture_rect, color, size, angle, pivot_x, pivot_y)", 0xFFF0F0F0)
     y += 22
     text_out(180, y, "get_pixel(image, x, y)", 0xFFF0F0F0)
     y += 22

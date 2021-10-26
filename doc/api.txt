@@ -66,12 +66,21 @@ class Image
 --------------------------------------------------------------------------
 
   img |> draw_image(x, y)
-  img |> draw_image(x, y)
   img |> draw_image(x, y, color)
   img |> draw_image(x, y, color, size: float)
   img |> draw_image(x, y, color, size: float2)
+
+  img |> draw_image_region(x, y, texture_rect: float4)  // texture_rect - float4(x, y, width, height) in texels
+  img |> draw_image_region(x, y, texture_rect: float4, color)
+  img |> draw_image_region(x, y, texture_rect: float4, color, size: float)
+  img |> draw_image_region(x, y, texture_rect: float4, color, size: float2)
+
+  img |> draw_image_transformed(x, y, texture_rect: float4, color, size: float2, angle, relative_pivot_x, relative_pivot_y)
+  img |> draw_image_transformed(x, y, texture_rect: float4, color, size: float2, angle)  // pivot at center (0.5, 0.5)
+
   img |> draw_quad(float2(0, 0), float2(0, 64), float2(64, 64), float2(64, 0), color)
   img |> draw_quad(array_of_float2, color)
+
   img |> draw_triangle_strip(coords, texture_coords)
   img |> draw_triangle_strip(coords, texture_coords, color)
   img |> draw_triangle_strip(coords, texture_coords, colors)

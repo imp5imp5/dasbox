@@ -18,6 +18,7 @@ static sf::Font * font_sans = nullptr;
 static sf::Font * current_font = nullptr;
 static int current_font_size = 16;
 static sf::Font * saved_font = nullptr;
+static unordered_map<string, sf::Font *> loaded_fonts;
 
 
 const sf::BlendMode BlendPremultipliedAlpha(sf::BlendMode::One, sf::BlendMode::OneMinusSrcAlpha, sf::BlendMode::Add,
@@ -229,8 +230,31 @@ void set_font_name(const char * name)
     return;
   }
 
-  // TODO: load font from file to font cache
-  current_font = font_mono;
+  auto it = loaded_fonts.find(string(name));
+  if (it != loaded_fonts.end())
+  {
+    current_font = it->second;
+    return;
+  }
+
+  if (!fs::is_path_string_valid(name))
+  {
+    print_error("Cannot open font '%s'. Absolute paths or access to the parent directory is prohibited.", name);
+    current_font = font_mono;
+    return;
+  }
+
+  sf::Font * font = new sf::Font();
+  if (!font->loadFromFile(name))
+  {
+    print_error("Cannot load font '%s'", name);
+    delete font;
+    current_font = font_mono;
+    return;
+  }
+
+  loaded_fonts[string(name)] = font;
+  current_font = font;
 }
 
 void stash_font()
@@ -1175,6 +1199,10 @@ void delete_allocated_images()
   for (auto && image : image_pointers)
     delete image;
   image_pointers.clear();
+
+  for (auto & f : loaded_fonts)
+    delete f.second;
+  loaded_fonts.clear();
 }
 
 void finalize()

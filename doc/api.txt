@@ -11,7 +11,7 @@
   circle(x, y, radius, color)
   fill_circle(x, y, radius, color)
 
-  set_font_name(font_name)  // set_font_name("mono"), set_font_name("sans")
+  set_font_name(font_name)  // set_font_name("mono"), set_font_name("sans"), set_font_name("*.ttf")
   set_font_size(size_px)
 
   text_out(x, y, text, color)

@@ -291,6 +291,20 @@ def fill_menu_items()
         ]])
 
     menuItems |> emplace(
+        [[MenuItem name = "Custom Fonts",
+          image <- create_image("custom_fonts/_preview_custom_fonts.png"),
+          source = "custom_fonts/custom_fonts.das",
+          description <- [{string[]
+              "How to load custom fonts";
+              "";
+              "Controls:";
+              "Esc - Return to this menu";
+              "";
+              "Source: samples/custom_fonts/custom_fonts.das"
+              }]
+        ]])
+
+    menuItems |> emplace(
         [[MenuItem name = "Will-o'-Wisp",
           image <- create_image("will_o_wisp/_preview.png"),
           source = "will_o_wisp/will_o_wisp.das",

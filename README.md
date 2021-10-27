@@ -29,22 +29,22 @@ Run your application:
 
 Optional comand line arguments:
 
-  `--dasbox-console - duplicate output to console ('--' is also acceptable)
-  --trust - allow access to any file on this computer`
+  `--dasbox-console - duplicate output to console ('--' is also acceptable)` \
+  `--trust - allow access to any file on this computer`
 
-Once the application is running, all the sources ('file_name.das' and all the sources requested from it) will be checked for changes and automatically reloaded.
+Once the application is running, all the sources ('file_name.das' and all the sources requested from it) will be checked for changes and automatically reloaded. \
 The current directory will change to 'path_to_application_folder'. For security reasons access to parent directories from within the script will be forbidden.
 
-**F5** or **Ctrl+R** - reload sources in the manual mode
-**Ctrl+F5** or **Ctrl+Alt+R** - hard reload, **ECS** will be reloaded too
+**F5** or **Ctrl+R** - reload sources in the manual mode \
+**Ctrl+F5** or **Ctrl+Alt+R** - hard reload, **ECS** will be reloaded too \
 **Tab** - switch to the logging screen and back
 
 In the log screen your application will be paused.
 
 Controls in the log screen:
 
-  **Up, Down, Ctrl+Up, Ctrl+Down, PgUp, PgDown, Mouse Scroll** - scroll log
-  **Left Mouse Button** - text selection
+  **Up, Down, Ctrl+Up, Ctrl+Down, PgUp, PgDown, Mouse Scroll** - scroll log \
+  **Left Mouse Button** - text selection \
   **Ctrl+C** - copy to clipboard
   
 
@@ -56,7 +56,7 @@ Controls in the log screen:
 
 * See [roadmap][roadmap]
 
-* See [how to setup vs code][vscodesetup]
+* See [how to setup VS Code][vscodesetup]
 
 
 

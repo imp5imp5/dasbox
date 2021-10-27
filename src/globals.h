@@ -66,7 +66,7 @@ template <typename T> inline T clamp(T t, const T min_val, const T max_val)
   return max_val;
 }
 
-template <typename T> inline T lerp(T a, T b, T t)
+template <typename T> inline T lerp(T a, T b, float t)
 {
   return (b - a) * t + a;
 }

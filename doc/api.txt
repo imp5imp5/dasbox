@@ -320,6 +320,11 @@ class PcmSound
   approach(from, to, dt, viscosity)
   cvt(value, from_range_1, from_range_2, to_range_1, to_range_2)
 
+  normalize_angle(angle)  // to -PI..PI
+  angle_diff(source, target)
+  angle_move_to(from, to, dt, vel)
+  angle_approach(from, to, dt, viscosity)
+
 
 
 

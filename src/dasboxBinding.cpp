@@ -17,6 +17,8 @@
 #include <string>
 #include <fstream>
 #include <time.h>
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -87,6 +89,30 @@ int das_get_key_code(const char * key_name)
 }
 
 
+float normalize_angle(float a)
+{
+  a = fmodf(a, 2 * M_PI);
+  return a > M_PI ? a - 2 * M_PI : (a < -M_PI ? a + 2 * M_PI : a);
+}
+
+float angle_diff(float source, float target)
+{
+  return normalize_angle(target - source);
+}
+
+float angle_move_to(float from, float to, float dt, float vel)
+{
+  float d = vel * dt;
+  float angleD = angle_diff(from, to);
+  if (fabsf(angleD) < d)
+    return to;
+
+  if (angleD < 0)
+    return from - d;
+  else
+    return from + d;
+}
+
 float move_to(float from, float to, float dt, float vel)
 {
   float d = vel * dt;
@@ -99,7 +125,7 @@ float move_to(float from, float to, float dt, float vel)
     return from + d;
 }
 
-template <typename T> T approach(T from, T to, float dt, float viscosity)
+float approach(float from, float to, float dt, float viscosity)
 {
   if (viscosity < 1e-9f)
     return to;
@@ -107,12 +133,44 @@ template <typename T> T approach(T from, T to, float dt, float viscosity)
     return from + (1.0f - expf(-dt / viscosity)) * (to - from);
 }
 
-float cvt(float v, float i0, float i1, float o0, float o1)
+float angle_approach(float from, float to, float dt, float viscosity)
+{
+  if (viscosity < 1e-9f)
+    return to;
+  else
+    return from + (1.0f - expf(-dt / viscosity)) * angle_diff(from, to);
+}
+
+template <typename T> inline T approach_vec(T from, T to, float dt, float viscosity)
+{
+  if (viscosity < 1e-9f)
+    return to;
+  else
+  {
+    float d = 1.0f - expf(-dt / viscosity);
+    return v_madd(v_splat4(&d), v_sub(to, from), from);
+  }
+}
+
+template <typename T> T cvt(float v, float i0, float i1, T o0, T o1)
 {
   if (i0 < i1)
     return ::lerp(o0, o1, ::clamp((v - i0) / max(i1 - i0, 1e-6f), 0.0f, 1.0f));
   else
     return ::lerp(o1, o0, ::clamp((v - i1) / max(i0 - i1, 1e-6f), 0.0f, 1.0f));
+}
+
+template <typename T> inline T lerp_vec(T a, T b, float t)
+{
+  return v_madd(v_splat4(&t), v_sub(b, a), a);
+}
+
+template <typename T> T cvt_vec(float v, float i0, float i1, T o0, T o1)
+{
+  if (i0 < i1)
+    return lerp_vec(o0, o1, ::clamp((v - i0) / max(i1 - i0, 1e-6f), 0.0f, 1.0f));
+  else
+    return lerp_vec(o1, o0, ::clamp((v - i1) / max(i0 - i1, 1e-6f), 0.0f, 1.0f));
 }
 
 
@@ -445,21 +503,71 @@ public:
       (*this, lib, "sqr", SideEffects::accessExternal, "sqr")
       ->args({"x"});
 
-    addExtern<DAS_BIND_FUN(cvt)>
+    addExtern<DAS_BIND_FUN(normalize_angle)>
+      (*this, lib, "normalize_angle", SideEffects::accessExternal, "normalize_angle")
+      ->args({"angle"});
+
+    addExtern<DAS_BIND_FUN(angle_diff)>
+      (*this, lib, "angle_diff", SideEffects::accessExternal, "angle_diff")
+      ->args({"source", "target"});
+
+
+    addExtern<DAS_BIND_FUN(lerp_vec<das::float2>)>
+      (*this, lib, "lerp", SideEffects::accessExternal, "lerp_vec<das::float2>")
+      ->args({"a", "b", "t"});
+
+    addExtern<DAS_BIND_FUN(lerp_vec<das::float3>)>
+      (*this, lib, "lerp", SideEffects::accessExternal, "lerp_vec<das::float3>")
+      ->args({"a", "b", "t"});
+
+    addExtern<DAS_BIND_FUN(lerp_vec<das::float4>)>
+      (*this, lib, "lerp", SideEffects::accessExternal, "lerp_vec<das::float4>")
+      ->args({"a", "b", "t"});
+
+    addExtern<DAS_BIND_FUN(cvt<float>)>
       (*this, lib, "cvt", SideEffects::accessExternal, "cvt")
+      ->args({"value", "from_range_1", "from_range_2", "to_range_1", "to_range_2"});
+
+    addExtern<DAS_BIND_FUN(cvt_vec<das::float2>)>
+      (*this, lib, "cvt", SideEffects::accessExternal, "cvt_vec<das::float2>")
+      ->args({"value", "from_range_1", "from_range_2", "to_range_1", "to_range_2"});
+
+    addExtern<DAS_BIND_FUN(cvt_vec<das::float3>)>
+      (*this, lib, "cvt", SideEffects::accessExternal, "cvt_vec<das::float3>")
+      ->args({"value", "from_range_1", "from_range_2", "to_range_1", "to_range_2"});
+
+    addExtern<DAS_BIND_FUN(cvt_vec<das::float4>)>
+      (*this, lib, "cvt", SideEffects::accessExternal, "cvt_vec<das::float4>")
       ->args({"value", "from_range_1", "from_range_2", "to_range_1", "to_range_2"});
 
     addExtern<DAS_BIND_FUN(move_to)>
       (*this, lib, "move_to", SideEffects::accessExternal, "move_to")
       ->args({"from", "to", "dt", "vel"});
 
-    addExtern<DAS_BIND_FUN(approach<float>)>
+    addExtern<DAS_BIND_FUN(angle_move_to)>
+      (*this, lib, "angle_move_to", SideEffects::accessExternal, "angle_move_to")
+      ->args({"from", "to", "dt", "vel"});
+
+    addExtern<DAS_BIND_FUN(approach)>
       (*this, lib, "approach", SideEffects::accessExternal, "approach")
       ->args({"from", "to", "dt", "viscosity"});
 
-    addExtern<DAS_BIND_FUN(approach<double>)>
-      (*this, lib, "approach", SideEffects::accessExternal, "approach")
+    addExtern<DAS_BIND_FUN(angle_approach)>
+      (*this, lib, "angle_approach", SideEffects::accessExternal, "angle_approach")
       ->args({"from", "to", "dt", "viscosity"});
+
+    addExtern<DAS_BIND_FUN(approach_vec<das::float2>)>
+      (*this, lib, "approach", SideEffects::accessExternal, "approach_vec<das::float2>")
+      ->args({"from", "to", "dt", "viscosity"});
+
+    addExtern<DAS_BIND_FUN(approach_vec<das::float3>)>
+      (*this, lib, "approach", SideEffects::accessExternal, "approach_vec<das::float3>")
+      ->args({"from", "to", "dt", "viscosity"});
+    
+    addExtern<DAS_BIND_FUN(approach_vec<das::float4>)>
+      (*this, lib, "approach", SideEffects::accessExternal, "approach_vec<das::float4>")
+      ->args({"from", "to", "dt", "viscosity"});
+
 
     addExtern<DAS_BIND_FUN(set_window_title)>
       (*this, lib, "set_window_title", SideEffects::modifyExternal, "set_window_title")

@@ -21,7 +21,7 @@ update CMake (3.21.3 or newer version required) https://cmake.org/install/
 `cd dasbox`\
 `./build_linux.sh`
 
-##How to use
+## How to use
 
 Run your application:
 

@@ -314,6 +314,17 @@ das::float2 get_text_size(const char * str)
   if (!str || !str[0])
     return float2(0);
 
+  if (current_font != font_mono)
+  {
+    sf::Text text;
+    text.setFont(*current_font);
+    text.setCharacterSize(current_font_size);
+    text.setPosition(0, 0);
+    text.setString(str);
+    sf::FloatRect bounds = text.getLocalBounds();
+    return das::float2(bounds.width + bounds.left + 1.0f, bounds.height + bounds.top + 1.0f);
+  }
+
   float2 charSize = float2(0);
   float2 charBase = float2(0);
   auto it = cached_char_size.find(current_font_size);

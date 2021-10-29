@@ -1,0 +1,95 @@
+<html>
+<script src="./vue.js"></script>
+<!-- import CSS -->
+<link rel="stylesheet" href="./index.css">
+<!-- import JavaScript -->
+<script src="./index.js"></script>
+
+<!-- <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12"></script> -->
+<script src="./dasweb/simple-jsonrpc-js.js"></script>
+<script src="./dasweb/jsonrpc.js"></script>
+
+<body>
+
+  <div id="app">
+    <el-button-group>
+      <el-button type="primary" @click="showArchetypes()">Archetypes</el-button>
+      <el-button type="primary" @click="showEntities()">Entities</el-button>
+    </el-button-group>
+
+    <el-collapse v-if="currentTab == 0" v-for="item in archetypes" v-bind:key="item.hash">
+      <el-collapse-item>
+        <template slot="title">
+          {{item.hash}}: {{item.size}} entities <i class="header-icon el-icon-info"></i>
+        </template>
+        <!-- <div>{{ item }}</div> -->
+
+        <el-table :data="item.components" stripe style="width: 100%">
+          <el-table-column prop="name" label="Name">
+          </el-table-column>
+          <el-table-column prop="info.mangledName" label="Mangled name">
+          </el-table-column>
+          <el-table-column prop="info.basicType" label="Basic Type">
+          </el-table-column>
+          <el-table-column prop="info.size" label="Size">
+          </el-table-column>
+        </el-table>
+      </el-collapse-item>
+    </el-collapse>
+
+    <el-collapse v-if="currentTab == 1" v-for="item in entities" v-bind:key="item.hash">
+      <el-collapse-item>
+        <template slot="title">
+          Eid: {{item.eid}} gen: {{item.eid_gen}} arch: {{item.archetype}} <i class="header-icon el-icon-info"></i>
+        </template>
+        <!-- <div>{{ item }}</div> -->
+
+        <el-table :data="item.data" stripe style="width: 100%">
+          <el-table-column prop="name" label="Name">
+          </el-table-column>
+          <el-table-column prop="value" label="Value">
+          </el-table-column>
+        </el-table>
+      </el-collapse-item>
+    </el-collapse>
+
+  </div>
+
+  <script>
+    createSocket()
+    var app5 = new Vue({
+      el: '#app',
+      data: {
+        currentTab: -1,
+        archetypes: null,
+        entities: null
+      },
+      methods: {
+        getArchetypes: function () {
+          jrpc.call('getArchetypes').then((data) => {
+            this.archetypes = data
+          })
+        },
+        getEntities: function () {
+          jrpc.call('getEntities').then((data) => {
+            this.entities = data
+          })
+        },
+        showArchetypes: function () {
+          this.currentTab = 0
+          this.getArchetypes()
+        },
+        showEntities: function () {
+          this.currentTab = 1
+          this.getEntities()
+        }
+      },
+      mounted() {
+        // setTimeout(() => jrpc.notification("whatsup"), 100)
+      }
+    })
+  </script>
+
+</body>
+
+</html>

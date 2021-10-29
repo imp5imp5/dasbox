@@ -197,6 +197,34 @@ const char * get_clipboard_text()
   return "";
 }
 
+const char * get_dasbox_exe_path();
+
+void patch_vscode_project(const char * dir)
+{
+  string projFileName = fs::combine_path(dir, ".vscode/settings.json");
+  if (!fs::is_file_exists(projFileName.c_str()))
+    return;
+
+  string s = fs::read_whole_file(projFileName.c_str());
+
+  const char * n = strstr(s.c_str(), "/dasbox.exe\",");
+  if (n)
+  {
+    const char * nEnd = strchr(n, '"');
+    const char * nStart = n;
+    while (nStart >= s.c_str() && *nStart != '"')
+      nStart--;
+
+    nStart++;
+
+    if (!strncmp(nStart, get_dasbox_exe_path(), nEnd - nStart))
+      return;
+
+    s.replace(nStart - s.c_str(), nEnd - nStart, get_dasbox_exe_path());
+    fs::write_string_to_file(projFileName.c_str(), s.c_str());
+  }
+}
+
 void dasbox_execute_editor(const char * dir, const char * file_name)
 {
   if (!trust_mode)
@@ -210,6 +238,7 @@ void dasbox_execute_editor(const char * dir, const char * file_name)
   int res = system("where code.cmd");
   if (!res)
   {
+    patch_vscode_project(dir);
     char buf[512] = { 0 };
     snprintf(buf, sizeof(buf), "code \"%s\"", dir, file_name);
     system(buf);

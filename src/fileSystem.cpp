@@ -72,6 +72,32 @@ bool read_whole_file(const char * file_name, std::vector<uint8_t> & bytes)
 }
 
 
+std::string read_whole_file(const char * file_name)
+{
+  vector<uint8_t> data;
+  read_whole_file(file_name, data);
+  data.push_back(0);
+  return string((const char *)&data[0]);
+}
+
+bool write_string_to_file(const char * file_name, const char * str)
+{
+  if (!file_name)
+    file_name = "";
+
+  FILE * f = fopen(file_name, "wb");
+  if (!f)
+  {
+    print_error("Cannot open file '%s' for write", file_name);
+    return false;
+  }
+
+  fwrite(str, strlen(str), 1, f);
+  fclose(f);
+  return true;
+}
+
+
 DasboxFsFileAccess::DasboxFsFileAccess(const char * pak, bool allow_hot_reload) :
   das::ModuleFileAccess(pak, das::make_smart<DasboxFsFileAccess>(false)), storeOpenedFiles(allow_hot_reload)
 {

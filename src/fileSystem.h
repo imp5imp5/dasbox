@@ -14,6 +14,8 @@ namespace fs
 void initialize();
 bool is_path_string_valid(const char * path);
 bool read_whole_file(const char * file_name, std::vector<uint8_t> & bytes);
+std::string read_whole_file(const char * file_name);
+bool write_string_to_file(const char * file_name, const char * str);
 std::string combine_path(const std::string & path1, const std::string & path2);
 std::string extract_dir(const std::string & path);
 std::string extract_file_name(const std::string & path);

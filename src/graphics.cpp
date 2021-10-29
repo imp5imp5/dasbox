@@ -1122,6 +1122,273 @@ void draw_triangle_strip(const Image & image,
 }
 
 
+
+struct MeshData
+{
+  sf::VertexArray vertexArray;
+  vector<int> triangleStripIdx;
+  vector<int> trianglesIdx;
+};
+
+
+static unordered_set<MeshData *> mesh_pointers;
+
+
+struct Mesh
+{
+  MeshData * meshData;
+
+  bool isValid() const
+  {
+    return !!meshData;
+  }
+
+  int getDimensions() const
+  {
+    return 2;
+  }
+
+  Mesh()
+  {
+    meshData = nullptr;
+  }
+
+  Mesh(const Mesh & b)
+  {
+    meshData = meshData ? new MeshData(*b.meshData) : nullptr;
+    mesh_pointers.insert(meshData);
+  }
+
+  Mesh(Mesh && b)
+  {
+    meshData = b.meshData;
+    b.meshData = nullptr;
+  }
+
+  Mesh& operator=(const Mesh & b)
+  {
+    mesh_pointers.erase(meshData);
+    delete meshData;
+    meshData = meshData ? new MeshData(*b.meshData) : nullptr;
+    mesh_pointers.insert(meshData);
+    return *this;
+  }
+
+  Mesh& operator=(Mesh && b)
+  {
+    meshData = b.meshData;
+    b.meshData = nullptr;
+    return *this;
+  }
+
+  ~Mesh()
+  {
+    mesh_pointers.erase(meshData);
+    delete meshData;
+    meshData = nullptr;
+  }
+};
+
+
+void delete_mesh(Mesh * mesh)
+{
+  mesh_pointers.erase(mesh->meshData);
+  delete mesh->meshData;
+  mesh->meshData = nullptr;
+}
+
+
+Mesh create_mesh_triangles_1(const TArray<float2> & positions, const TArray<float2> & tex_coords, const TArray<uint32_t> & colors,
+  const TArray<int> & indices)
+{
+  Mesh m;
+
+  int cnt = min(positions.size, min(tex_coords.size, colors.size));
+  if (cnt == 0)
+    return m;
+
+  int tri = indices.size / 3 * 3;
+  if (!tri)
+    return m;
+
+  MeshData * md = new MeshData;
+  m.meshData = md;
+
+  md->vertexArray.setPrimitiveType(sf::Triangles);
+
+  for (int i = 0; i < cnt; i++)
+    md->vertexArray.append(sf::Vertex(sf::Vector2f(positions[i].x, positions[i].y), conv_color(colors[i]),
+      sf::Vector2f(tex_coords[i].x, tex_coords[i].y)));
+
+  for (int i = 0; i < tri; i++)
+    md->trianglesIdx.push_back(indices[i]);
+
+  return m;
+}
+
+Mesh create_mesh_triangles_2(const TArray<float2> & positions, const TArray<float2> & tex_coords,
+  const TArray<int> & indices)
+{
+  Mesh m;
+
+  int cnt = min(positions.size, tex_coords.size);
+  if (cnt == 0)
+    return m;
+
+  int tri = indices.size / 3 * 3;
+  if (!tri)
+    return m;
+
+  MeshData * md = new MeshData;
+  m.meshData = md;
+
+  md->vertexArray.setPrimitiveType(sf::Triangles);
+
+  for (int i = 0; i < cnt; i++)
+    md->vertexArray.append(sf::Vertex(sf::Vector2f(positions[i].x, positions[i].y), sf::Color::White,
+      sf::Vector2f(tex_coords[i].x, tex_coords[i].y)));
+
+  for (int i = 0; i < tri; i++)
+    md->trianglesIdx.push_back(indices[i]);
+
+  return m;
+}
+
+Mesh create_mesh_triangles_3(const TArray<float2> & positions,
+  const TArray<int> & indices)
+{
+  Mesh m;
+
+  int cnt = positions.size;
+  if (cnt == 0)
+    return m;
+
+  int tri = indices.size / 3 * 3;
+  if (!tri)
+    return m;
+
+  MeshData * md = new MeshData;
+  m.meshData = md;
+
+  md->vertexArray.setPrimitiveType(sf::Triangles);
+
+  for (int i = 0; i < cnt; i++)
+    md->vertexArray.append(sf::Vertex(sf::Vector2f(positions[i].x, positions[i].y), sf::Color::White,
+      sf::Vector2f(0, 0)));
+
+  for (int i = 0; i < tri; i++)
+    md->trianglesIdx.push_back(indices[i]);
+
+  return m;
+}
+
+
+Mesh create_mesh_triangle_strip_1(const TArray<float2> & positions, const TArray<float2> & tex_coords, const TArray<uint32_t> & colors,
+  const TArray<int> & indices)
+{
+  Mesh m;
+
+  int cnt = min(positions.size, min(tex_coords.size, colors.size));
+  if (cnt == 0)
+    return m;
+
+  int tri = indices.size / 2 * 2;
+  if (!tri)
+    return m;
+
+  MeshData * md = new MeshData;
+  m.meshData = md;
+
+  md->vertexArray.setPrimitiveType(sf::TriangleStrip);
+
+  for (int i = 0; i < cnt; i++)
+    md->vertexArray.append(sf::Vertex(sf::Vector2f(positions[i].x, positions[i].y), conv_color(colors[i]),
+      sf::Vector2f(tex_coords[i].x, tex_coords[i].y)));
+
+  for (int i = 0; i < tri; i++)
+    md->triangleStripIdx.push_back(indices[i]);
+
+  return m;
+}
+
+Mesh create_mesh_triangle_strip_2(const TArray<float2> & positions, const TArray<float2> & tex_coords,
+  const TArray<int> & indices)
+{
+  Mesh m;
+
+  int cnt = min(positions.size, tex_coords.size);
+  if (cnt == 0)
+    return m;
+
+  int tri = indices.size / 2 * 2;
+  if (!tri)
+    return m;
+
+  MeshData * md = new MeshData;
+  m.meshData = md;
+
+  md->vertexArray.setPrimitiveType(sf::TriangleStrip);
+
+  for (int i = 0; i < cnt; i++)
+    md->vertexArray.append(sf::Vertex(sf::Vector2f(positions[i].x, positions[i].y), sf::Color::White,
+      sf::Vector2f(tex_coords[i].x, tex_coords[i].y)));
+
+  for (int i = 0; i < tri; i++)
+    md->triangleStripIdx.push_back(indices[i]);
+
+  return m;
+}
+
+Mesh create_mesh_triangle_strip_3(const TArray<float2> & positions,
+  const TArray<int> & indices)
+{
+  Mesh m;
+
+  int cnt = positions.size;
+  if (cnt == 0)
+    return m;
+
+  int tri = indices.size / 2 * 2;
+  if (!tri)
+    return m;
+
+  MeshData * md = new MeshData;
+  m.meshData = md;
+
+  md->vertexArray.setPrimitiveType(sf::TriangleStrip);
+
+  for (int i = 0; i < cnt; i++)
+    md->vertexArray.append(sf::Vertex(sf::Vector2f(positions[i].x, positions[i].y), sf::Color::White,
+      sf::Vector2f(0, 0)));
+
+  for (int i = 0; i < tri; i++)
+    md->triangleStripIdx.push_back(indices[i]);
+
+  return m;
+}
+
+
+void draw_mesh(const Mesh & mesh, const Image & texture_image, float x, float y, float angle, float scale)
+{
+  if (!mesh.isValid() || fabsf(scale) < 1e-8f)
+    return;
+  if (!texture_image.tex)
+    return;
+  if (!texture_image.applied)
+    apply_texture(texture_image);
+
+  sf::RenderStates states = primitive_rs;
+  states.texture = texture_image.tex;
+  states.transform = states.transform.translate(x, y).rotate(angle * 180.0f / M_PI).scale(sf::Vector2f(scale, scale));
+  if (g_render_target)
+    g_render_target->draw(mesh.meshData->vertexArray, states);
+}
+
+
+
+
+
+
 typedef das::float2 PointsType_2[2];
 typedef das::float2 PointsType_3[3];
 typedef das::float2 PointsType_4[4];
@@ -1203,6 +1470,10 @@ void initialize()
 
 void delete_allocated_images()
 {
+  for (auto && meshData : mesh_pointers)
+    delete meshData;
+  mesh_pointers.clear();
+
   for (auto && texture : texture_pointers)
     delete texture;
   texture_pointers.clear();
@@ -1230,6 +1501,64 @@ void on_graphics_frame_start()
 }
 
 } // namespace
+
+
+
+MAKE_TYPE_FACTORY(Mesh, Mesh)
+
+
+struct SimNode_DeleteMesh : SimNode_Delete
+{
+  SimNode_DeleteMesh( const LineInfo & a, SimNode * s, uint32_t t )
+    : SimNode_Delete(a, s, t) {}
+
+  virtual SimNode * visit(SimVisitor & vis) override
+  {
+    V_BEGIN();
+    V_OP(DeleteMesh);
+    V_ARG(total);
+    V_SUB(subexpr);
+    V_END();
+  }
+
+  virtual vec4f eval(Context & context) override
+  {
+    DAS_PROFILE_NODE
+      auto pH = (Mesh *)subexpr->evalPtr(context);
+    for (uint32_t i = 0; i != total; ++i, pH++)
+      delete_mesh(pH);
+    return v_zero();
+  }
+};
+
+
+struct MeshAnnotation : ManagedStructureAnnotation<Mesh, true, true>
+{
+  MeshAnnotation(ModuleLibrary & ml) : ManagedStructureAnnotation("Mesh", ml)
+  {
+    addProperty<DAS_BIND_MANAGED_PROP(getDimensions)>("dimensions");
+    addProperty<DAS_BIND_MANAGED_PROP(isValid)>("valid");
+  }
+
+  bool canCopy() const override { return false; }
+  virtual bool hasNonTrivialCtor() const override { return false; }
+  virtual bool isLocal() const override { return true; }
+  virtual bool canClone() const override { return true; }
+  virtual bool canMove() const override { return true; }
+  virtual bool canNew() const override { return true; }
+  virtual bool canDelete() const override { return true; }
+  virtual bool needDelete() const override { return true; }
+  virtual bool canBePlacedInContainer() const override { return true; }
+
+  virtual SimNode * simulateDelete(Context & context, const LineInfo & at, SimNode * sube, uint32_t count) const override
+  {
+    return context.code->makeNode<SimNode_DeleteMesh>(at, sube, count);
+  }
+};
+
+
+
+
 
 
 MAKE_TYPE_FACTORY(Image, Image)
@@ -1302,6 +1631,8 @@ public:
 
     addAnnotation(das::make_smart<ImageAnnotation>(lib));
     addCtorAndUsing<Image>(*this, lib, "Image", "Image");
+    addAnnotation(das::make_smart<MeshAnnotation>(lib));
+    addCtorAndUsing<Mesh>(*this, lib, "Mesh", "Mesh");
 
     addExtern<DAS_BIND_FUN(get_screen_width)>(*this, lib, "get_screen_width", SideEffects::accessExternal, "get_screen_width");
     addExtern<DAS_BIND_FUN(get_screen_height)>(*this, lib, "get_screen_height", SideEffects::accessExternal, "get_screen_height");
@@ -1524,6 +1855,35 @@ public:
 
     addExtern<DAS_BIND_FUN(get_image_pixel)>(*this, lib, "get_pixel", SideEffects::accessExternal, "get_pixel")
       ->args({"image", "x", "y"});
+
+
+    addExtern<DAS_BIND_FUN(draw_mesh)>(*this, lib, "draw_mesh", SideEffects::modifyExternal, "draw_mesh")
+      ->args({"mesh", "texture_image", "x", "y", "angle", "scale"});
+
+    
+    addExtern<DAS_BIND_FUN(create_mesh_triangles_1), SimNode_ExtFuncCallAndCopyOrMove>(*this, lib,
+    "create_mesh_triangles", SideEffects::modifyExternal, "create_mesh_triangles_1")
+      ->args({"positions", "tex_coords", "colors", "indices"});
+
+    addExtern<DAS_BIND_FUN(create_mesh_triangles_2), SimNode_ExtFuncCallAndCopyOrMove>(*this, lib,
+      "create_mesh_triangles", SideEffects::modifyExternal, "create_mesh_triangles_2")
+      ->args({"positions", "tex_coords", "indices"});
+
+    addExtern<DAS_BIND_FUN(create_mesh_triangles_3), SimNode_ExtFuncCallAndCopyOrMove>(*this, lib,
+      "create_mesh_triangles", SideEffects::modifyExternal, "create_mesh_triangles_3")
+      ->args({"positions", "indices"});
+
+    addExtern<DAS_BIND_FUN(create_mesh_triangle_strip_1), SimNode_ExtFuncCallAndCopyOrMove>(*this,
+      lib, "create_mesh_triangle_strip", SideEffects::modifyExternal, "create_mesh_triangle_strip_1")
+      ->args({"positions", "tex_coords", "colors", "indices"});
+
+    addExtern<DAS_BIND_FUN(create_mesh_triangle_strip_2), SimNode_ExtFuncCallAndCopyOrMove>(*this,
+      lib, "create_mesh_triangle_strip", SideEffects::modifyExternal, "create_mesh_triangle_strip_2")
+      ->args({"positions", "tex_coords", "indices"});
+
+    addExtern<DAS_BIND_FUN(create_mesh_triangle_strip_3), SimNode_ExtFuncCallAndCopyOrMove>(*this,
+      lib, "create_mesh_triangle_strip", SideEffects::modifyExternal, "create_mesh_triangle_strip_3")
+      ->args({"positions", "indices"});
 
 
     compileBuiltinModule("graphics.das", (unsigned char *)graphics_das, sizeof(graphics_das));

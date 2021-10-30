@@ -127,6 +127,7 @@ DasboxFsFileAccess::~DasboxFsFileAccess()
     context = nullptr;
 }
 
+/*
 void check_source_for_correct_debug_position(const das::string & fname, char * s)
 {
   const char * p = s;
@@ -145,6 +146,7 @@ void check_source_for_correct_debug_position(const das::string & fname, char * s
     p++;
   }
 }
+*/
 
 das::FileInfo * DasboxFsFileAccess::getNewFileInfo(const das::string & fname)
 {
@@ -190,7 +192,7 @@ das::FileInfo * DasboxFsFileAccess::getNewFileInfo(const das::string & fname)
   fclose(f);
 
   source[fileLength] = 0;
-  check_source_for_correct_debug_position(fname, source);
+  //check_source_for_correct_debug_position(fname, source);
 
   auto info = das::make_unique<das::TextFileInfo>(source, fileLength, true);
   if (storeOpenedFiles)

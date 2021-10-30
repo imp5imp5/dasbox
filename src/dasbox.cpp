@@ -58,8 +58,8 @@ int screen_height = 720;
 
 sf::Vector2i window_pos = sf::Vector2i(0, 0);
 
-void set_font_name(const char *);
-void set_font_size_i(int);
+const char * set_font_name(const char *);
+int set_font_size_i(int);
 
 
 //------------------------------- logger ----------------------------------------------
@@ -378,6 +378,21 @@ void exec_function(SimFunction * fn, vec4f * args)
       print_exception("%s", s.c_str());
     }
   }
+}
+
+
+const char * das_str_dup(const char * s)
+{
+  if (!s)
+    return s;
+
+  if (!das_file->ctx.get() || !das_file->ctx)
+    return strdup(s); // memory leak is better than crash
+
+  int len = strlen(s);
+  char * res = das_file->ctx->stringHeap->allocate(len + 1);
+  memcpy(res, s, len + 1);
+  return res;
 }
 
 

@@ -16,9 +16,12 @@ static sf::RenderStates primitive_rs;
 static sf::Font * font_mono = nullptr;
 static sf::Font * font_sans = nullptr;
 static sf::Font * current_font = nullptr;
+static string current_font_name = "mono";
+static string prev_font_name = "mono";
 static int current_font_size = 16;
 static sf::Font * saved_font = nullptr;
 static unordered_map<string, sf::Font *> loaded_fonts;
+static vector<sf::Transform> transform_stack;
 
 
 const sf::BlendMode BlendPremultipliedAlpha(sf::BlendMode::One, sf::BlendMode::OneMinusSrcAlpha, sf::BlendMode::Add,
@@ -216,32 +219,38 @@ void fill_circle_i(int x, int y, int radius, uint32_t color)
   fill_circle((float)x, (float)y, (float)radius, color);
 }
 
-void set_font_name(const char * name)
+const char * set_font_name(const char * name)
 {
+  prev_font_name = current_font_name;
+
   if (!name || !name[0] || !strcmp(name, "mono"))
   {
     current_font = font_mono;
-    return;
+    current_font_name = "mono";
+    return das_str_dup(prev_font_name.c_str());
   }
 
   if (!strcmp(name, "sans"))
   {
     current_font = font_sans;
-    return;
+    current_font_name = name;
+    return das_str_dup(prev_font_name.c_str());
   }
 
   auto it = loaded_fonts.find(string(name));
   if (it != loaded_fonts.end())
   {
     current_font = it->second;
-    return;
+    current_font_name = name;
+    return das_str_dup(prev_font_name.c_str());
   }
 
   if (!fs::is_path_string_valid(name))
   {
     print_error("Cannot open font '%s'. Absolute paths or access to the parent directory is prohibited.", name);
     current_font = font_mono;
-    return;
+    current_font_name = name;
+    return das_str_dup(prev_font_name.c_str());
   }
 
   sf::Font * font = new sf::Font();
@@ -250,11 +259,14 @@ void set_font_name(const char * name)
     print_error("Cannot load font '%s'", name);
     delete font;
     current_font = font_mono;
-    return;
+    current_font_name = name;
+    return das_str_dup(prev_font_name.c_str());
   }
 
   loaded_fonts[string(name)] = font;
   current_font = font;
+  current_font_name = name;
+  return das_str_dup(prev_font_name.c_str());
 }
 
 void stash_font()
@@ -270,14 +282,18 @@ void restore_font()
     current_font = font_mono;
 }
 
-void set_font_size(float size)
+float set_font_size(float size)
 {
+  float res = current_font_size;
   current_font_size = int(size + 0.5f);
+  return res;
 }
 
-void set_font_size_i(int size)
+int set_font_size_i(int size)
 {
+  int res = current_font_size;
   current_font_size = size;
+  return res;
 }
 
 int get_font_size_i()
@@ -1368,9 +1384,9 @@ Mesh create_mesh_triangle_strip_3(const TArray<float2> & positions,
 }
 
 
-void draw_mesh(const Mesh & mesh, const Image & texture_image, float x, float y, float angle, float scale)
+void draw_mesh(const Mesh & mesh, const Image & texture_image, float x, float y, float angle, float2 scale)
 {
-  if (!mesh.isValid() || fabsf(scale) < 1e-8f)
+  if (!mesh.isValid() || fabsf(scale.x) < 1e-8f || fabsf(scale.y) < 1e-8f)
     return;
   if (!texture_image.tex)
     return;
@@ -1379,14 +1395,31 @@ void draw_mesh(const Mesh & mesh, const Image & texture_image, float x, float y,
 
   sf::RenderStates states = primitive_rs;
   states.texture = texture_image.tex;
-  states.transform = states.transform.translate(x, y).rotate(angle * 180.0f / M_PI).scale(sf::Vector2f(scale, scale));
+  states.transform = states.transform.translate(x, y).rotate(angle * 180.0f / M_PI).scale(sf::Vector2f(scale.x, scale.y));
   if (g_render_target)
     g_render_target->draw(mesh.meshData->vertexArray, states);
 }
 
+void draw_mesh_f(const Mesh & mesh, const Image & texture_image, float x, float y, float angle, float scale)
+{
+  draw_mesh(mesh, texture_image, x, y, angle, float2(scale, scale));
+}
 
+void draw_mesh_nt(const Mesh & mesh, float x, float y, float angle, float2 scale)
+{
+  if (!mesh.isValid() || fabsf(scale.x) < 1e-8f || fabsf(scale.y) < 1e-8f)
+    return;
 
+  sf::RenderStates states = primitive_rs;
+  states.transform = states.transform.translate(x, y).rotate(angle * 180.0f / M_PI).scale(sf::Vector2f(scale.x, scale.y));
+  if (g_render_target)
+    g_render_target->draw(mesh.meshData->vertexArray, states);
+}
 
+void draw_mesh_ntf(const Mesh & mesh, float x, float y, float angle, float scale)
+{
+  draw_mesh_nt(mesh, x, y, angle, float2(scale, scale));
+}
 
 
 typedef das::float2 PointsType_2[2];
@@ -1466,6 +1499,9 @@ void initialize()
 
   saved_font = nullptr;
   set_font_name(nullptr);
+
+  transform_stack.clear();
+  primitive_rs.transform = sf::Transform::Identity;
 }
 
 void delete_allocated_images()
@@ -1860,7 +1896,16 @@ public:
     addExtern<DAS_BIND_FUN(draw_mesh)>(*this, lib, "draw_mesh", SideEffects::modifyExternal, "draw_mesh")
       ->args({"mesh", "texture_image", "x", "y", "angle", "scale"});
 
-    
+    addExtern<DAS_BIND_FUN(draw_mesh_f)>(*this, lib, "draw_mesh", SideEffects::modifyExternal, "draw_mesh_f")
+      ->args({"mesh", "texture_image", "x", "y", "angle", "scale"});
+
+    addExtern<DAS_BIND_FUN(draw_mesh_nt)>(*this, lib, "draw_mesh", SideEffects::modifyExternal, "draw_mesh_nt")
+      ->args({"mesh", "x", "y", "angle", "scale"});
+
+    addExtern<DAS_BIND_FUN(draw_mesh_ntf)>(*this, lib, "draw_mesh", SideEffects::modifyExternal, "draw_mesh_ntf")
+      ->args({"mesh", "x", "y", "angle", "scale"});
+
+
     addExtern<DAS_BIND_FUN(create_mesh_triangles_1), SimNode_ExtFuncCallAndCopyOrMove>(*this, lib,
     "create_mesh_triangles", SideEffects::modifyExternal, "create_mesh_triangles_1")
       ->args({"positions", "tex_coords", "colors", "indices"});

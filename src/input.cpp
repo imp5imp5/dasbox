@@ -67,6 +67,8 @@ void reset_input()
 
 static void post_update_keys(char * keys, int count)
 {
+  entered_symbols.clear();
+
   for (int i = 0; i < count; i++)
     if (keys[i] != K_NOT_PRESSED)
     {

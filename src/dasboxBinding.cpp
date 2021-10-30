@@ -194,7 +194,7 @@ const char * get_clipboard_text()
   }
   else */
     print_error("get_clipboard_text is not implemented");
-  return "";
+  return das_str_dup("");
 }
 
 const char * get_dasbox_exe_path();
@@ -283,7 +283,7 @@ const char * get_dasbox_build_date()
 
 const char * get_dasbox_initial_dir()
 {
-  return initial_dir;
+  return das_str_dup(initial_dir);
 }
 
 void randomize_seed(int4 & seed)

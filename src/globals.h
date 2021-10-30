@@ -1,6 +1,6 @@
 #pragma once
 
-#define DASBOX_VERSION "0.1.22"
+#define DASBOX_VERSION "0.1.23"
 
 namespace sf
 {
@@ -33,6 +33,8 @@ void print_note(const char * format, ...);
 void reinterpret_error_as_note(bool is_note);
 void os_debug_break();
 void fetch_cerr();
+
+const char * das_str_dup(const char * s);
 
 #define VERY_BIG_NUMBER 2147440000
 #define countof(x) (sizeof(x) / sizeof((x)[0]))

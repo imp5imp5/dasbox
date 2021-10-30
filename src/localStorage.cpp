@@ -173,7 +173,7 @@ const char * local_storage_get(const char * key)
   if (!key)
     return "";
   ensure_open_storage();
-  return inmemory_local_storage[std::string(key)].c_str();
+  return das_str_dup(inmemory_local_storage[std::string(key)].c_str());
 }
 
 bool local_storage_has_key(const char * key)

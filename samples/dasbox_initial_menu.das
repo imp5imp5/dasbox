@@ -111,6 +111,15 @@ def find_projects_dir(): string
     return ""
 
 
+def check_and_create_vs_code_settings(editor_dir: string)
+    if !is_file_exists(editor_dir + "/.vscode")
+        mkdir(editor_dir + "/.vscode")
+    if !is_file_exists(editor_dir + "/.vscode/settings.json")
+        fopen(editor_dir + "/.vscode/settings.json", "wt") <| $(f)
+            if f != null
+                fwrite(f, vscode_settings)
+
+
 def create_project(name: string): bool
     var result = false
     var d = find_projects_dir()
@@ -130,10 +139,7 @@ def create_project(name: string): bool
             fwrite(f, replace(minimal_sample, "__TITLE__", name))
             result = true
 
-    mkdir(d + "/" + fsName + "/.vscode")
-    fopen(d + "/" + fsName + "/.vscode/settings.json", "wt") <| $(f)
-        if f != null
-            fwrite(f, vscode_settings)
+    check_and_create_vs_code_settings(d + "/" + fsName)
 
     return result
 
@@ -407,8 +413,10 @@ def update_select_item(dt: float)
             wishScrollPos = float(nextIndex)
 
     if (get_key_press(VK_RETURN) || get_key_press(VK_SPACE)) && fadeout <= 0.0
-        if ctrl && !empty(menuItems[nextIndex].editorDir)
-            dasbox_execute_editor(menuItems[nextIndex].editorDir, menuItems[nextIndex].source)
+        let editorDir = menuItems[nextIndex].editorDir
+        if ctrl && !empty(editorDir)
+            check_and_create_vs_code_settings(editorDir)
+            dasbox_execute_editor(editorDir, menuItems[nextIndex].source)
 
         if menuItems[nextIndex].newApplication
             enteringName = true

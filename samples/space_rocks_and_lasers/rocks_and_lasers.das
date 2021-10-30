@@ -187,15 +187,7 @@ def add_bullet(pos: float2; vel: float2; ttl: float; canDamage: bool)
     push(new_bullets, b)
 
 
-[export]
-def initialize()
-    set_antialiasing(4)
-    set_window_title("Space, Rocks and Lasers")
-    print("Screen size: {get_screen_width()} x {get_screen_height()}\n")
-    // schedule_pause()
-
-    randomize_seed(seed)
-
+def reset_game
     timeToRestart = -1.0
     lives = 3
     ship_reset(ship)
@@ -210,6 +202,16 @@ def initialize()
         var a: Rock
         rock_reset(a)
         push(rocks, a)
+
+
+[export]
+def initialize()
+    set_antialiasing(4)
+    set_window_title("Space, Rocks and Lasers")
+    print("Screen size: {get_screen_width()} x {get_screen_height()}\n")
+    // schedule_pause()
+    randomize_seed(seed)
+    reset_game()
 
 
 def create_explosion(pos: float2; vel: float2; speed: float; radius: float; particles: int)
@@ -303,7 +305,7 @@ def act(dt: float)
     if timeToRestart > 0.0
         timeToRestart -= dt
         if timeToRestart < 0.0
-            initialize()
+            reset_game()
 
 
 [export]

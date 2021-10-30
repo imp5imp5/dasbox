@@ -1,9 +1,4 @@
-options indenting = 4
-require dasbox
-require graphics
-require math
-require daslib/random
-require strings
+require daslib/media
 
 let
     BIRD_COLOR      = 0xFF3F70
@@ -139,13 +134,17 @@ def remove_out_of_screen_column()
         erase(columns, index)
 
 
+def reset_game()
+    reset_bird(bird)
+    clear(columns)
+    score = 0
+
+
 [export]
 def initialize
     set_window_title("Flappy Box")
     randomize_seed(RAND_SEED)
-    reset_bird(bird)
-    clear(columns)
-    score = 0
+    reset_game()
 
 
 def update_input()
@@ -154,7 +153,7 @@ def update_input()
         if bird.alive
             jump_bird(bird)
         else
-            initialize()
+            reset_game()
     jump_pressed = jump
 
 

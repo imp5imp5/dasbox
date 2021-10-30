@@ -58,8 +58,8 @@ int screen_height = 720;
 
 sf::Vector2i window_pos = sf::Vector2i(0, 0);
 
-const char * set_font_name(const char *);
-int set_font_size_i(int);
+void set_font_name(const char *);
+void set_font_size_i(int);
 
 
 //------------------------------- logger ----------------------------------------------

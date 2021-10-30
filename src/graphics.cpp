@@ -17,7 +17,6 @@ static sf::Font * font_mono = nullptr;
 static sf::Font * font_sans = nullptr;
 static sf::Font * current_font = nullptr;
 static string current_font_name = "mono";
-static string prev_font_name = "mono";
 static int current_font_size = 16;
 static sf::Font * saved_font = nullptr;
 static unordered_map<string, sf::Font *> loaded_fonts;
@@ -219,22 +218,20 @@ void fill_circle_i(int x, int y, int radius, uint32_t color)
   fill_circle((float)x, (float)y, (float)radius, color);
 }
 
-const char * set_font_name(const char * name)
+void set_font_name(const char * name)
 {
-  prev_font_name = current_font_name;
-
   if (!name || !name[0] || !strcmp(name, "mono"))
   {
     current_font = font_mono;
     current_font_name = "mono";
-    return das_str_dup(prev_font_name.c_str());
+    return;
   }
 
   if (!strcmp(name, "sans"))
   {
     current_font = font_sans;
     current_font_name = name;
-    return das_str_dup(prev_font_name.c_str());
+    return;
   }
 
   auto it = loaded_fonts.find(string(name));
@@ -242,15 +239,15 @@ const char * set_font_name(const char * name)
   {
     current_font = it->second;
     current_font_name = name;
-    return das_str_dup(prev_font_name.c_str());
+    return;
   }
 
   if (!fs::is_path_string_valid(name))
   {
     print_error("Cannot open font '%s'. Absolute paths or access to the parent directory is prohibited.", name);
     current_font = font_mono;
-    current_font_name = name;
-    return das_str_dup(prev_font_name.c_str());
+    current_font_name = "mono";
+    return;
   }
 
   sf::Font * font = new sf::Font();
@@ -259,14 +256,18 @@ const char * set_font_name(const char * name)
     print_error("Cannot load font '%s'", name);
     delete font;
     current_font = font_mono;
-    current_font_name = name;
-    return das_str_dup(prev_font_name.c_str());
+    current_font_name = "mono";
+    return;
   }
 
   loaded_fonts[string(name)] = font;
   current_font = font;
   current_font_name = name;
-  return das_str_dup(prev_font_name.c_str());
+}
+
+const char * get_current_font_name()
+{
+  return das_str_dup(current_font_name.c_str());
 }
 
 void stash_font()
@@ -282,18 +283,14 @@ void restore_font()
     current_font = font_mono;
 }
 
-float set_font_size(float size)
+void set_font_size(float size)
 {
-  float res = current_font_size;
   current_font_size = int(size + 0.5f);
-  return res;
 }
 
-int set_font_size_i(int size)
+void set_font_size_i(int size)
 {
-  int res = current_font_size;
   current_font_size = size;
-  return res;
 }
 
 int get_font_size_i()
@@ -1755,6 +1752,8 @@ public:
     addExtern<DAS_BIND_FUN(fill_convex_polygon8)>(*this, lib,
       "fill_convex_polygon", SideEffects::modifyExternal, "fill_convex_polygon8");
 
+    addExtern<DAS_BIND_FUN(get_current_font_name)>(*this, lib, "get_current_font_name", SideEffects::modifyExternal, "get_current_font_name");
+    addExtern<DAS_BIND_FUN(get_font_size_i)>(*this, lib, "get_current_font_size", SideEffects::modifyExternal, "get_font_size_i");
 
     addExtern<DAS_BIND_FUN(set_font_name)>(*this, lib, "set_font_name", SideEffects::modifyExternal, "set_font_name")
       ->args({"font_name"});

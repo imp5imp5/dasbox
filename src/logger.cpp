@@ -441,13 +441,13 @@ void update_log_screen(float dt)
 
 
 void disable_alpha_blend();
-int  set_font_size_i(int size);
+void set_font_size_i(int size);
 int  get_font_size_i();
 void text_out_i(int x, int y, const char * str, uint32_t color);
 void fill_rect_i(int x, int y, int width, int height, uint32_t color);
 void stash_font();
 void restore_font();
-const char * set_font_name(const char *);
+void set_font_name(const char *);
 
 
 

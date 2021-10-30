@@ -127,6 +127,25 @@ DasboxFsFileAccess::~DasboxFsFileAccess()
     context = nullptr;
 }
 
+void check_source_for_correct_debug_position(const das::string & fname, char * s)
+{
+  const char * p = s;
+  for (;;)
+  {
+    p = strstr(p, "require daslib/debug");
+    if (!p)
+      break;
+    if (p == s || p[-1] == '\n')
+    {
+      const char * req = strstr(p + 1, "\nrequire ");
+      if (req != nullptr)
+        print_error("Lines 'options debugger' and 'require daslib/debug' should be placed after all other 'require'\nAt file: '%s'",
+          fname.c_str());
+    }
+    p++;
+  }
+}
+
 das::FileInfo * DasboxFsFileAccess::getNewFileInfo(const das::string & fname)
 {
   /*{
@@ -171,6 +190,8 @@ das::FileInfo * DasboxFsFileAccess::getNewFileInfo(const das::string & fname)
   fclose(f);
 
   source[fileLength] = 0;
+  check_source_for_correct_debug_position(fname, source);
+
   auto info = das::make_unique<das::TextFileInfo>(source, fileLength, true);
   if (storeOpenedFiles)
   {

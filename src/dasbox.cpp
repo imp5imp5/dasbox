@@ -56,6 +56,8 @@ int screen_global_scale = 0;
 int screen_width = 1280;
 int screen_height = 720;
 
+sf::Vector2i window_pos = sf::Vector2i(0, 0);
+
 void set_font_name(const char *);
 void set_font_size_i(int);
 
@@ -650,6 +652,13 @@ void create_window()
   input::reset_input();
 
   sf::Vector2i pos(INT_MAX, INT_MAX);
+
+  if (fs::local_storage_has_key("dasbox_preferences/window_pos/x"))
+  {
+    pos.x = atoi(fs::local_storage_get("dasbox_preferences/window_pos/x"));
+    pos.y = atoi(fs::local_storage_get("dasbox_preferences/window_pos/y"));
+  }
+
   if (g_window)
   {
     pos = g_window->getPosition();
@@ -818,6 +827,23 @@ void fetch_cerr()
     print_error("%s", s.c_str());
     stringstream clearStream;
     logger.cerrStream.swap(clearStream);
+  }
+}
+
+
+void check_window_pos_changed()
+{
+  if (!g_window || !g_window->isOpen())
+    return;
+
+  if (window_pos != g_window->getPosition() && g_window->getSize().x > 0)
+  {
+    window_pos = g_window->getPosition();
+    char buf[16] = { 0 };
+    snprintf(buf, 16, "%d", window_pos.x);
+    fs::local_storage_set("dasbox_preferences/window_pos/x", buf);
+    snprintf(buf, 16, "%d", window_pos.y);
+    fs::local_storage_set("dasbox_preferences/window_pos/y", buf);
   }
 }
 
@@ -1058,6 +1084,8 @@ void run_das_for_ui()
       print_note("Window recreated");
       create_window();
     }
+
+    check_window_pos_changed();
 
     if (is_quit_scheduled)
       g_window->close();

@@ -10,15 +10,17 @@
   fill_rect(x, y, width, height, color)
   circle(x, y, radius, color)
   fill_circle(x, y, radius, color)
+  polygon(points_array, color)
+  fill_convex_polygon(points_array, color)
 
   set_font_name(font_name)  // set_font_name("mono"), set_font_name("sans"), set_font_name("*.ttf")
   set_font_size(size_px)
 
   text_out(x, y, text, color)
-  get_text_size(text)  // now only for monospaced fonts
+  get_text_size(text)
 
-  polygon(points_array, color)
-  fill_convex_polygon(points_array, color)
+  get_current_font_name()
+  get_current_font_size()
 
 --------------------------------------------------------------------------
 
@@ -84,6 +86,22 @@ class Image
   img |> draw_triangle_strip(coords, texture_coords)
   img |> draw_triangle_strip(coords, texture_coords, color)
   img |> draw_triangle_strip(coords, texture_coords, colors)
+
+--------------------------------------------------------------------------
+
+class Mesh      // 2D
+
+  var mesh <- create_mesh_triangles(positions, tex_coords, colors, indices)
+  var mesh <- create_mesh_triangles(positions, tex_coords, indices)
+  var mesh <- create_mesh_triangles(positions, indices)
+
+  var mesh <- create_mesh_triangle_strip(positions, tex_coords, colors, indices)
+  var mesh <- create_mesh_triangle_strip(positions, tex_coords, indices)
+  var mesh <- create_mesh_triangle_strip(positions, indices)
+
+  mesh |> draw_mesh(texture_image, x, y, angle, scale)   // angle - radians, scale - float or float2
+  mesh |> draw_mesh(x, y, angle, scale)
+
 
 --------------------------------------------------------------------------
 

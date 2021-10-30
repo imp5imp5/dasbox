@@ -15,6 +15,7 @@
     <el-button-group>
       <el-button type="primary" @click="showArchetypes()">Archetypes</el-button>
       <el-button type="primary" @click="showEntities()">Entities</el-button>
+      <el-button type="primary" @click="showQueries()">Queries</el-button>
     </el-button-group>
 
     <el-collapse v-if="currentTab == 0" v-for="item in archetypes" v-bind:key="item.hash">
@@ -53,6 +54,25 @@
       </el-collapse-item>
     </el-collapse>
 
+    <el-collapse v-if="currentTab == 2" v-for="item in queries" v-bind:key="item.hash">
+      <el-collapse-item>
+        <template slot="title">
+          Query: {{item.hash}} <i class="header-icon el-icon-info"></i>
+        </template>
+        <!-- <div>{{ item }}</div> -->
+
+        <div v-if="item.req.length > 0"> Req:
+          <el-tag v-for="it in item.req" style="margin:5px;">{{ it }}</el-tag>
+        </div>
+        <div v-if="item.reqn.length > 0"> Reqn:
+          <el-tag v-for="it in item.reqn" style="margin:5px;">{{ it }}</el-tag>
+        </div>
+        <div> Archetypes:
+          <el-tag v-for="it in item.archetypes" style="margin:5px;">{{ it }}</el-tag>
+        </div>
+      </el-collapse-item>
+    </el-collapse>
+
   </div>
 
   <script>
@@ -62,18 +82,18 @@
       data: {
         currentTab: -1,
         archetypes: null,
-        entities: null
+        entities: null,
+        queries: null,
       },
       methods: {
         getArchetypes: function () {
-          jrpc.call('getArchetypes').then((data) => {
-            this.archetypes = data
-          })
+          jrpc.call('getArchetypes').then((data) => this.archetypes = data)
         },
         getEntities: function () {
-          jrpc.call('getEntities').then((data) => {
-            this.entities = data
-          })
+          jrpc.call('getEntities').then((data) => this.entities = data)
+        },
+        getQueries: function () {
+          jrpc.call('getQueries').then((data) => this.queries = data)
         },
         showArchetypes: function () {
           this.currentTab = 0
@@ -82,7 +102,11 @@
         showEntities: function () {
           this.currentTab = 1
           this.getEntities()
-        }
+        },
+        showQueries: function () {
+          this.currentTab = 2
+          this.getQueries()
+        },
       },
       mounted() {
         // setTimeout(() => jrpc.notification("whatsup"), 100)

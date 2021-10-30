@@ -5,7 +5,7 @@
 - cd websockify-js/websockify
 - npm install
 - run proxy `node websockify.js :1000 127.0.0.1:9000`
-- open in browser `decs_test.html`
+- open in browser `index.html`
 
 # icons
 

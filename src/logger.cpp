@@ -448,11 +448,16 @@ void fill_rect_i(int x, int y, int width, int height, uint32_t color);
 void stash_font();
 void restore_font();
 void set_font_name(const char *);
+void transform2d_push();
+void transform2d_reset();
+void transform2d_pop();
 
 
 
 void draw_log_screen()
 {
+  transform2d_push();
+  transform2d_reset();
   disable_alpha_blend();
   stash_font();
   set_font_name(nullptr);
@@ -495,6 +500,7 @@ void draw_log_screen()
   }
 
   restore_font();
+  transform2d_pop();
   set_font_size_i(savedFontSize);
 }
 

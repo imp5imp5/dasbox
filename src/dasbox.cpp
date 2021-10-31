@@ -486,6 +486,7 @@ void das_file_manual_reload(bool hard_reload)
   sound::stop_all_sounds();
   builtin_sleep(50);
   graphics::delete_allocated_images();
+  graphics::reset_transform();
   sound::delete_allocated_sounds();
   set_font_name(nullptr);
   set_font_size_i(16);
@@ -1002,7 +1003,9 @@ void run_das_for_ui()
       is_first_frame = false;
       dt = std::min(dt, 0.01f);
     }
-    time_after_start += double(dt);
+
+    if (screen_mode == SM_USER_APPLICATION)
+      time_after_start += double(dt);
 
     dt = std::min(dt, 0.1f);
 

@@ -1611,6 +1611,14 @@ static const uint8_t font_sans_data[] =
 namespace graphics
 {
 
+void reset_transform()
+{
+  transform_stack.clear();
+  primitive_rs.transform = sf::Transform::Identity;
+  current_inverse_transform = sf::Transform::Identity;
+  current_inverse_transform_calculated = false;
+}
+
 void initialize()
 {
   font_mono = new sf::Font;
@@ -1624,10 +1632,7 @@ void initialize()
   saved_font = nullptr;
   set_font_name(nullptr);
 
-  transform_stack.clear();
-  primitive_rs.transform = sf::Transform::Identity;
-  current_inverse_transform = sf::Transform::Identity;
-  current_inverse_transform_calculated = false;
+  reset_transform();
 }
 
 void delete_allocated_images()

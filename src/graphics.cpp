@@ -156,6 +156,19 @@ das::float2 world_to_screen(float x, float y)
   return das::float2(res.x, res.y);
 }
 
+void setup_2d_camera(float2 center)
+{
+  transform2d_reset();
+  transform2d_translate(-center.x + get_screen_width() / 2, -center.y + get_screen_height() / 2);
+}
+
+void setup_2d_camera_s(float2 center, float scale)
+{
+  transform2d_reset();
+  transform2d_scale_c(scale, float2(get_screen_width() / 2, get_screen_height() / 2));
+  transform2d_translate(-center.x + get_screen_width() / 2, -center.y + get_screen_height() / 2);
+}
+
 
 void fill_rect(float x, float y, float width, float height, uint32_t color)
 {
@@ -1645,10 +1658,10 @@ void on_graphics_frame_start()
   g_render_target->clear();
   g_render_target->resetGLStates();
   disable_alpha_blend();
-  transform_stack.clear();
-  primitive_rs.transform = sf::Transform::Identity;
-  current_inverse_transform = sf::Transform::Identity;
-  current_inverse_transform_calculated = true;
+ // transform_stack.clear();
+ // primitive_rs.transform = sf::Transform::Identity;
+ // current_inverse_transform = sf::Transform::Identity;
+  current_inverse_transform_calculated = false;
 }
 
 } // namespace
@@ -2081,6 +2094,12 @@ public:
 
     addExtern<DAS_BIND_FUN(world_to_screen)>(*this, lib, "world_to_screen", SideEffects::modifyExternal, "world_to_screen")
       ->args({"world_x", "world_y"});
+
+    addExtern<DAS_BIND_FUN(setup_2d_camera)>(*this, lib, "setup_2d_camera", SideEffects::modifyExternal, "setup_2d_camera")
+      ->args({"center"});
+
+    addExtern<DAS_BIND_FUN(setup_2d_camera_s)>(*this, lib, "setup_2d_camera", SideEffects::modifyExternal, "setup_2d_camera_s")
+      ->args({"center", "scale"});
 
 
     compileBuiltinModule("graphics.das", (unsigned char *)graphics_das, sizeof(graphics_das));

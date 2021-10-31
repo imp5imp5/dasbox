@@ -125,6 +125,14 @@ class Mesh      // 2D
 
 --------------------------------------------------------------------------
 
+  setup_2d_camera(center)
+  setup_2d_camera(center, scale)
+
+  // default camera: setup_2d_camera(float2(get_screen_width() / 2, get_screen_height() / 2), 1.0)
+
+
+--------------------------------------------------------------------------
+
   transform2d_reset()
   transform2d_push()
   transform2d_pop()
@@ -134,6 +142,11 @@ class Mesh      // 2D
   transform2d_scale(scale)
   transform2d_rotate(angle)
   transform2d_rotate(angle, center)
+
+
+--------------------------------------------------------------------------
+
+  // get local coordinates after functions setup_2d_camera and transform2d_*
 
   screen_to_world(point): float2
   screen_to_world(x, y): float2

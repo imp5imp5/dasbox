@@ -111,6 +111,16 @@ def find_projects_dir(): string
     return ""
 
 
+def find_samples_dir(): string
+    var d = get_dasbox_initial_dir() + "/samples"
+    if is_file_exists(d)
+        return d
+    d = get_dasbox_initial_dir() + "/../samples"
+    if is_file_exists(d)
+        return d
+    return ""
+
+
 def check_and_create_vs_code_settings(editor_dir: string)
     if !is_file_exists(editor_dir + "/.vscode")
         mkdir(editor_dir + "/.vscode")
@@ -162,13 +172,15 @@ def add_projects_to_menu()
                           source = dirName + "/" + to_lower(fname) + "_main.das",
                           description <- [{string[]
                               "{dirName}";
-                              "Enter - Execute";
-                              "Ctrl+Enter - Open in 'Visual Studio Code' and execute"
+                              "Enter - Execute.";
+                              "Ctrl+Enter - Open in 'Visual Studio Code' and execute."
                               }]
                     ]])
 
 
 def fill_menu_items()
+    let samples_dir = find_samples_dir()
+
     menuItems |> clear()
     menuItems |> emplace(
         [[MenuItem name = "About",
@@ -197,9 +209,12 @@ def fill_menu_items()
         [[MenuItem name = "Flappy Box",
           image <- create_image("flappy_box/_preview.png"),
           source = "flappy_box/flappy_box.das",
+          editorDir = empty(samples_dir) ? "" : samples_dir + "/flappy_box",
           description <- [{string[]
               "This example shows how to display graphical primitives";
               "and how to handle the simplest keyboard input.";
+              "Enter - Execute.";
+              "Ctrl+Enter - Open sample folder in 'Visual Studio Code' and execute.";
               "";
               "Controls:";
               "Space - Jump";
@@ -213,9 +228,12 @@ def fill_menu_items()
         [[MenuItem name = "Space, Rocks and Lasers",
           image <- create_image("space_rocks_and_lasers/_preview.png"),
           source = "space_rocks_and_lasers/rocks_and_lasers.das",
+          editorDir = empty(samples_dir) ? "" : samples_dir + "/space_rocks_and_lasers",
           description <- [{string[]
               "This example shows how to display graphical primitives";
               "and the simplest keyboard input.";
+              "Enter - Execute.";
+              "Ctrl+Enter - Open sample folder in 'Visual Studio Code' and execute.";
               "";
               "Controls:";
               "Arrow Keys - Move";
@@ -230,8 +248,11 @@ def fill_menu_items()
         [[MenuItem name = "Keyboard Input",
           image <- create_image("controls/_preview_keyboard.png"),
           source = "controls/keyboard_input_demo.das",
+          editorDir = empty(samples_dir) ? "" : samples_dir + "/controls",
           description <- [{string[]
               "Example of functions for processing keyboard input.";
+              "Enter - Execute.";
+              "Ctrl+Enter - Open sample folder in 'Visual Studio Code' and execute.";
               "";
               "Controls:";
               "Esc - Return to this menu";
@@ -244,8 +265,11 @@ def fill_menu_items()
         [[MenuItem name = "Mouse Input",
           image <- create_image("controls/_preview_mouse.png"),
           source = "controls/mouse_input_demo.das",
+          editorDir = empty(samples_dir) ? "" : samples_dir + "/controls",
           description <- [{string[]
               "Example of functions for processing mouse input.";
+              "Enter - Execute.";
+              "Ctrl+Enter - Open sample folder in 'Visual Studio Code' and execute.";
               "";
               "Controls:";
               "Esc - Return to this menu";
@@ -258,8 +282,11 @@ def fill_menu_items()
         [[MenuItem name = "Gamepad Input",
           image <- create_image("controls/_preview_gamepad.png"),
           source = "controls/gamepad_input_demo.das",
+          editorDir = empty(samples_dir) ? "" : samples_dir + "/controls",
           description <- [{string[]
               "Example of functions for processing gampad input.";
+              "Enter - Execute.";
+              "Ctrl+Enter - Open sample folder in 'Visual Studio Code' and execute.";
               "";
               "Controls:";
               "Esc - Return to this menu";
@@ -272,8 +299,11 @@ def fill_menu_items()
         [[MenuItem name = "Graphics",
           image <- create_image("graphics/_preview_graphics.png"),
           source = "graphics/graphics_demo.das",
+          editorDir = empty(samples_dir) ? "" : samples_dir + "/graphics",
           description <- [{string[]
               "Simple graphics primitives and text.";
+              "Enter - Execute.";
+              "Ctrl+Enter - Open sample folder in 'Visual Studio Code' and execute.";
               "";
               "Controls:";
               "Esc - Return to this menu";
@@ -286,8 +316,11 @@ def fill_menu_items()
         [[MenuItem name = "Images",
           image <- create_image("images/_preview_images.png"),
           source = "images/images_demo.das",
+          editorDir = empty(samples_dir) ? "" : samples_dir + "/images",
           description <- [{string[]
-              "How to work with 'Image'";
+              "How to work with 'Image'.";
+              "Enter - Execute.";
+              "Ctrl+Enter - Open sample folder in 'Visual Studio Code' and execute.";
               "";
               "Controls:";
               "Esc - Return to this menu";
@@ -300,8 +333,11 @@ def fill_menu_items()
         [[MenuItem name = "Custom Fonts",
           image <- create_image("custom_fonts/_preview_custom_fonts.png"),
           source = "custom_fonts/custom_fonts.das",
+          editorDir = empty(samples_dir) ? "" : samples_dir + "/custom_fonts",
           description <- [{string[]
-              "How to load custom fonts";
+              "How to load custom fonts.";
+              "Enter - Execute.";
+              "Ctrl+Enter - Open sample folder in 'Visual Studio Code' and execute.";
               "";
               "Controls:";
               "Esc - Return to this menu";
@@ -314,8 +350,11 @@ def fill_menu_items()
         [[MenuItem name = "Will-o'-Wisp",
           image <- create_image("will_o_wisp/_preview.png"),
           source = "will_o_wisp/will_o_wisp.das",
+          editorDir = empty(samples_dir) ? "" : samples_dir + "/will_o_wisp",
           description <- [{string[]
-              "Alpha blend, gradients, triangle strip";
+              "Alpha blend, gradients, triangle strip.";
+              "Enter - Execute.";
+              "Ctrl+Enter - Open sample folder in 'Visual Studio Code' and execute.";
               "";
               "Controls:";
               "Esc - Return to this menu";
@@ -328,8 +367,11 @@ def fill_menu_items()
         [[MenuItem name = "Sound",
           image <- create_image("sound/_preview_sound.png"),
           source = "sound/sound_demo.das",
+          editorDir = empty(samples_dir) ? "" : samples_dir + "/sound",
           description <- [{string[]
-              "How to work with 'PcmSound'";
+              "How to work with 'PcmSound'.";
+              "Enter - Execute.";
+              "Ctrl+Enter - Open sample folder in 'Visual Studio Code' and execute.";
               "";
               "Controls:";
               "Esc - Return to this menu";
@@ -342,8 +384,11 @@ def fill_menu_items()
         [[MenuItem name = "Basic ECS Demo",
           image <- create_image("ecs/_preview_basic.png"),
           source = "ecs/decs_demo_basic.das",
+          editorDir = empty(samples_dir) ? "" : samples_dir + "/ecs",
           description <- [{string[]
-              "Entity Component System 'DECS'";
+              "Entity Component System 'DECS'.";
+              "Enter - Execute.";
+              "Ctrl+Enter - Open sample folder in 'Visual Studio Code' and execute.";
               "";
               "Controls:";
               "Esc - Return to this menu";

@@ -1073,7 +1073,7 @@ PcmSound::PcmSound(PcmSound && b)
   WinAutoLock lock(&sound_cs);
 
   for (auto && s : playing_sounds)
-    if (s.sound == &b)
+    if (s.sound == this || s.sound == &b)
       if (!s.isEmpty())
         s.setStopMode();
 

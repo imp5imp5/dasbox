@@ -58,6 +58,8 @@ sf::Color conv_color(uint32_t c)
 void transform2d_push()
 {
   transform_stack.push_back(primitive_rs.transform);
+  if (transform_stack.size() > 20)
+    transform_stack.erase(transform_stack.begin());
 }
 
 void transform2d_reset()

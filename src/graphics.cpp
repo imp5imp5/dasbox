@@ -21,6 +21,8 @@ static int current_font_size = 16;
 static sf::Font * saved_font = nullptr;
 static unordered_map<string, sf::Font *> loaded_fonts;
 static vector<sf::Transform> transform_stack;
+static sf::Transform current_inverse_transform;
+static bool current_inverse_transform_calculated = false;
 
 
 const sf::BlendMode BlendPremultipliedAlpha(sf::BlendMode::One, sf::BlendMode::OneMinusSrcAlpha, sf::BlendMode::Add,
@@ -51,6 +53,107 @@ sf::Color conv_color(uint32_t c)
 {
   return sf::Color((c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF, c >> 24);
 }
+
+
+void transform2d_push()
+{
+  transform_stack.push_back(primitive_rs.transform);
+}
+
+void transform2d_reset()
+{
+  primitive_rs.transform = sf::Transform::Identity;
+  current_inverse_transform_calculated = false;
+}
+
+void transform2d_pop()
+{
+  if (transform_stack.size() >= 1)
+  {
+    primitive_rs.transform = transform_stack.back();
+    transform_stack.pop_back();
+    current_inverse_transform_calculated = false;
+  }
+  else
+    transform2d_reset();
+}
+
+static void ensure_inverse_transform2d_calculated()
+{
+  if (current_inverse_transform_calculated)
+    return;
+  current_inverse_transform_calculated = true;
+  current_inverse_transform = primitive_rs.transform.getInverse();
+}
+
+void transform2d_translate_f2(das::float2 offset)
+{
+  primitive_rs.transform.translate(offset.x, offset.y);
+  current_inverse_transform_calculated = false;
+}
+
+void transform2d_translate(float offset_x, float offset_y)
+{
+  primitive_rs.transform.translate(offset_x, offset_y);
+  current_inverse_transform_calculated = false;
+}
+
+void transform2d_scale_c(float scale, das::float2 center)
+{
+  primitive_rs.transform.scale(scale, scale, center.x, center.y);
+  current_inverse_transform_calculated = false;
+}
+
+void transform2d_scale(float scale)
+{
+  primitive_rs.transform.scale(scale, scale);
+  current_inverse_transform_calculated = false;
+}
+
+void transform2d_scale_f2(das::float2 scale, das::float2 center)
+{
+  primitive_rs.transform.scale(scale.x, scale.y, center.x, center.y);
+  current_inverse_transform_calculated = false;
+}
+
+void transform2d_rotate(float angle)
+{
+  primitive_rs.transform.rotate(angle * (180.0f / M_PI));
+  current_inverse_transform_calculated = false;
+}
+
+void transform2d_rotate_f2(float angle, das::float2 center)
+{
+  primitive_rs.transform.rotate(angle * (180.0f / M_PI), center.x, center.y);
+  current_inverse_transform_calculated = false;
+}
+
+das::float2 screen_to_world_f2(das::float2 point)
+{
+  ensure_inverse_transform2d_calculated();
+  sf::Vector2f res = current_inverse_transform.transformPoint(point.x, point.y);
+  return das::float2(res.x, res.y);
+}
+
+das::float2 screen_to_world(float x, float y)
+{
+  ensure_inverse_transform2d_calculated();
+  sf::Vector2f res = current_inverse_transform.transformPoint(x, y);
+  return das::float2(res.x, res.y);
+}
+
+das::float2 world_to_screen_f2(das::float2 point)
+{
+  sf::Vector2f res = primitive_rs.transform.transformPoint(point.x, point.y);
+  return das::float2(res.x, res.y);
+}
+
+das::float2 world_to_screen(float x, float y)
+{
+  sf::Vector2f res = primitive_rs.transform.transformPoint(x, y);
+  return das::float2(res.x, res.y);
+}
+
 
 void fill_rect(float x, float y, float width, float height, uint32_t color)
 {
@@ -136,10 +239,13 @@ void set_pixel_i(int x, int y, uint32_t color)
 
 void circle(float x, float y, float radius, uint32_t color)
 {
-  if (radius < 0)
+  const float * fptr = primitive_rs.transform.getMatrix();
+  float screenRadius = radius * sqrtf(sqr(fptr[0]) + sqr(fptr[1]));
+
+  if (screenRadius < 0)
     return;
 
-  if (radius <= 0.5f)
+  if (screenRadius <= 0.5f)
   {
     set_pixel(x, y, color);
     return;
@@ -148,7 +254,7 @@ void circle(float x, float y, float radius, uint32_t color)
   x += 0.5f;
   y += 0.5f;
 
-  int n = int(std::min(8.0f + std::max(radius - 2.0f, 0.0f) * 0.6f, 100.0f));
+  int n = int(std::min(8.0f + std::max(screenRadius - 2.0f, 0.0f) * 0.6f, 100.0f));
 
   sf::Color sfColor = conv_color(color);
   sf::VertexArray v(sf::LinesStrip, n + 1);
@@ -178,16 +284,19 @@ void circle_i(int x, int y, int radius, uint32_t color)
 
 void fill_circle(float x, float y, float radius, uint32_t color)
 {
-  if (radius < 0)
+  const float * fptr = primitive_rs.transform.getMatrix();
+  float screenRadius = radius * sqrtf(sqr(fptr[0]) + sqr(fptr[1]));
+
+  if (screenRadius < 0)
     return;
 
-  if (radius < 0.5f)
+  if (screenRadius < 0.5f)
   {
     set_pixel(x, y, color);
     return;
   }
 
-  int n = int(std::min(8.0f + std::max(radius - 2.0f, 0.0f) * 0.6f, 100.0f));
+  int n = int(std::min(8.0f + std::max(screenRadius - 2.0f, 0.0f) * 0.6f, 100.0f));
 
   sf::Color sfColor = conv_color(color);
   sf::VertexArray v(sf::TriangleFan, n + 2);
@@ -311,8 +420,11 @@ void text_out(float x, float y, const char * str, uint32_t color)
   text.setPosition(x, y);
   text.setCharacterSize(current_font_size);
   text.setString(sf::String::fromUtf8(str, str + strlen(str)));
+  sf::RenderStates textRs = primitive_rs;
+  textRs.blendMode = (primitive_rs.blendMode == sf::BlendNone) ? sf::BlendAlpha : primitive_rs.blendMode;
+
   if (g_render_target)
-    g_render_target->draw(text, primitive_rs.blendMode == sf::BlendNone ? sf::BlendAlpha : primitive_rs.blendMode);
+    g_render_target->draw(text, textRs);
 }
 
 void text_out_i(int x, int y, const char * str, uint32_t color)
@@ -1392,7 +1504,7 @@ void draw_mesh(const Mesh & mesh, const Image & texture_image, float x, float y,
 
   sf::RenderStates states = primitive_rs;
   states.texture = texture_image.tex;
-  states.transform = states.transform.translate(x, y).rotate(angle * 180.0f / M_PI).scale(sf::Vector2f(scale.x, scale.y));
+  states.transform = states.transform.translate(x, y).rotate(angle * (180.0f / M_PI)).scale(sf::Vector2f(scale.x, scale.y));
   if (g_render_target)
     g_render_target->draw(mesh.meshData->vertexArray, states);
 }
@@ -1408,7 +1520,7 @@ void draw_mesh_nt(const Mesh & mesh, float x, float y, float angle, float2 scale
     return;
 
   sf::RenderStates states = primitive_rs;
-  states.transform = states.transform.translate(x, y).rotate(angle * 180.0f / M_PI).scale(sf::Vector2f(scale.x, scale.y));
+  states.transform = states.transform.translate(x, y).rotate(angle * (180.0f / M_PI)).scale(sf::Vector2f(scale.x, scale.y));
   if (g_render_target)
     g_render_target->draw(mesh.meshData->vertexArray, states);
 }
@@ -1531,6 +1643,10 @@ void on_graphics_frame_start()
   g_render_target->clear();
   g_render_target->resetGLStates();
   disable_alpha_blend();
+  transform_stack.clear();
+  primitive_rs.transform = sf::Transform::Identity;
+  current_inverse_transform = sf::Transform::Identity;
+  current_inverse_transform_calculated = true;
 }
 
 } // namespace
@@ -1928,6 +2044,41 @@ public:
     addExtern<DAS_BIND_FUN(create_mesh_triangle_strip_3), SimNode_ExtFuncCallAndCopyOrMove>(*this,
       lib, "create_mesh_triangle_strip", SideEffects::modifyExternal, "create_mesh_triangle_strip_3")
       ->args({"positions", "indices"});
+
+
+    addExtern<DAS_BIND_FUN(transform2d_reset)>(*this, lib, "transform2d_reset", SideEffects::modifyExternal, "transform2d_reset");
+    addExtern<DAS_BIND_FUN(transform2d_push)>(*this, lib, "transform2d_push", SideEffects::modifyExternal, "transform2d_push");
+    addExtern<DAS_BIND_FUN(transform2d_pop)>(*this, lib, "transform2d_pop", SideEffects::modifyExternal, "transform2d_pop");
+
+    addExtern<DAS_BIND_FUN(transform2d_translate_f2)>(*this, lib, "transform2d_translate", SideEffects::modifyExternal, "transform2d_translate_f2")
+      ->args({"offset"});
+
+    addExtern<DAS_BIND_FUN(transform2d_translate)>(*this, lib, "transform2d_translate", SideEffects::modifyExternal, "transform2d_translate")
+      ->args({"offset_x", "offset_y"});
+
+    addExtern<DAS_BIND_FUN(transform2d_scale_c)>(*this, lib, "transform2d_scale", SideEffects::modifyExternal, "transform2d_scale_c")
+      ->args({"scale", "center"});
+
+    addExtern<DAS_BIND_FUN(transform2d_scale_f2)>(*this, lib, "transform2d_scale", SideEffects::modifyExternal, "transform2d_scale_f2")
+      ->args({"scale", "center"});
+
+    addExtern<DAS_BIND_FUN(transform2d_rotate)>(*this, lib, "transform2d_rotate", SideEffects::modifyExternal, "transform2d_rotate")
+      ->args({"angle"});
+
+    addExtern<DAS_BIND_FUN(transform2d_rotate_f2)>(*this, lib, "transform2d_rotate", SideEffects::modifyExternal, "transform2d_rotate_f2")
+      ->args({"angle", "center"});
+
+    addExtern<DAS_BIND_FUN(screen_to_world_f2)>(*this, lib, "screen_to_world", SideEffects::modifyExternal, "screen_to_world_f2")
+      ->args({"point"});
+
+    addExtern<DAS_BIND_FUN(screen_to_world)>(*this, lib, "screen_to_world", SideEffects::modifyExternal, "screen_to_world")
+      ->args({"screen_x", "screen_y"});
+
+    addExtern<DAS_BIND_FUN(world_to_screen_f2)>(*this, lib, "world_to_screen", SideEffects::modifyExternal, "world_to_screen_f2")
+      ->args({"point"});
+
+    addExtern<DAS_BIND_FUN(world_to_screen)>(*this, lib, "world_to_screen", SideEffects::modifyExternal, "world_to_screen")
+      ->args({"world_x", "world_y"});
 
 
     compileBuiltinModule("graphics.das", (unsigned char *)graphics_das, sizeof(graphics_das));

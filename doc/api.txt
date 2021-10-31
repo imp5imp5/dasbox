@@ -123,7 +123,22 @@ class Mesh      // 2D
   add_colors(c1, c2: uint): uint
 
 
+--------------------------------------------------------------------------
 
+  transform2d_reset()
+  transform2d_push()
+  transform2d_pop()
+  transform2d_translate(offset)
+  transform2d_translate(offset_x, offset_y)
+  transform2d_scale(scale, center)
+  transform2d_scale(scale)
+  transform2d_rotate(angle)
+  transform2d_rotate(angle, center)
+
+  screen_to_world(point): float2
+  screen_to_world(x, y): float2
+  world_to_screen(point): float2
+  world_to_screen(x, y): float2
 
 
 ==========================================================================

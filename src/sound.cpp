@@ -27,7 +27,7 @@ namespace sound
 {
 
 int64_t total_samples_played = 0;
-double total_time_played = 0.0;
+volatile double total_time_played = 0.0;
 
 static sf::Mutex sound_cs;
 static volatile bool sound_cs_manual_entered = false;
@@ -463,26 +463,53 @@ static int handle_to_index(PlayingSoundHandle ps)
 }
 
 
+static float g_limiter_mult = 1.0f;
+
+static void apply_limiter(float * __restrict buf, int count)
+{
+  float limiter_mult = g_limiter_mult;
+  for (int i = 0; i < count; i++, buf++)
+  {
+    float v = *buf * limiter_mult;
+    *buf = v;
+    if (fabsf(v) > 1.0f)
+      limiter_mult *= 0.96f;
+    if (limiter_mult < 1.0f)
+      limiter_mult = min(limiter_mult + (0.5f / 65536), 1.0f);
+  }
+
+  g_limiter_mult = limiter_mult;
+}
+
+
 static void fill_buffer_cb(float * __restrict out_buf, int frequency, int channels, int samples)
 {
-  WinAutoLock lock(&sound_cs);
-
-  memset(out_buf, 0, samples * channels * sizeof(float));
-
-  double invFrequency = 1.0 / frequency;
-  int step = 256;
-
-  while (samples > 0)
+  double total_time_played_ = total_time_played;
   {
-    for (auto && s : playing_sounds)
-      if (!s.isEmpty())
-        s.mixTo(out_buf, min(samples, step), frequency, invFrequency, min(samples, step) * invFrequency);
+    WinAutoLock lock(&sound_cs);
 
-    samples -= step;
-    out_buf += step * channels;
-    total_samples_played += min(samples, step);
-    total_time_played += min(samples, step) * invFrequency;
+    float * mixCursor = out_buf;
+    int samplesLeft = samples;
+    memset(out_buf, 0, samples * channels * sizeof(float));
+
+    double invFrequency = 1.0 / frequency;
+    int step = 256;
+
+    while (samplesLeft > 0)
+    {
+      for (auto && s : playing_sounds)
+        if (!s.isEmpty())
+          s.mixTo(mixCursor, min(samplesLeft, step), frequency, invFrequency, min(samplesLeft, step) * invFrequency);
+
+      samplesLeft -= step;
+      mixCursor += step * channels;
+      total_samples_played += min(samplesLeft, step);
+      total_time_played_ += min(samplesLeft, step) * invFrequency;
+    }
   }
+  apply_limiter(out_buf, samples * channels);
+
+  total_time_played = total_time_played_;
 }
 
 

@@ -1626,6 +1626,8 @@ void initialize()
 
   transform_stack.clear();
   primitive_rs.transform = sf::Transform::Identity;
+  current_inverse_transform = sf::Transform::Identity;
+  current_inverse_transform_calculated = false;
 }
 
 void delete_allocated_images()

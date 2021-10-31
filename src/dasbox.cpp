@@ -1103,7 +1103,7 @@ void run_das_for_ui()
     check_window_pos_changed();
 
     if (das_file && das_file->ctx)
-      das_file->ctx->collectHeap(nullptr, true, false);
+      das_file->ctx->collectStringHeap(nullptr, false);
 
     if (is_quit_scheduled)
       g_window->close();

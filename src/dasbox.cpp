@@ -2,6 +2,7 @@
 #include <daScript/simulate/interop.h>
 #include <daScript/simulate/simulate_visit_op.h>
 #include <daScript/das_project_specific.h>
+#include <daScript/misc/performance_time.h>
 #include <SFML/Graphics.hpp>
 #include <SFML/Graphics/BlendMode.hpp>
 #include <SFML/System.hpp>
@@ -20,6 +21,7 @@
 #include "fileSystem.h"
 #include "localStorage.h"
 #include "sound.h"
+#include "profiler.h"
 
 #ifdef _WIN32
 #include <../SFML/extlibs/headers/glad/include/glad/gl.h>
@@ -61,6 +63,8 @@ sf::Vector2i window_pos = sf::Vector2i(0, 0);
 void set_font_name(const char *);
 void set_font_size_i(int);
 
+
+int current_frame = 0;
 
 //------------------------------- logger ----------------------------------------------
 
@@ -316,6 +320,16 @@ SimFunction * fn_act = nullptr;
 SimFunction * fn_draw = nullptr;
 SimFunction * fn_live_set_new_context = nullptr;
 
+int get_string_heap_memory_usage()
+{
+  return int(das_file->ctx->stringHeap->bytesAllocated());
+}
+
+int get_heap_memory_usage()
+{
+  return int(das_file->ctx->heap->bytesAllocated());
+}
+
 
 static void find_live_function(SimFunction ** fn, const char * fn_name)
 {
@@ -490,6 +504,7 @@ void das_file_manual_reload(bool hard_reload)
   sound::delete_allocated_sounds();
   set_font_name(nullptr);
   set_font_size_i(16);
+  profiler.reset();
 
   set_application_screen();
   logger.clear();
@@ -1005,7 +1020,10 @@ void run_das_for_ui()
     }
 
     if (screen_mode == SM_USER_APPLICATION)
+    {
       time_after_start += double(dt);
+      current_frame++;
+    }
 
     dt = std::min(dt, 0.1f);
 
@@ -1035,9 +1053,11 @@ void run_das_for_ui()
 
     if (screen_mode == SM_USER_APPLICATION)
     {
+      uint64_t t0 = ref_time_ticks();
       vec4f arg = v_make_vec4f(dt, 0, 0, 0);
       exec_function(fn_act, &arg);
       fetch_cerr();
+      profiler.add(profiler.actTime, double(get_time_usec(t0)));
     }
 
     if (logger.topErrorLine >= 0)
@@ -1060,6 +1080,8 @@ void run_das_for_ui()
       set_vsync_enabled(delayed_vsync.second);
 
 
+    uint64_t drawT0 = ref_time_ticks();
+
     // render
     {
       inside_draw_fn = true;
@@ -1080,12 +1102,33 @@ void run_das_for_ui()
       }
     }
 
+    if (screen_mode == SM_USER_APPLICATION)
+    {
+      profiler.add(profiler.drawTime, double(get_time_usec(drawT0)));
+      profiler.add(profiler.textureUpdate, double(graphics::get_updated_textures_count()));
+    }
+
 #ifdef _WIN32
     // Workaround unstable vsync on Windows 10
  //   if (vsync_enabled)
 //      glFinish();
 #endif
     g_window->display();
+
+
+    if (screen_mode == SM_USER_APPLICATION)
+    {
+      profiler.update();
+
+      if (input::get_key_down(sf::Keyboard::F1) && (input::get_key(sf::Keyboard::LAlt) || input::get_key(sf::Keyboard::RAlt)))
+      {
+        logger.setTopErrorLine();
+        profiler.print();
+        screen_mode = SM_LOG;
+        on_switch_to_log_screen();
+      }
+    }
+
 
     input::post_update_input();
 

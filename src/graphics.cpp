@@ -23,6 +23,7 @@ static unordered_map<string, sf::Font *> loaded_fonts;
 static vector<sf::Transform> transform_stack;
 static sf::Transform current_inverse_transform;
 static bool current_inverse_transform_calculated = false;
+static int updated_textures_count = 0;
 
 
 const sf::BlendMode BlendPremultipliedAlpha(sf::BlendMode::One, sf::BlendMode::OneMinusSrcAlpha, sf::BlendMode::Add,
@@ -598,12 +599,14 @@ void fill_convex_polygon(const das::TArray<das::float2> & points, uint32_t color
 struct Image;
 static unordered_set<sf::Image *> image_pointers;
 static unordered_set<sf::Texture *> texture_pointers;
+static unordered_set<DasboxDebugInfo *> dbg_pointers;
 
 
 struct Image
 {
   sf::Image * img;
   sf::Texture * tex;
+  DasboxDebugInfo * dbg;
   uint32_t * cached_pixels;
   int width;
   int height;
@@ -631,6 +634,7 @@ struct Image
     useMipmap = false;
     img = nullptr;
     tex = nullptr;
+    dbg = nullptr;
     cached_pixels = nullptr;
     width = 0;
     height = 0;
@@ -640,6 +644,9 @@ struct Image
   {
     img = b.img ? new sf::Image(*b.img) : nullptr;
     tex = b.tex ? new sf::Texture(*b.tex) : nullptr;
+    dbg = b.dbg ? new DasboxDebugInfo(*b.dbg) : nullptr;
+    if (dbg)
+      dbg->creationFrame = current_frame;
     cached_pixels = img ? (uint32_t *)img->getPixelsPtr() : nullptr;
     width = 0;
     height = 0;
@@ -647,12 +654,14 @@ struct Image
     useMipmap = b.useMipmap;
     image_pointers.insert(img);
     texture_pointers.insert(tex);
+    dbg_pointers.insert(dbg);
   }
 
   Image(Image && b)
   {
     img = b.img;
     tex = b.tex;
+    dbg = b.dbg;
     cached_pixels = b.cached_pixels;
     width = b.width;
     height = b.height;
@@ -663,6 +672,7 @@ struct Image
     b.height = 0;
     b.img = nullptr;
     b.tex = nullptr;
+    b.dbg = nullptr;
     b.cached_pixels = nullptr;
   }
 
@@ -670,10 +680,13 @@ struct Image
   {
     image_pointers.erase(img);
     texture_pointers.erase(tex);
+    dbg_pointers.erase(dbg);
     delete img;
     delete tex;
+    delete dbg;
     img = b.img ? new sf::Image(*b.img) : nullptr;
     tex = b.tex ? new sf::Texture(*b.tex) : nullptr;
+    dbg = b.dbg ? new DasboxDebugInfo(*b.dbg) : nullptr;
     cached_pixels = img ? (uint32_t *)img->getPixelsPtr() : nullptr;
     width = b.width;
     height = b.height;
@@ -681,6 +694,11 @@ struct Image
     useMipmap = b.useMipmap;
     image_pointers.insert(img);
     texture_pointers.insert(tex);
+    dbg_pointers.insert(dbg);
+
+    if (dbg)
+      dbg->creationFrame = current_frame;
+
     return *this;
   }
 
@@ -688,6 +706,7 @@ struct Image
   {
     img = b.img;
     tex = b.tex;
+    dbg = b.dbg;
     cached_pixels = b.cached_pixels;
     width = b.width;
     height = b.height;
@@ -698,6 +717,7 @@ struct Image
     b.height = 0;
     b.img = nullptr;
     b.tex = nullptr;
+    b.dbg = nullptr;
     b.cached_pixels = nullptr;
     return *this;
   }
@@ -706,10 +726,13 @@ struct Image
   {
     image_pointers.erase(img);
     texture_pointers.erase(tex);
+    dbg_pointers.erase(dbg);
     delete img;
     img = nullptr;
     delete tex;
     tex = nullptr;
+    delete dbg;
+    dbg = nullptr;
     applied = false;
     useMipmap = false;
     cached_pixels = nullptr;
@@ -723,10 +746,13 @@ void delete_image(Image * image)
 {
   image_pointers.erase(image->img);
   texture_pointers.erase(image->tex);
+  dbg_pointers.erase(image->dbg);
   delete image->img;
   image->img = nullptr;
   delete image->tex;
   image->tex = nullptr;
+  delete image->dbg;
+  image->dbg = nullptr;
   image->cached_pixels = nullptr;
   image->width = 0;
   image->height = 0;
@@ -752,6 +778,11 @@ Image create_image_wh(int width, int height)
 
   image_pointers.insert(b.img);
   texture_pointers.insert(b.tex);
+
+  b.dbg = new DasboxDebugInfo();
+  snprintf(b.dbg->name, sizeof(b.dbg->name) - 1, "unknown (%d x %d)", width, height);
+  dbg_pointers.insert(b.dbg);
+
 
   return b;
 }
@@ -780,6 +811,10 @@ Image create_image(int width, int height, const das::TArray<uint32_t> & pixels)
   b.tex = new sf::Texture();
   b.tex->loadFromImage(*b.img);
   texture_pointers.insert(b.tex);
+
+  b.dbg = new DasboxDebugInfo();
+  snprintf(b.dbg->name, sizeof(b.dbg->name) - 1, "unknown (%d x %d)", width, height);
+  dbg_pointers.insert(b.dbg);
 
   return b;
 }
@@ -818,6 +853,10 @@ Image create_image_from_file(const char * file_name)
 
   image_pointers.insert(b.img);
   texture_pointers.insert(b.tex);
+
+  b.dbg = new DasboxDebugInfo();
+  snprintf(b.dbg->name, sizeof(b.dbg->name) - 1, "%s", file_name);
+  dbg_pointers.insert(b.dbg);
 
   return b;
 }
@@ -957,6 +996,7 @@ inline void apply_texture(const Image & image)
 {
   Image * b = (Image *)&image;
   b->applied = true;
+  updated_textures_count++;
   if (b->img->getSize() == b->tex->getSize())
     b->tex->update(*b->img);
   else
@@ -1611,12 +1651,24 @@ static const uint8_t font_sans_data[] =
 namespace graphics
 {
 
+int get_image_count()
+{
+  return int(dbg_pointers.size());
+}
+
 void reset_transform()
 {
   transform_stack.clear();
   primitive_rs.transform = sf::Transform::Identity;
   current_inverse_transform = sf::Transform::Identity;
   current_inverse_transform_calculated = false;
+}
+
+void print_debug_infos(int from_frame)
+{
+  for (auto && dbg : dbg_pointers)
+    if (dbg && dbg->creationFrame >= from_frame)
+      print_text("  image: %s\n", dbg->name);
 }
 
 void initialize()
@@ -1637,6 +1689,10 @@ void initialize()
 
 void delete_allocated_images()
 {
+  for (auto && dbg : dbg_pointers)
+    delete dbg;
+  dbg_pointers.clear();
+
   for (auto && meshData : mesh_pointers)
     delete meshData;
   mesh_pointers.clear();
@@ -1669,7 +1725,14 @@ void on_graphics_frame_start()
  // primitive_rs.transform = sf::Transform::Identity;
  // current_inverse_transform = sf::Transform::Identity;
   current_inverse_transform_calculated = false;
+  updated_textures_count = 0;
 }
+
+int get_updated_textures_count()
+{
+  return updated_textures_count;
+}
+
 
 } // namespace
 

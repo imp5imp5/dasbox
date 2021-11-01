@@ -111,6 +111,21 @@ void print_note(const char * format, ...)
   logger.setState(LOGGER_NORMAL);
 }
 
+void print_text(const char * format, ...)
+{
+  static char buf[16000];
+  va_list args;
+  va_start(args, format);
+  vsnprintf(buf, sizeof(buf), format, args);
+  buf[sizeof(buf) - 1] = 0;
+  va_end(args);
+  logger.setState(LOGGER_NORMAL);
+  logger << buf;
+  if (!ends_with_newline(buf))
+    logger << "\n";
+  logger.setState(LOGGER_NORMAL);
+}
+
 
 void Logger::clear()
 {

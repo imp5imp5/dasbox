@@ -11,6 +11,7 @@ The current directory will change to 'path_to_application_folder'. For security 
 F5 or Ctrl+R - reload sources in the manual mode
 Ctrl+F5 or Ctrl+Alt+R - hard reload, ECS will be reloaded too
 Tab - switch to the logging screen and back
+Alt+F1 - show profile information
 
 In the log screen your application will be paused.
 

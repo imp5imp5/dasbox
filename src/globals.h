@@ -26,10 +26,12 @@ extern bool trust_mode;
 extern bool log_to_console;
 extern bool inside_draw_fn;
 extern const char * initial_dir;
+extern int current_frame;
 
 void print_error(const char * format, ...);
 void print_exception(const char * format, ...);
 void print_note(const char * format, ...);
+void print_text(const char * format, ...);
 void reinterpret_error_as_note(bool is_note);
 void os_debug_break();
 void fetch_cerr();
@@ -72,3 +74,15 @@ template <typename T> inline T lerp(T a, T b, float t)
 {
   return (b - a) * t + a;
 }
+
+struct DasboxDebugInfo
+{
+  char name[40];
+  int creationFrame;
+
+  DasboxDebugInfo()
+  {
+    name[0] = 0;
+    creationFrame = current_frame;
+  }
+};

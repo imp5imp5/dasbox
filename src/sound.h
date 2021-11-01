@@ -59,4 +59,5 @@ namespace sound
   float get_output_sample_rate();
   int64_t get_total_samples_played();
   double get_total_time_played();
+  int get_sound_count();
 }

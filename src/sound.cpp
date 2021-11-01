@@ -36,6 +36,12 @@ static float master_volume = 1.0f;
 
 static unordered_set<float *> sound_data_pointers;
 
+int get_sound_count()
+{
+  return int(sound_data_pointers.size());
+}
+
+
 struct WinAutoLock
 {
   sf::Mutex * mutex;

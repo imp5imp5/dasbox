@@ -24,7 +24,7 @@ static vector<sf::Transform> transform_stack;
 static sf::Transform current_inverse_transform;
 static bool current_inverse_transform_calculated = false;
 static int updated_textures_count = 0;
-
+static int primitives_count = 0;
 
 const sf::BlendMode BlendPremultipliedAlpha(sf::BlendMode::One, sf::BlendMode::OneMinusSrcAlpha, sf::BlendMode::Add,
   sf::BlendMode::One, sf::BlendMode::OneMinusSrcAlpha, sf::BlendMode::Add);
@@ -185,6 +185,7 @@ void fill_rect(float x, float y, float width, float height, uint32_t color)
   v[3].color = c;
   if (g_render_target)
     g_render_target->draw(v, primitive_rs);
+  primitives_count++;
 }
 
 void fill_rect_i(int x, int y, int width, int height, uint32_t color)
@@ -214,6 +215,7 @@ void rect(float x, float y, float width, float height, uint32_t color)
   v[4].color = c;
   if (g_render_target)
     g_render_target->draw(v, primitive_rs);
+  primitives_count++;
 }
 
 void rect_i(int x, int y, int width, int height, uint32_t color)
@@ -231,6 +233,7 @@ void line(float x0, float y0, float x1, float y1, uint32_t color)  // TODO: cach
   v[1].color = c;
   if (g_render_target)
     g_render_target->draw(v, primitive_rs);
+  primitives_count++;
 }
 
 void line_i(int x0, int y0, int x1, int y1, uint32_t color)
@@ -246,6 +249,7 @@ void set_pixel(float x, float y, uint32_t color) // TODO: cache
   v[0].color = c;
   if (g_render_target)
     g_render_target->draw(v, primitive_rs);
+  primitives_count++;
 }
 
 void set_pixel_i(int x, int y, uint32_t color)
@@ -291,6 +295,7 @@ void circle(float x, float y, float radius, uint32_t color)
 
   if (g_render_target)
     g_render_target->draw(v, primitive_rs);
+  primitives_count++;
 }
 
 void circle_i(int x, int y, int radius, uint32_t color)
@@ -300,6 +305,7 @@ void circle_i(int x, int y, int radius, uint32_t color)
 
 void fill_circle(float x, float y, float radius, uint32_t color)
 {
+  primitives_count++;
   const float * fptr = primitive_rs.transform.getMatrix();
   float screenRadius = radius * sqrtf(sqr(fptr[0]) + sqr(fptr[1]));
 
@@ -441,6 +447,7 @@ void text_out(float x, float y, const char * str, uint32_t color)
 
   if (g_render_target)
     g_render_target->draw(text, textRs);
+  primitives_count++;
 }
 
 void text_out_i(int x, int y, const char * str, uint32_t color)
@@ -534,6 +541,7 @@ void disable_alpha_blend()
 
 inline void polygon_internal(const das::float2 * points, int count, uint32_t color)
 {
+  primitives_count++;
   if (count < 1 || count > 32768)
     return;
 
@@ -568,6 +576,7 @@ void polygon(const das::TArray<das::float2> & points, uint32_t color)
 
 inline void fill_convex_polygon_internal(const das::float2 * points, int count, uint32_t color)
 {
+  primitives_count++;
   if (count < 1 || count > 32768)
     return;
 
@@ -1042,6 +1051,7 @@ void draw_image_cs2(const Image & image, float x, float y, uint32_t color, das::
   states.texture = image.tex;
   if (g_render_target)
     g_render_target->draw(v, states);
+  primitives_count++;
 }
 
 void draw_image_region_cs2(const Image & image, float x, float y, float4 texture_rect, uint32_t color, das::float2 size)
@@ -1069,6 +1079,7 @@ void draw_image_region_cs2(const Image & image, float x, float y, float4 texture
   states.texture = image.tex;
   if (g_render_target)
     g_render_target->draw(v, states);
+  primitives_count++;
 }
 
 void draw_image(const Image & image, float x, float y)
@@ -1171,6 +1182,7 @@ void draw_quad(const Image & image, das::float2 p0, das::float2 p1, das::float2 
   if (g_render_target)
     g_render_target->draw(v, states);
 
+  primitives_count++;
 }
 
 void draw_quad_a(const Image & image, das::float2 p[4], uint32_t color)
@@ -1198,6 +1210,7 @@ void draw_quad_a(const Image & image, das::float2 p[4], uint32_t color)
   if (g_render_target)
     g_render_target->draw(v, states);
 
+  primitives_count++;
 }
 
 
@@ -1233,6 +1246,7 @@ void draw_image_transformed(const Image & image, float x, float y, float4 textur
   states.texture = image.tex;
   if (g_render_target)
     g_render_target->draw(v, states);
+  primitives_count++;
 }
 
 void draw_image_transformed_center(const Image & image, float x, float y, float4 texture_rect, uint32_t color,
@@ -1267,6 +1281,7 @@ void draw_triangle_strip_color(const Image & image,
   if (g_render_target)
     g_render_target->draw(v, states);
 
+  primitives_count++;
 }
 
 void draw_triangle_strip_color_a(const Image & image,
@@ -1293,6 +1308,7 @@ void draw_triangle_strip_color_a(const Image & image,
   if (g_render_target)
     g_render_target->draw(v, states);
 
+  primitives_count++;
 }
 
 void draw_triangle_strip(const Image & image,
@@ -1562,6 +1578,7 @@ void draw_mesh(const Mesh & mesh, const Image & texture_image, float x, float y,
   states.transform = states.transform.translate(x, y).rotate(angle * (180.0f / M_PI)).scale(sf::Vector2f(scale.x, scale.y));
   if (g_render_target)
     g_render_target->draw(mesh.meshData->vertexArray, states);
+  primitives_count++;
 }
 
 void draw_mesh_f(const Mesh & mesh, const Image & texture_image, float x, float y, float angle, float scale)
@@ -1578,6 +1595,7 @@ void draw_mesh_nt(const Mesh & mesh, float x, float y, float angle, float2 scale
   states.transform = states.transform.translate(x, y).rotate(angle * (180.0f / M_PI)).scale(sf::Vector2f(scale.x, scale.y));
   if (g_render_target)
     g_render_target->draw(mesh.meshData->vertexArray, states);
+  primitives_count++;
 }
 
 void draw_mesh_ntf(const Mesh & mesh, float x, float y, float angle, float scale)
@@ -1656,6 +1674,11 @@ int get_image_count()
   return int(dbg_pointers.size());
 }
 
+int get_render_primitives_count()
+{
+  return primitives_count;
+}
+
 void reset_transform()
 {
   transform_stack.clear();
@@ -1726,6 +1749,7 @@ void on_graphics_frame_start()
  // current_inverse_transform = sf::Transform::Identity;
   current_inverse_transform_calculated = false;
   updated_textures_count = 0;
+  primitives_count = 0;
 }
 
 int get_updated_textures_count()

@@ -1106,6 +1106,8 @@ void run_das_for_ui()
     {
       profiler.add(profiler.drawTime, double(get_time_usec(drawT0)));
       profiler.add(profiler.textureUpdate, double(graphics::get_updated_textures_count()));
+      profiler.add(profiler.renderPrimitives, double(graphics::get_render_primitives_count()));
+      profiler.add(profiler.playingSounds, double(sound::get_playing_sound_count()));
     }
 
 #ifdef _WIN32

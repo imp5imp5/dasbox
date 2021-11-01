@@ -22,6 +22,8 @@ void Profiler::reset()
   actTime.clear();
   drawTime.clear();
   textureUpdate.clear();
+  playingSounds.clear();
+  renderPrimitives.clear();
 }
 
 void Profiler::update()
@@ -47,6 +49,27 @@ double Profiler::getSum(const vector<double> & a)
   return res;
 }
 
+double Profiler::getMin(const vector<double> & a)
+{
+  if (a.size() == 0)
+    return 0.0;
+  double res = a[0];
+  for (double t : a)
+    res = min(res, t);
+  return res;
+}
+
+double Profiler::getMax(const vector<double> & a)
+{
+  if (a.size() == 0)
+    return 0.0;
+  double res = a[0];
+  for (double t : a)
+    res = max(res, t);
+  return res;
+}
+
+
 void Profiler::add(vector<double> & a, double t)
 {
   if (a.size() < collectFrames)
@@ -60,10 +83,12 @@ void Profiler::print()
     "_____________________________________________________\n"
     "Profiler log, based on last %d frame(s)\n"
     "\n"
-    "act time:   %0.2f msec\n"
-    "draw time:  %0.2f msec\n"
+    "act time:   %0.2f msec (min: %0.2f, max: %0.2f)\n"
+    "draw time:  %0.2f msec (min: %0.2f, max: %0.2f)\n"
     "\n"
-    "textures updated: %d (%0.2f per frame)\n"
+    "textures updated:  %d (%0.2f per frame)\n"
+    "render primitives: %0.2f per frame\n"
+    "sounds playing:    %0.2f per frame\n"
     "\n"
     "total images: %d\n"
     "total sounds: %d\n"
@@ -73,11 +98,13 @@ void Profiler::print()
     "\n"
     ,
     int(actTime.size()),
-    getAverage(actTime) / 1000.0,
-    getAverage(drawTime) / 1000.0,
+    getAverage(actTime) / 1000.0, getMin(actTime) / 1000.0, getMax(actTime) / 1000.0,
+    getAverage(drawTime) / 1000.0, getMin(drawTime) / 1000.0, getMax(drawTime) / 1000.0,
     int(getSum(textureUpdate) + 0.5), getAverage(textureUpdate),
+    getAverage(renderPrimitives),
+    getAverage(playingSounds),
     graphics::get_image_count(),
-    sound::get_sound_count(),
+    sound::get_total_sound_count(),
     get_heap_memory_usage() / 1.0e6,
     get_string_heap_memory_usage() / 1.0e6
   );

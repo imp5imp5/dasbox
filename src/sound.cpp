@@ -26,6 +26,7 @@ using namespace das;
 namespace sound
 {
 
+int playing_sound_count = 0;
 int64_t total_samples_played = 0;
 volatile double total_time_played = 0.0;
 
@@ -36,11 +37,15 @@ static float master_volume = 1.0f;
 
 static unordered_set<float *> sound_data_pointers;
 
-int get_sound_count()
+int get_total_sound_count()
 {
   return int(sound_data_pointers.size());
 }
 
+int get_playing_sound_count()
+{
+  return int(playing_sound_count);
+}
 
 struct WinAutoLock
 {
@@ -490,10 +495,10 @@ static void apply_limiter(float * __restrict buf, int count)
 
 static void fill_buffer_cb(float * __restrict out_buf, int frequency, int channels, int samples)
 {
+  int cnt = 0;
   double total_time_played_ = total_time_played;
   {
     WinAutoLock lock(&sound_cs);
-
     float * mixCursor = out_buf;
     int samplesLeft = samples;
     memset(out_buf, 0, samples * channels * sizeof(float));
@@ -503,9 +508,13 @@ static void fill_buffer_cb(float * __restrict out_buf, int frequency, int channe
 
     while (samplesLeft > 0)
     {
+      cnt = 0;
       for (auto && s : playing_sounds)
         if (!s.isEmpty())
+        {
+          cnt++;
           s.mixTo(mixCursor, min(samplesLeft, step), frequency, invFrequency, min(samplesLeft, step) * invFrequency);
+        }
 
       samplesLeft -= step;
       mixCursor += step * channels;
@@ -514,6 +523,7 @@ static void fill_buffer_cb(float * __restrict out_buf, int frequency, int channe
     }
   }
   apply_limiter(out_buf, samples * channels);
+  playing_sound_count = cnt;
 
   total_time_played = total_time_played_;
 }

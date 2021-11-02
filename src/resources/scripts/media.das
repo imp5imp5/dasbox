@@ -7,3 +7,4 @@ require dasbox public
 require math public
 require strings public
 require daslib/dasbox_graphics_utils public
+require daslib/dasbox_sound_utils public

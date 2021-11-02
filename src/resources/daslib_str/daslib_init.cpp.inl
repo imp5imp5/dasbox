@@ -188,3 +188,8 @@ static const char dasbox_graphics_utils_das[] =
 ;
 daslib_inc_files[string("dasbox_graphics_utils.das")] = new das::TextFileInfo(dasbox_graphics_utils_das, sizeof(dasbox_graphics_utils_das) - 1, false);
 
+static const char dasbox_sound_utils_das[] =
+#include "resources/daslib_str/dasbox_sound_utils.das.inl"
+;
+daslib_inc_files[string("dasbox_sound_utils.das")] = new das::TextFileInfo(dasbox_sound_utils_das, sizeof(dasbox_sound_utils_das) - 1, false);
+

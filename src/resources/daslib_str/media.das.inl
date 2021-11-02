@@ -11,3 +11,4 @@
 "require math public\n"
 "require strings public\n"
 "require daslib/dasbox_graphics_utils public\n"
+"require daslib/dasbox_sound_utils public\n"

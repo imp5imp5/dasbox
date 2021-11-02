@@ -48,6 +48,7 @@ call python stringify.py --array JetBrainsMonoNL-Medium.ttf font.JetBrainsMonoNL
 %I% internal_menu_background.das
 %I% media.das
 %I% dasbox_graphics_utils.das
+%I% dasbox_sound_utils.das
 
 
 exit/b

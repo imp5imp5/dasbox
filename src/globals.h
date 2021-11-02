@@ -1,6 +1,6 @@
 #pragma once
 
-#define DASBOX_VERSION "0.1.28"
+#define DASBOX_VERSION "0.1.29"
 
 namespace sf
 {
@@ -81,6 +81,11 @@ struct DasboxDebugInfo
   int creationFrame;
 
   DasboxDebugInfo()
+  {
+    reset();
+  }
+
+  void reset()
   {
     name[0] = 0;
     creationFrame = current_frame;

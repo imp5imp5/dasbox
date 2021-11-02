@@ -323,9 +323,12 @@ string convert_to_utf8(wchar_t * ws)
 string get_user_data_dir()
 {
   wchar_t buf[MAX_PATH + 1];
+  wchar_t shortBuf[MAX_PATH + 1];
   buf[0] = 0;
+  shortBuf[0] = 0;
   HRESULT hr = SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA | CSIDL_FLAG_CREATE, NULL, 0, buf);
-  string s = convert_to_utf8(buf);
+  GetShortPathNameW(buf, shortBuf, MAX_PATH);
+  string s = convert_to_utf8(shortBuf);
   if (!FAILED(hr))
   {
     s += "\\dasbox";

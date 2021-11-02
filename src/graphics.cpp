@@ -1873,10 +1873,6 @@ struct ImageAnnotation : ManagedStructureAnnotation<Image, true, true>
 };
 
 
-static char graphics_das[] =
-#include "graphics.das.inl"
-;
-
 
 class ModuleGraphics : public Module
 {
@@ -2195,8 +2191,6 @@ public:
     addExtern<DAS_BIND_FUN(setup_2d_camera_s)>(*this, lib, "setup_2d_camera", SideEffects::modifyExternal, "setup_2d_camera_s")
       ->args({"center", "scale"});
 
-
-    compileBuiltinModule("graphics.das", (unsigned char *)graphics_das, sizeof(graphics_das));
 
     //verifyAotReady();
   }

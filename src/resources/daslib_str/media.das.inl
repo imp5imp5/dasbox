@@ -10,3 +10,4 @@
 "require dasbox public\n"
 "require math public\n"
 "require strings public\n"
+"require daslib/dasbox_graphics_utils public\n"

@@ -37,6 +37,11 @@
 
 class Image
 
+  //
+  // This class stores the image itself.
+  // If you need a link to the image to pass it to functions, use "ImageHandler" instead.
+  //
+
   var img: Image
   var img <- create_image(width, height)
   var img <- create_image("file_name")  // .png .jpg .tga
@@ -86,6 +91,51 @@ class Image
   img |> draw_triangle_strip(coords, texture_coords)
   img |> draw_triangle_strip(coords, texture_coords, color)
   img |> draw_triangle_strip(coords, texture_coords, colors)
+
+
+--------------------------------------------------------------------------
+
+class ImageHandle
+
+  // (WORK IN PROGRESS)
+  //
+  // This lightweight class can be used to conveniently transfer images to various functions,
+  // or store links to pictures in tables.
+  //
+
+  create_image_in_collection(file_name: string; smooth: bool = false; use_mips: bool = false): ImageHandle
+  create_image_in_collection(width, height: int; smooth: bool = false; use_mips: bool = false): ImageHandle
+  create_image_in_collection(width, height: int; pixels: array<uint> &; smooth: bool = false; use_mips: bool = false): ImageHandle
+  create_image_in_collection(width, height: int; pixels: string; palette): ImageHandle
+  
+  clone_image_in_collection(image_handle: ImageHandle): ImageHandle
+
+  delete_image_from_collection(image_handle: ImageHandle)
+
+  image_handle |> draw_image_transformed(x, y, texture_rect, color, size, angle, relative_pivot_x, relative_pivot_y)
+  image_handle |> draw_image_transformed(x, y, texture_rect, color, size, angle)
+  image_handle |> draw_image(x, y)
+  image_handle |> draw_image(x, y, color)
+  image_handle |> draw_image(x, y, color, size)
+  image_handle |> draw_image_region(x, y, texture_rect)
+  image_handle |> draw_image_region(x, y, texture_rect, color)
+  image_handle |> draw_image_region(x, y, texture_rect, color, size)
+  image_handle |> draw_quad(p0, p1, p2, p3)
+  image_handle |> draw_quad(p0, p1, p2, p3, color)
+  image_handle |> draw_triangle_strip(coords, texture_coords)
+  image_handle |> draw_triangle_strip(coords, texture_coords, colors)
+  image_handle |> set_pixel(x, y, color)
+  image_handle |> get_pixel(x, y)
+  image_handle |> set_image_data(data)
+  image_handle |> get_image_data(data)
+  image_handle |> premultiply_alpha()
+  image_handle |> make_image_color_transparent(color)
+  image_handle |> set_image_smooth(is_smooth)
+  image_handle |> set_image_clamp(is_clamp)
+  image_handle |> set_image_use_mipmap()
+  image_handle |> flip_image_x()
+  image_handle |> flip_image_y()
+
 
 --------------------------------------------------------------------------
 

@@ -337,28 +337,28 @@ class PcmSound
   delete snd
 
 
-  snd |> play()
-  snd |> play(volume)
-  snd |> play(volume, pitch)
-  snd |> play(volume, pitch, pan)
-  snd |> play(volume, pitch, pan, start_time, stop_time)
+  snd |> play_sound()
+  snd |> play_sound(volume)
+  snd |> play_sound(volume, pitch)
+  snd |> play_sound(volume, pitch, pan)
+  snd |> play_sound(volume, pitch, pan, start_time, stop_time)
 
-  snd |> play_loop()
-  snd |> play_loop(volume)
-  snd |> play_loop(volume, pitch)
-  snd |> play_loop(volume, pitch, pan)
-  snd |> play_loop(volume, pitch, pan, start_time, stop_time)
+  snd |> play_sound_loop()
+  snd |> play_sound_loop(volume)
+  snd |> play_sound_loop(volume, pitch)
+  snd |> play_sound_loop(volume, pitch, pan)
+  snd |> play_sound_loop(volume, pitch, pan, start_time, stop_time)
 
-  snd |> play_deferred(defer_seconds)
-  snd |> play_deferred(defer_seconds, volume)
-  snd |> play_deferred(defer_seconds, volume, pitch)
-  snd |> play_deferred(defer_seconds, volume, pitch, pan)
-  snd |> play_deferred(defer_seconds, volume, pitch, pan, start_time, stop_time)
+  snd |> play_sound_deferred(defer_seconds)
+  snd |> play_sound_deferred(defer_seconds, volume)
+  snd |> play_sound_deferred(defer_seconds, volume, pitch)
+  snd |> play_sound_deferred(defer_seconds, volume, pitch, pan)
+  snd |> play_sound_deferred(defer_seconds, volume, pitch, pan, start_time, stop_time)
 
 --------------------------------------------------------------------------
 
-  var handle: PlayingSoundHandle = snd |> play...(...)
-  var handle = snd |> play...(...)
+  var handle: PlayingSoundHandle = snd |> play_sound...(...)
+  var handle = snd |> play_sound...(...)
 
   is_playing(handle): bool
   get_sound_play_pos(handle): float

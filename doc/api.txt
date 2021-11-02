@@ -108,6 +108,11 @@ class ImageHandle
   create_managed_image(width, height: int; pixels: array<uint> &; smooth: bool = false; use_mips: bool = false): ImageHandle
   create_managed_image(width, height: int; pixels: string; palette): ImageHandle
   
+  var image_handle: ImageHandle
+
+  image_handle.width
+  image_handle.height
+
   clone_managed_image(image_handle: ImageHandle): ImageHandle
 
   delete_managed_image(image_handle: ImageHandle)
@@ -319,6 +324,11 @@ class Mesh      // 2D
 
 class PcmSound
 
+  //
+  // This class stores the sound itself.
+  // If you need a link to the sound to pass it to functions, use "SoundHandle" instead.
+  //
+
   var snd: PcmSound
   var snd <- create_sound("file_name") // .wav .flac .mp3
   var snd <- create_sound(44100, monoSamples: array<float>)
@@ -354,6 +364,54 @@ class PcmSound
   snd |> play_sound_deferred(defer_seconds, volume, pitch)
   snd |> play_sound_deferred(defer_seconds, volume, pitch, pan)
   snd |> play_sound_deferred(defer_seconds, volume, pitch, pan, start_time, stop_time)
+
+--------------------------------------------------------------------------
+
+class SoundHandle
+
+  // (WORK IN PROGRESS)
+  //
+  // This lightweight class can be used to conveniently transfer sounds to various functions,
+  // or store links to sounds in tables.
+  //
+
+  create_managed_sound("file_name"): SoundHandle // .wav .flac .mp3
+  create_managed_sound(44100, monoSamples: array<float>): SoundHandle
+  create_managed_sound(44100, stereoSamples: array<float2>): SoundHandle
+
+  var sound_handle: SoundHandle
+
+  sound_handle.duration     // in seconds
+  sound_handle.frequency    // samples per seconds
+  sound_handle.samples
+  sound_handle.channels
+  sound_handle.valid
+
+  sound_handle |> set_sound_data(data)  // data: array<float> or data: array<float2>
+  sound_handle |> get_sound_data(data)  // var data: array<float>; data.resize(snd.samples)
+  sound_handle |> get_sound_data(data)  // var data: array<float2>; data.resize(snd.samples)
+
+  delete_managed_sound(sound_handle)
+  clone_imaged_sound(sound_handle)
+
+  sound_handle |> play_sound()
+  sound_handle |> play_sound(volume)
+  sound_handle |> play_sound(volume, pitch)
+  sound_handle |> play_sound(volume, pitch, pan)
+  sound_handle |> play_sound(volume, pitch, pan, start_time, stop_time)
+
+  sound_handle |> play_sound_loop()
+  sound_handle |> play_sound_loop(volume)
+  sound_handle |> play_sound_loop(volume, pitch)
+  sound_handle |> play_sound_loop(volume, pitch, pan)
+  sound_handle |> play_sound_loop(volume, pitch, pan, start_time, stop_time)
+
+  sound_handle |> play_sound_deferred(defer_seconds)
+  sound_handle |> play_sound_deferred(defer_seconds, volume)
+  sound_handle |> play_sound_deferred(defer_seconds, volume, pitch)
+  sound_handle |> play_sound_deferred(defer_seconds, volume, pitch, pan)
+  sound_handle |> play_sound_deferred(defer_seconds, volume, pitch, pan, start_time, stop_time)
+
 
 --------------------------------------------------------------------------
 

@@ -111,5 +111,6 @@ void Profiler::print()
 
   print_text("New resources for this period:");
   graphics::print_debug_infos(current_frame - collectFrames);
+  sound::print_debug_infos(current_frame - collectFrames);
   print_text("\n\n");
 }

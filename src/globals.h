@@ -88,6 +88,7 @@ struct DasboxDebugInfo
   void reset()
   {
     name[0] = 0;
+    name[sizeof(name) - 1] = 0;
     creationFrame = current_frame;
   }
 };

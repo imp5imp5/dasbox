@@ -36,6 +36,7 @@ static volatile bool sound_cs_manual_entered = false;
 static float master_volume = 1.0f;
 
 static unordered_set<float *> sound_data_pointers;
+static unordered_set<DasboxDebugInfo *> dbg_pointers;
 
 int get_total_sound_count()
 {
@@ -68,6 +69,8 @@ struct PcmSound
 private:
   float * data;
 public:
+  DasboxDebugInfo * dbg;
+
   int frequency;
   int samples;
   int channels;
@@ -85,11 +88,13 @@ public:
 
   void deleteData()
   {
-    if (data)
-    {
-      sound_data_pointers.erase(data);
-      delete[] data;
-    }
+    sound_data_pointers.erase(data);
+    delete[] data;
+    data = nullptr;
+
+    dbg_pointers.erase(dbg);
+    delete dbg;
+    dbg = nullptr;
   }
 
   bool isValid() const
@@ -128,6 +133,7 @@ public:
     samples = 0;
     channels = 1;
     data = nullptr;
+    dbg = nullptr;
   }
 
   PcmSound(const PcmSound & b)
@@ -137,21 +143,12 @@ public:
     channels = b.channels;
     newData(getDataMemorySize());
     memcpy(data, b.data, getDataMemorySize());
+    dbg = b.dbg ? new DasboxDebugInfo(*b.dbg) : nullptr;
+    if (dbg)
+      dbg->creationFrame = current_frame;
   }
 
-  PcmSound& operator=(const PcmSound & b)
-  {
-    if (this == &b)
-      return *this;
-    deleteData();
-    frequency = b.frequency;
-    samples = b.samples;
-    channels = b.channels;
-    newData(getDataMemorySize());
-    memcpy(data, b.data, getDataMemorySize());
-    return *this;
-  }
-
+  PcmSound& operator=(const PcmSound & b);
   PcmSound(PcmSound && b);
   PcmSound& operator=(PcmSound && b);
   ~PcmSound();
@@ -596,6 +593,13 @@ void init_sound_lib_internal()
   device_initialized = true;
 }
 
+void print_debug_infos(int from_frame)
+{
+  for (auto && dbg : dbg_pointers)
+    if (dbg && dbg->creationFrame >= from_frame)
+      print_text("  sound: %s\n", dbg->name);
+}
+
 void initialize()
 {
   memset(&playing_sounds[0], 0, sizeof(playing_sounds[0]) * playing_sounds.size());
@@ -624,6 +628,11 @@ PcmSound create_sound(int frequency, const das::TArray<float> & data)
   s.newData(s.getDataMemorySize());
   memcpy(s.getData(), data.data, s.getDataMemorySize());
   s.getData()[data.size] = s.getData()[0];
+
+  s.dbg = new DasboxDebugInfo();
+  snprintf(s.dbg->name, sizeof(s.dbg->name) - 1, "mono %d smpl @%d", s.samples, s.frequency);
+  dbg_pointers.insert(s.dbg);
+
   return s;
 }
 
@@ -643,6 +652,11 @@ PcmSound create_sound_stereo(int frequency, const das::TArray<das::float2> & dat
   memcpy(s.getData(), data.data, s.getDataMemorySize());
   s.getData()[s.samples * 2] = s.getData()[0];
   s.getData()[s.samples * 2 + 1] = s.getData()[1];
+
+  s.dbg = new DasboxDebugInfo();
+  snprintf(s.dbg->name, sizeof(s.dbg->name) - 1, "stereo %d smpl @%d", s.samples, s.frequency);
+  dbg_pointers.insert(s.dbg);
+
   return s;
 }
 
@@ -717,6 +731,11 @@ PcmSound create_sound_from_file(const char * file_name)
   }
 
   drwav_free(pSampleData, NULL);
+
+  s.dbg = new DasboxDebugInfo();
+  snprintf(s.dbg->name, sizeof(s.dbg->name) - 1, "%s", file_name);
+  dbg_pointers.insert(s.dbg);
+
   return s;
 }
 
@@ -851,6 +870,11 @@ void delete_allocated_sounds()
     delete[] data;
 
   sound_data_pointers.clear();
+
+  for (auto && dbg : dbg_pointers)
+    delete dbg;
+
+  dbg_pointers.clear();
 }
 
 
@@ -1124,7 +1148,33 @@ PcmSound::PcmSound(PcmSound && b)
   samples = b.samples;
   channels = b.channels;
   data = b.data;
+  dbg = b.dbg;
   b.data = nullptr;
+  b.dbg = nullptr;
+}
+
+PcmSound& PcmSound::operator=(const PcmSound & b)
+{
+  if (this == &b)
+    return *this;
+
+  WinAutoLock lock(&sound_cs);
+
+  for (auto && s : playing_sounds)
+    if (s.sound == this)
+      if (!s.isEmpty())
+        s.setStopMode();
+
+  deleteData();
+  frequency = b.frequency;
+  samples = b.samples;
+  channels = b.channels;
+  newData(getDataMemorySize());
+  memcpy(data, b.data, getDataMemorySize());
+  dbg = b.dbg ? new DasboxDebugInfo(*b.dbg) : nullptr;
+  if (dbg)
+    dbg->creationFrame = current_frame;
+  return *this;
 }
 
 PcmSound& PcmSound::operator=(PcmSound && b)
@@ -1143,7 +1193,9 @@ PcmSound& PcmSound::operator=(PcmSound && b)
   samples = b.samples;
   channels = b.channels;
   data = b.data;
+  dbg = b.dbg;
   b.data = nullptr;
+  b.dbg = nullptr;
 
   return *this;
 }
@@ -1162,7 +1214,6 @@ PcmSound::~PcmSound()
         s.setStopMode();
 
   deleteData();
-  data = nullptr;
   samples = 0;
 }
 

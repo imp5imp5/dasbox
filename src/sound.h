@@ -61,4 +61,5 @@ namespace sound
   double get_total_time_played();
   int get_total_sound_count();
   int get_playing_sound_count();
+  void print_debug_infos(int from_frame);
 }

@@ -134,32 +134,32 @@ def private allocate_image(): int
     deleted_images |> pop()
     return res
 
-def delete_image_from_collection(image_handle: ImageHandle)
+def delete_managed_image(image_handle: ImageHandle)
     if (image_handle.index > 0 && images[image_handle.index].valid)
         deleted_images |> push(image_handle.index)
         delete images[image_handle.index]
 
-def clone_image_in_collection(image_handle: ImageHandle): ImageHandle
+def clone_managed_collection(image_handle: ImageHandle): ImageHandle
     var i = allocate_image()
     images[i] := images[image_handle.index]
     return setup_image(i)
 
-def create_image_in_collection(file_name: string; smooth: bool = false; use_mips: bool = false): ImageHandle
+def create_managed_image(file_name: string; smooth: bool = false; use_mips: bool = false): ImageHandle
     var i = allocate_image()
     images[i] <- create_image(file_name)
     return setup_image(i, smooth, use_mips)
 
-def create_image_in_collection(width, height: int; smooth: bool = false; use_mips: bool = false): ImageHandle
+def create_managed_image(width, height: int; smooth: bool = false; use_mips: bool = false): ImageHandle
     var i = allocate_image()
     images[i] <- create_image(width, height)
     return setup_image(i, smooth, use_mips)
 
-def create_image_in_collection(width, height: int; pixels: array<uint> &; smooth: bool = false; use_mips: bool = false): ImageHandle
+def create_managed_image(width, height: int; pixels: array<uint> &; smooth: bool = false; use_mips: bool = false): ImageHandle
     var i = allocate_image()
     images[i] <- create_image(width, height, pixels)
     return setup_image(i, smooth, use_mips)
 
-def create_image_in_collection(width, height: int; pixels: string; palette): ImageHandle
+def create_managed_image(width, height: int; pixels: string; palette): ImageHandle
     var i = allocate_image()
     images[i] <- create_image(width, height, pixels, palette)
     return setup_image(i, smooth, use_mips)

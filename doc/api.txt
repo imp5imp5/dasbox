@@ -103,14 +103,14 @@ class ImageHandle
   // or store links to pictures in tables.
   //
 
-  create_image_in_collection(file_name: string; smooth: bool = false; use_mips: bool = false): ImageHandle
-  create_image_in_collection(width, height: int; smooth: bool = false; use_mips: bool = false): ImageHandle
-  create_image_in_collection(width, height: int; pixels: array<uint> &; smooth: bool = false; use_mips: bool = false): ImageHandle
-  create_image_in_collection(width, height: int; pixels: string; palette): ImageHandle
+  create_managed_image(file_name: string; smooth: bool = false; use_mips: bool = false): ImageHandle
+  create_managed_image(width, height: int; smooth: bool = false; use_mips: bool = false): ImageHandle
+  create_managed_image(width, height: int; pixels: array<uint> &; smooth: bool = false; use_mips: bool = false): ImageHandle
+  create_managed_image(width, height: int; pixels: string; palette): ImageHandle
   
-  clone_image_in_collection(image_handle: ImageHandle): ImageHandle
+  clone_managed_image(image_handle: ImageHandle): ImageHandle
 
-  delete_image_from_collection(image_handle: ImageHandle)
+  delete_managed_image(image_handle: ImageHandle)
 
   image_handle |> draw_image_transformed(x, y, texture_rect, color, size, angle, relative_pivot_x, relative_pivot_y)
   image_handle |> draw_image_transformed(x, y, texture_rect, color, size, angle)

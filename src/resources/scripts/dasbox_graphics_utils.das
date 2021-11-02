@@ -139,7 +139,7 @@ def delete_managed_image(image_handle: ImageHandle)
         deleted_images |> push(image_handle.index)
         delete images[image_handle.index]
 
-def clone_managed_collection(image_handle: ImageHandle): ImageHandle
+def clone_managed_image(image_handle: ImageHandle): ImageHandle
     var i = allocate_image()
     images[i] := images[image_handle.index]
     return setup_image(i)
@@ -203,14 +203,14 @@ def draw_triangle_strip(image_handle: ImageHandle; coords, texture_coords, color
 def set_pixel(image_handle: ImageHandle; x, y, color)
     images[image_handle.index] |> set_pixel(x, y, color)
 
-def get_pixel(image_handle: ImageHandle; x, y)
+def get_pixel(image_handle: ImageHandle; x, y): uint
     return images[image_handle.index] |> get_pixel(x, y)
 
 def set_image_data(image_handle: ImageHandle; data)
-    return images[image_handle.index] |> set_image_data(data)
+    images[image_handle.index] |> set_image_data(data)
 
 def get_image_data(image_handle: ImageHandle; data)
-    return images[image_handle.index] |> get_image_data(data)
+    images[image_handle.index] |> get_image_data(data)
 
 def premultiply_alpha(image_handle: ImageHandle)
     images[image_handle.index] |> premultiply_alpha()

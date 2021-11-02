@@ -183,10 +183,10 @@ def draw_image_region(image_handle: ImageHandle; x, y, texture_rect)
     images[image_handle.index] |> draw_image_region(x, y, texture_rect)
 
 def draw_image_region(image_handle: ImageHandle; x, y, texture_rect, color)
-    images[image_handle.index] |> draw_image_region(x, y, texture_rect)
+    images[image_handle.index] |> draw_image_region(x, y, texture_rect, color)
 
 def draw_image_region(image_handle: ImageHandle; x, y, texture_rect, color, size)
-    images[image_handle.index] |> draw_image_region(x, y, texture_rect)
+    images[image_handle.index] |> draw_image_region(x, y, texture_rect, color, size)
 
 def draw_quad(image_handle: ImageHandle; p0, p1, p2, p3)
     images[image_handle.index] |> draw_quad(p0, p1, p2, p3)

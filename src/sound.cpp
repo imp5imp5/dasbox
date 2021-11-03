@@ -232,14 +232,14 @@ struct PlayingSound
     float wishVolumeL = master_volume * volume * min(1.0f + pan, 1.0f);
     float wishVolumeR = master_volume * volume * min(1.0f - pan, 1.0f);
     float * __restrict sndData = sound ? sound->getData() : nullptr;
-    if (!sndData)
-      return;
 
     double advance = sound ? double(sound->frequency) * inv_frequency * pitch : 1.0;
 
     if (!stopMode && !waitingStart && sound && volumeL > 0.0f && volumeR > 0.0f &&
         wishVolumeL == volumeL && wishVolumeR == volumeR &&
-        pos + advance * count < stopPos)
+        pos + advance * count < stopPos &&
+        sndData != nullptr
+       )
     {
       if (channels == 1)
       {
@@ -276,6 +276,8 @@ struct PlayingSound
       return;
     }
 
+    if (!sndData && !stopMode)
+      stopMode = true;
 
     if (channels == 1)
     {
@@ -350,7 +352,10 @@ struct PlayingSound
           }
 
           if (volumeR == 0.f && volumeL == 0.f)
+          {
             stopMode = false;
+            break;
+          }
 
           mix[0] += volumeL;
           mix[1] += volumeR;

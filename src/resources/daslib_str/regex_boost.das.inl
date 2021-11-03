@@ -11,7 +11,7 @@
 "require ast\n"
 "require strings\n"
 "require daslib/ast_boost\n"
-"require daslib/regex\n"
+"require daslib/regex public\n"
 "\n"
 "[reader_macro(name=\"regex\")]\n"
 "class RegexReader : AstReaderMacro\n"

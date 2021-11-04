@@ -1,5 +1,6 @@
 ## ROADMAP
 
+* Streaming large audio files
 * Render targets
 * 2D Meshes
 * Asynchronous IO and resources (images, textures, texts, fonts, etc)

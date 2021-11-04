@@ -427,14 +427,15 @@ bool load_module(const string & file_name, DasFile ** das_file)
   print_note("Executing file '%s'", file_name.c_str());
 
   (*das_file)->program = compileDaScript(file_name, (*das_file)->fAccess, logger, (*das_file)->dummyLibGroup);
-  if ((*das_file)->program->failed())
+  ProgramPtr program = (*das_file)->program;
+  if (program->failed())
   {
     string s;
     s += "Failed to compile: '";
     s += file_name;
     s += "'\n";
 
-    for (Error & e : (*das_file)->program->errors)
+    for (Error & e : program->errors)
     {
       s += "\n";
       s += reportError(e.at, e.what, e.extra, e.fixme, e.cerr);
@@ -444,16 +445,20 @@ bool load_module(const string & file_name, DasFile ** das_file)
     return false;
   }
 
+  program->policies.persistent_heap = true;
+  if (!program->options.find("gc", Type::tBool))
+    program->options.emplace_back("gc", true);
+
   // create daScript context
-  (*das_file)->ctx = make_smart<PlaygroundContext>((*das_file)->program->getContextStackSize());
-  if (!(*das_file)->program->simulate(*(*das_file)->ctx, logger))
+  (*das_file)->ctx = make_smart<PlaygroundContext>(program->getContextStackSize());
+  if (!program->simulate(*(*das_file)->ctx, logger))
   {
     string s;
     s += "Failed to simulate '";
     s += file_name;
     s += "'\n";
 
-    for (Error & e : (*das_file)->program->errors)
+    for (Error & e : program->errors)
     {
       s += "\n";
       s += reportError(e.at, e.what, e.extra, e.fixme, e.cerr);
@@ -1151,7 +1156,7 @@ void run_das_for_ui()
     check_window_pos_changed();
 
     if (das_file && das_file->ctx)
-      das_file->ctx->collectStringHeap(nullptr, false);
+      das_file->ctx->collectHeap(nullptr, true, false);
 
     if (is_quit_scheduled)
       g_window->close();

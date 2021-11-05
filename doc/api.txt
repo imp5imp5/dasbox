@@ -427,6 +427,17 @@ class SoundHandle
   set_sound_play_pos(handle, pos_in_seconds)
 
 
+--------------------------------------------------------------------------
+
+  // output arrays will be resized inside functions
+
+  fft_real_forward(real_signal_input, complex_frequencies_output)  // length if input array (N) must be power of 2
+  fft_real_inverse(complex_frequencies_input, real_signal_output)
+  fft_calculate_magnitudes(complex_frequencies, magnitudes_output)
+  fft_calculate_normalized_magnitudes(complex_frequencies, magnitudes_output)  // maginudes divided by N
+  fft_calculate_log_magnitudes(complex_frequencies, log_magnitudes_output)
+
+
 
 
 

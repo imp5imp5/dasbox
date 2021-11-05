@@ -59,6 +59,7 @@ namespace sound
   float get_output_sample_rate();
   int64_t get_total_samples_played();
   double get_total_time_played();
+  double get_memory_used();
   int get_total_sound_count();
   int get_playing_sound_count();
   void print_debug_infos(int from_frame);

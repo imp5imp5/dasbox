@@ -33,6 +33,39 @@ void initialize()
 #include "resources/daslib_str/daslib_init.cpp.inl"
 }
 
+uint64_t get_file_size(const char * file_name)
+{
+  if (!file_name || !file_name[0])
+  {
+    print_error("Cannot access file. File name is empty.");
+    return false;
+  }
+
+  if (!is_path_string_valid(file_name))
+  {
+    print_error("Cannot access file '%s'. Absolute paths or access to the parent directory is prohibited.", file_name);
+    return false;
+  }
+
+  FILE * f = fopen(file_name, "rb");
+  if (!f)
+  {
+    print_error("Cannot access file '%s'", file_name);
+    return false;
+  }
+
+#ifdef _WIN32
+  _fseeki64(f, 0, SEEK_END);
+  uint64_t fileLength = _ftelli64(f);
+#else
+  fseeko(f, 0, SEEK_END);
+  uint64_t fileLength = ftello(f);
+#endif
+
+  fclose(f);
+  return fileLength;
+}
+
 
 bool read_whole_file(const char * file_name, std::vector<uint8_t> & bytes)
 {

@@ -41,6 +41,7 @@ static unordered_set<float *> sound_data_pointers;
 static unordered_set<DasboxDebugInfo *> dbg_pointers;
 static unordered_map<int, minfft_aux *> fft_complex_aux_pointers;
 static unordered_map<int, minfft_aux *> fft_real_aux_pointers;
+static uint64_t memory_used = 0;
 
 int get_total_sound_count()
 {
@@ -78,6 +79,7 @@ public:
   int frequency;
   int samples;
   int channels;
+  unsigned memoryUsed;
 
   float * getData() const
   {
@@ -86,12 +88,16 @@ public:
 
   void newData(size_t size)
   {
-    data = new float[size];
+    memoryUsed = size;
+    data = new float[(size + 3) / sizeof(float)];
     sound_data_pointers.insert(data);
+    memory_used += memoryUsed;
   }
 
   void deleteData()
   {
+    memory_used -= memoryUsed;
+
     sound_data_pointers.erase(data);
     delete[] data;
     data = nullptr;
@@ -133,6 +139,7 @@ public:
 
   PcmSound()
   {
+    memoryUsed = 0;
     frequency = 44100;
     samples = 0;
     channels = 1;
@@ -142,6 +149,7 @@ public:
 
   PcmSound(const PcmSound & b)
   {
+    memoryUsed = 0;
     frequency = b.frequency;
     samples = b.samples;
     channels = b.channels;
@@ -675,6 +683,8 @@ PcmSound create_sound_from_file(const char * file_name)
   if (!device_initialized)
     init_sound_lib_internal();
 
+  print_note("create_sound_from_file '%s'", file_name);
+
   if (!file_name || !file_name[0])
   {
     print_error("Cannot create sound. File name is empty.", file_name);
@@ -894,6 +904,8 @@ void delete_allocated_sounds()
     minfft_free_aux(aux.second);
 
   fft_real_aux_pointers.clear();
+
+  memory_used = 0;
 }
 
 static_assert(sizeof(minfft_real) == sizeof(float), "sizeof(minfft_real) != sizeof(float), define MINFFT_SINGLE");
@@ -1248,6 +1260,11 @@ double get_total_time_played()
   return total_time_played;
 }
 
+double get_memory_used()
+{
+  return double(memory_used);
+}
+
 
 PcmSound::PcmSound(PcmSound && b)
 {
@@ -1261,8 +1278,11 @@ PcmSound::PcmSound(PcmSound && b)
   frequency = b.frequency;
   samples = b.samples;
   channels = b.channels;
+  memoryUsed = b.memoryUsed;
   data = b.data;
   dbg = b.dbg;
+
+  b.memoryUsed = 0;
   b.data = nullptr;
   b.dbg = nullptr;
 }
@@ -1308,8 +1328,11 @@ PcmSound& PcmSound::operator=(PcmSound && b)
   channels = b.channels;
   data = b.data;
   dbg = b.dbg;
+  memoryUsed = b.memoryUsed;
+
   b.data = nullptr;
   b.dbg = nullptr;
+  b.memoryUsed = 0;
 
   return *this;
 }

@@ -592,7 +592,7 @@ public:
     addExtern<DAS_BIND_FUN(approach_vec<das::float3>)>
       (*this, lib, "approach", SideEffects::accessExternal, "approach_vec<das::float3>")
       ->args({"from", "to", "dt", "viscosity"});
-    
+
     addExtern<DAS_BIND_FUN(approach_vec<das::float4>)>
       (*this, lib, "approach", SideEffects::accessExternal, "approach_vec<das::float4>")
       ->args({"from", "to", "dt", "viscosity"});

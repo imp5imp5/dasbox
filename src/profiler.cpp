@@ -95,6 +95,8 @@ void Profiler::print()
     "\n"
     "heap:        %0.6f MB\n"
     "string heap: %0.6f MB\n"
+    "graphics:    %0.6f MB\n"
+    "sound:       %0.6f MB\n"
     "\n"
     ,
     int(actTime.size()),
@@ -106,7 +108,9 @@ void Profiler::print()
     graphics::get_image_count(),
     sound::get_total_sound_count(),
     get_heap_memory_usage() / 1.0e6,
-    get_string_heap_memory_usage() / 1.0e6
+    get_string_heap_memory_usage() / 1.0e6,
+    graphics::get_memory_used() / 1.0e6,
+    sound::get_memory_used() / 1.0e6
   );
 
   print_text("New resources for this period:");

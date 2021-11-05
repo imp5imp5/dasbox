@@ -25,6 +25,7 @@ static sf::Transform current_inverse_transform;
 static bool current_inverse_transform_calculated = false;
 static int updated_textures_count = 0;
 static int primitives_count = 0;
+static uint64_t memory_used = 0;
 
 const sf::BlendMode BlendPremultipliedAlpha(sf::BlendMode::One, sf::BlendMode::OneMinusSrcAlpha, sf::BlendMode::Add,
   sf::BlendMode::One, sf::BlendMode::OneMinusSrcAlpha, sf::BlendMode::Add);
@@ -391,6 +392,8 @@ void set_font_name(const char * name)
     return;
   }
 
+  memory_used += fs::get_file_size(name);
+
   loaded_fonts[string(name)] = font;
   current_font = font;
   current_font_name = name;
@@ -657,8 +660,9 @@ struct Image
     if (dbg)
       dbg->creationFrame = current_frame;
     cached_pixels = img ? (uint32_t *)img->getPixelsPtr() : nullptr;
-    width = 0;
-    height = 0;
+    width = b.width;
+    height = b.height;
+    memory_used += width * height * 8;
     applied = false;
     useMipmap = b.useMipmap;
     image_pointers.insert(img);
@@ -693,12 +697,16 @@ struct Image
     delete img;
     delete tex;
     delete dbg;
+    memory_used -= width * height * 8;
+
     img = b.img ? new sf::Image(*b.img) : nullptr;
     tex = b.tex ? new sf::Texture(*b.tex) : nullptr;
     dbg = b.dbg ? new DasboxDebugInfo(*b.dbg) : nullptr;
     cached_pixels = img ? (uint32_t *)img->getPixelsPtr() : nullptr;
     width = b.width;
     height = b.height;
+    memory_used += width * height * 8;
+
     applied = false;
     useMipmap = b.useMipmap;
     image_pointers.insert(img);
@@ -745,6 +753,7 @@ struct Image
     applied = false;
     useMipmap = false;
     cached_pixels = nullptr;
+    memory_used -= width * height * 8;
     width = 0;
     height = 0;
   }
@@ -763,6 +772,7 @@ void delete_image(Image * image)
   delete image->dbg;
   image->dbg = nullptr;
   image->cached_pixels = nullptr;
+  memory_used -= image->width * image->height * 8;
   image->width = 0;
   image->height = 0;
   image->applied = false;
@@ -781,6 +791,7 @@ Image create_image_wh(int width, int height)
   b.cached_pixels = (uint32_t *)b.img->getPixelsPtr();
   b.width = width;
   b.height = height;
+  memory_used += width * height * 8;
 
   b.tex = new sf::Texture();
   b.tex->loadFromImage(*b.img);
@@ -816,6 +827,7 @@ Image create_image(int width, int height, const das::TArray<uint32_t> & pixels)
   b.cached_pixels = (uint32_t *)b.img->getPixelsPtr();
   b.width = width;
   b.height = height;
+  memory_used += width * height * 8;
 
   b.tex = new sf::Texture();
   b.tex->loadFromImage(*b.img);
@@ -856,6 +868,7 @@ Image create_image_from_file(const char * file_name)
   b.cached_pixels = (uint32_t *)b.img->getPixelsPtr();
   b.width = b.img->getSize().x;
   b.height = b.img->getSize().y;
+  memory_used += b.width * b.height * 8;
 
   b.tex = new sf::Texture();
   b.tex->loadFromImage(*b.img);
@@ -1674,6 +1687,12 @@ int get_image_count()
   return int(dbg_pointers.size());
 }
 
+double get_memory_used()
+{
+  return double(memory_used);
+}
+
+
 int get_render_primitives_count()
 {
   return primitives_count;
@@ -1731,6 +1750,8 @@ void delete_allocated_images()
   for (auto & f : loaded_fonts)
     delete f.second;
   loaded_fonts.clear();
+
+  memory_used = 0;
 }
 
 void finalize()

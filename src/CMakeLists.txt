@@ -13,11 +13,17 @@ if(MSVC)
 endif()
 
 add_definitions(-DSFML_STATIC)
+add_definitions(-DMINFFT_SINGLE)
 
-file(GLOB SRC *.cpp *.h)
+file(GLOB SRC
+  *.cpp
+  *.h
+  ../3rdParty/minfft/minfft.c
+)
 
 include_directories(
   .
+  ../3rdParty/minfft
   ../3rdParty/miniaudio
   ../3rdParty/SFML/include
   ../3rdParty/daScript/include

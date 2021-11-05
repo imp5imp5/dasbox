@@ -581,7 +581,7 @@ void update_switch_screens()
 {
   if ((input::get_key_down(sf::Keyboard::Tab) && !input::get_key(sf::Keyboard::LAlt) &&
       !input::get_key(sf::Keyboard::RAlt))
-      || (input::get_key_down(sf::Keyboard::Escape) && screen_mode == SM_LOG)
+      /*|| (input::get_key_down(sf::Keyboard::Escape) && screen_mode == SM_LOG*)*/
      )
   {
     if (screen_mode == SM_LOG)

@@ -54,5 +54,6 @@ protected:
 extern Logger logger;
 
 void on_switch_to_log_screen();
+void on_return_from_log_screen();
 void update_log_screen(float dt);
 void draw_log_screen();

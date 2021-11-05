@@ -27,6 +27,7 @@ extern bool log_to_console;
 extern bool inside_draw_fn;
 extern const char * initial_dir;
 extern int current_frame;
+extern bool window_is_active;
 
 void print_error(const char * format, ...);
 void print_exception(const char * format, ...);

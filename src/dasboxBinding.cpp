@@ -508,9 +508,11 @@ public:
       (*this, lib, "get_mouse_position_delta", SideEffects::accessExternal, "input::get_mouse_position_delta");
     addExtern<DAS_BIND_FUN(input::get_mouse_velocity)>
       (*this, lib, "get_mouse_velocity", SideEffects::accessExternal, "input::get_mouse_velocity");
-    addExtern<DAS_BIND_FUN(input::set_relative_mouse_movement)>
-      (*this, lib, "set_relative_mouse_movement", SideEffects::modifyExternal, "input::set_relative_mouse_movement")
+    addExtern<DAS_BIND_FUN(input::set_relative_mouse_mode)>
+      (*this, lib, "set_relative_mouse_mode", SideEffects::modifyExternal, "input::set_relative_mouse_mode")
       ->args({"relative"});
+    addExtern<DAS_BIND_FUN(input::is_relative_mouse_mode)>
+      (*this, lib, "is_relative_mouse_mode", SideEffects::accessExternal, "input::is_relative_mouse_mode");
 
     addExtern<DAS_BIND_FUN(das_get_axis)>
       (*this, lib, "get_axis", SideEffects::accessExternal, "das_get_axis")

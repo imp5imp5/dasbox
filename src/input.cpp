@@ -31,6 +31,8 @@ static float mouse_scroll_accum = 0;
 static int last_key_index = -1;
 static bool is_last_key_repeat = false;
 static float gamepad_axes[GAMEPAD_AXES] = { 0 };
+static bool delayed_relative_mode = false;
+static bool relative_mouse_mode = false;
 
 static float mouse_vel_x = 0.f;
 static float mouse_vel_y = 0.f;
@@ -200,10 +202,6 @@ das::float2 get_mouse_velocity()
 }
 
 
-void set_relative_mouse_movement(bool is_relative)
-{
-  (void)(is_relative); // not implemented yet
-}
 
 float get_axis(int axis)
 {
@@ -239,6 +237,18 @@ void update_mouse_input(float dt, bool active)
   mouse_y = sf::Mouse::getPosition(*g_window).y * invScale;
   mouse_dx = (mouse_x - prevX) * invScale;
   mouse_dy = (mouse_y - prevY) * invScale;
+
+  if (delayed_relative_mode)
+    set_relative_mouse_mode(true);
+
+  if (relative_mouse_mode && window_is_active)
+  {
+    g_window->setMouseCursorVisible(false);
+    sf::Vector2i center = sf::Vector2i(screen_width * screen_global_scale / 2, screen_height * screen_global_scale / 2);
+    sf::Mouse::setPosition(center, *g_window);
+    mouse_x = screen_width / 2;
+    mouse_y = screen_height / 2;
+  }
 
   float k = 1.5f;//fabsf(mouse_dx) < 3 && fabsf(mouse_dx) < 3 ? 1.1f : 1.5f;
 
@@ -352,6 +362,51 @@ void joy_axis_position(int axis_idx, float axis_pos)
     else
       axis_pos = sign(axis_pos) * (fabsf(axis_pos) - 1.0f) * (1.f / 99.f);
     gamepad_axes[axis_idx] = ::clamp(axis_pos, -1.0f, 1.0f);
+  }
+}
+
+
+bool is_relative_mouse_mode()
+{
+  return delayed_relative_mode || relative_mouse_mode;
+}
+
+void set_relative_mouse_mode(bool relative)
+{
+  if (!relative)
+  {
+    delayed_relative_mode = false;
+    relative_mouse_mode = false;
+  }
+
+  if (!g_window)
+  {
+    delayed_relative_mode = relative;
+    return;
+  }
+
+  bool mouseDown = sf::Mouse::isButtonPressed(sf::Mouse::Left) || sf::Mouse::isButtonPressed(sf::Mouse::Right);
+
+  if (relative)
+  {
+    if (mouseDown || !g_window->isOpen() || !window_is_active)
+    {
+      delayed_relative_mode = true;
+      return;
+    }
+
+    g_window->setMouseCursorGrabbed(true);
+    g_window->setMouseCursorVisible(false);
+    sf::Vector2i center = sf::Vector2i(screen_width * screen_global_scale / 2, screen_height * screen_global_scale / 2);
+    sf::Mouse::setPosition(center, *g_window);
+    mouse_x = screen_width / 2;
+    mouse_y = screen_height / 2;
+    relative_mouse_mode = true;
+  }
+  else
+  {
+    g_window->setMouseCursorVisible(true);
+    g_window->setMouseCursorGrabbed(false);
   }
 }
 

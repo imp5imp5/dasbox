@@ -227,6 +227,9 @@ class Mesh      // 2D
   get_mouse_position_delta()
   get_mouse_velocity()
 
+  set_relative_mouse_mode(is_relative)
+  is_relative_mouse_mode()
+
   get_axis(axis_code)
 
   get_key_code(key_name: string): int

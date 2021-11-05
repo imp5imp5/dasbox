@@ -14,6 +14,7 @@ var
     pos = 0.0
     scroll = 0.0
     mouse_pos: float2
+    relative_mode = false
 
 
 [export]
@@ -42,6 +43,10 @@ def act(dt: float)
     scroll += get_mouse_scroll_delta()
     mouse_pos = get_mouse_position()
 
+    if get_key_down(VK_SPACE)
+        relative_mode = !relative_mode
+        set_relative_mouse_mode(relative_mode)
+
 
 [export]
 def draw()
@@ -59,4 +64,5 @@ def draw()
     text_out(80, 250, "get_mouse_position() = {get_mouse_position()}", 0xF0F0F0)
     text_out(80, 300, "get_mouse_position_delta() = {get_mouse_position_delta()}", 0xF0F0F0)
     text_out(80, 350, "get_mouse_velocity() = {get_mouse_velocity()}", 0xF0F0F0)
+    text_out(80, 400, "set_relative_mouse_mode({relative_mode})  // Press SPACE to toggle mode", 0xFFD080)
 

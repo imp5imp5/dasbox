@@ -492,6 +492,7 @@ void initialize_das_file(bool hard_reload)
   if (das_file->ctx.get())
   {
     inside_initialization = true;
+    input::set_relative_mouse_mode(false);
     prepare_delayed_variables();
     set_new_live_context(das_file->ctx.get(), hard_reload);
     find_dasbox_api_functions(hard_reload);
@@ -586,6 +587,7 @@ void update_switch_screens()
   {
     if (screen_mode == SM_LOG)
     {
+      on_return_from_log_screen();
       set_application_screen();
     }
     else if (screen_mode == SM_USER_APPLICATION)
@@ -785,6 +787,9 @@ void create_window()
   }
 
   g_window->setVerticalSyncEnabled(true);
+
+  if (input::is_relative_mouse_mode())
+    input::set_relative_mouse_mode(true);
 
   delayed_window_antialiasing.first = false;
   delayed_upscale.first = false;

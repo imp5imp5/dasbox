@@ -577,10 +577,12 @@ void set_application_screen()
   screen_mode = SM_USER_APPLICATION;
 }
 
-  void update_switch_screens()
+void update_switch_screens()
 {
-  if (input::get_key_down(sf::Keyboard::Tab) && !input::get_key(sf::Keyboard::LAlt) &&
+  if ((input::get_key_down(sf::Keyboard::Tab) && !input::get_key(sf::Keyboard::LAlt) &&
       !input::get_key(sf::Keyboard::RAlt))
+      || (input::get_key_down(sf::Keyboard::Escape) && screen_mode == SM_LOG)
+     )
   {
     if (screen_mode == SM_LOG)
     {

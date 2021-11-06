@@ -196,6 +196,7 @@ static bool compare_identifier(const char * s, const char * word, int len)
 static void check_source_for_special_markers(const das::string & fname, char * s)
 {
   bool tag = false;
+  bool options = false;
   int tagDepth = 0;
   
   for (char * p = s; *p; p++)
@@ -246,6 +247,9 @@ static void check_source_for_special_markers(const das::string & fname, char * s
       }
     }
 
+    if (*p == '\n')
+      options = false;
+
     if (*p == '\n' && p[1] == '[')
     {
       tagDepth = 0;
@@ -269,8 +273,11 @@ static void check_source_for_special_markers(const das::string & fname, char * s
         print_note("'extern' used in file '%s'", fname.c_str());
       }
 
-    if (*p == '\n' && p[1] == 'r' && !is_in_debug_mode)
-      if (strncmp(p + 1, "require daslib/debug", sizeof("require daslib/debug") - 1) == 0)
+    if (*p == '\n' && strncmp(p + 1, "options ", sizeof("options ") - 1) == 0)
+      options = true;
+
+    if (options && !is_in_debug_mode && *p == 'd')
+      if (compare_identifier(p, "debugger", sizeof("debugger") - 1))
       {
         is_in_debug_mode = true;
         print_note("Debug mode was enabled in file '%s'", fname.c_str());

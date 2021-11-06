@@ -159,7 +159,7 @@ def create_managed_image(width, height: int; pixels: array<uint> &; smooth: bool
     images[i] <- create_image(width, height, pixels)
     return setup_image(i, smooth, use_mips)
 
-def create_managed_image(width, height: int; pixels: string; palette): ImageHandle
+def create_managed_image(width, height: int; pixels: string; palette; smooth: bool = false; use_mips: bool = false): ImageHandle
     var i = allocate_image()
     images[i] <- create_image(width, height, pixels, palette)
     return setup_image(i, smooth, use_mips)

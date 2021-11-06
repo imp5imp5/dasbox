@@ -1,6 +1,7 @@
 #include "fileSystem.h"
 
 #include <algorithm>
+#include <string.h>
 
 #ifdef _WIN32
 #define NOMINMAX
@@ -181,6 +182,110 @@ void check_source_for_correct_debug_position(const das::string & fname, char * s
 }
 */
 
+static bool compare_identifier(const char * s, const char * word, int len)
+{
+  if (strncmp(s, word, len) != 0)
+    return false;
+
+  if ((isalnum(s[-1]) || s[-1] == '_') || (isalnum(s[len]) || s[len] == '_'))
+    return false;
+
+  return true;
+}
+
+static void check_source_for_special_markers(const das::string & fname, char * s)
+{
+  bool tag = false;
+  int tagDepth = 0;
+  
+  for (char * p = s; *p; p++)
+  {
+    if (*p == '/' && p[1] == '/')
+      while (*p && *p != '\n')
+        p++;
+
+    if (*p == '/' && p[1] == '*')
+      while (*p)
+      {
+        if (*p == '*' && p[1] == '/')
+        {
+          p += 2;
+          break;
+        }
+        p++;
+      }
+
+    if (*p == '\'')
+    {
+      p++;
+      while (*p)
+      {
+        if (*p == '\'')
+          break;
+        if (*p == '\\')
+          p++;
+        p++;
+      }
+    }
+
+    if (*p == '\"')
+    {
+      int depth = 0;
+      p++;
+      while (*p)
+      {
+        if (*p == '{')
+          depth++;
+        if (*p == '}')
+          depth--;
+        if (*p == '\"' && depth <= 0)
+          break;
+        if (*p == '\\')
+          p++;
+        p++;
+      }
+    }
+
+    if (*p == '\n' && p[1] == '[')
+    {
+      tagDepth = 0;
+      tag = true;
+    }
+
+    if (*p == '[' && tag)
+      tagDepth++;
+
+    if (*p == ']' && tag)
+    {
+      tagDepth--;
+      if (tagDepth <= 0)
+        tag = false;
+    }
+
+    if (tag && *p == 'e' && !program_has_unsafe_operations)
+      if (compare_identifier(p, "extern", sizeof("extern") - 1))
+      {
+        program_has_unsafe_operations = true;
+        print_note("'extern' used in file '%s'", fname.c_str());
+      }
+
+    if (*p == '\n' && p[1] == 'r' && !is_in_debug_mode)
+      if (strncmp(p + 1, "require daslib/debug", sizeof("require daslib/debug") - 1) == 0)
+      {
+        is_in_debug_mode = true;
+        print_note("Debug mode was enabled in file '%s'", fname.c_str());
+      }
+
+    if (*p == 'u' && p[1] == 'n' && !program_has_unsafe_operations && !tag && p > s)
+      if (compare_identifier(p, "unsafe", sizeof("unsafe") - 1))
+        {
+          program_has_unsafe_operations = true;
+          print_note("'unsafe' used in file '%s'", fname.c_str());
+        }
+  }
+}
+
+
 das::FileInfo * DasboxFsFileAccess::getNewFileInfo(const das::string & fname)
 {
   /*{
@@ -213,7 +318,7 @@ das::FileInfo * DasboxFsFileAccess::getNewFileInfo(const das::string & fname)
   const uint32_t fileLength = uint32_t(ftell(f));
   fseek(f, 0, SEEK_SET);
 
-  char * source = (char *)das_aligned_alloc16(fileLength + 1);
+  char * source = (char *)das_aligned_alloc16(fileLength + 2);
   if (fread((void*)source, 1, fileLength, f) != fileLength)
   {
     fclose(f);
@@ -225,7 +330,9 @@ das::FileInfo * DasboxFsFileAccess::getNewFileInfo(const das::string & fname)
   fclose(f);
 
   source[fileLength] = 0;
+  source[fileLength + 1] = 0;
   //check_source_for_correct_debug_position(fname, source);
+  check_source_for_special_markers(fname, source);
 
   auto info = das::make_unique<das::TextFileInfo>(source, fileLength, true);
   if (storeOpenedFiles)

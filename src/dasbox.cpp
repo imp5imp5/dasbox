@@ -80,6 +80,8 @@ void os_debug_break()
 bool is_quit_scheduled = false;
 bool window_is_active = true;
 bool is_first_frame = true;
+bool is_in_debug_mode = false;
+bool program_has_unsafe_operations = false;
 float cur_dt = 0.001f;
 double time_after_start = 0.0;
 
@@ -132,14 +134,27 @@ bool is_window_active()
   return window_is_active;
 }
 
+void update_window_title()
+{
+  if (!g_window)
+    return;
+  sf::String t;
+  if (is_in_debug_mode)
+    t += "[DEBUG]  ";
+  if (program_has_unsafe_operations)
+    t += "[UNSAFE]  ";
+  t += delayed_window_title.second;
+  g_window->setTitle(t);
+}
+
 void set_window_title(const char * title)
 {
   if (!title)
     title = "";
   if (g_window && !inside_initialization)
   {
-    g_window->setTitle(sf::String::fromUtf8(title, title + strlen(title)));
-    delayed_window_title.first = false;
+    delayed_window_title = make_pair(false, sf::String(title));
+    update_window_title();
   }
   else
     delayed_window_title = make_pair(true, sf::String(title));
@@ -498,6 +513,9 @@ void initialize_das_file(bool hard_reload)
     find_dasbox_api_functions(hard_reload);
     inside_initialization = false;
     check_delayed_variables();
+
+    if (is_in_debug_mode || program_has_unsafe_operations)
+      update_window_title();
   }
 }
 
@@ -511,6 +529,9 @@ void das_file_manual_reload(bool hard_reload)
   set_font_name(nullptr);
   set_font_size_i(16);
   profiler.reset();
+
+  is_in_debug_mode = false;
+  program_has_unsafe_operations = false;
 
   set_application_screen();
   logger.clear();

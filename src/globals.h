@@ -23,6 +23,8 @@ extern int screen_width;
 extern int screen_height;
 extern bool has_errors;
 extern bool trust_mode;
+extern bool is_in_debug_mode;
+extern bool program_has_unsafe_operations;
 extern bool log_to_console;
 extern bool inside_draw_fn;
 extern const char * initial_dir;

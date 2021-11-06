@@ -683,8 +683,6 @@ PcmSound create_sound_from_file(const char * file_name)
   if (!device_initialized)
     init_sound_lib_internal();
 
-  print_note("create_sound_from_file '%s'", file_name);
-
   if (!file_name || !file_name[0])
   {
     print_error("Cannot create sound. File name is empty.", file_name);

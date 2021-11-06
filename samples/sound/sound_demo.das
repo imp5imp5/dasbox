@@ -3,14 +3,14 @@ require daslib/media
 // The easiest way to play sound:
 //
 // var
-//     snd: PcmSound <- create_sound("my_sound.wav")
+//     snd: SoundHandle <- create_managed_sound("my_sound.wav")
 // ...
 //     play_sound(snd)
 
 
 var
-    gong: PcmSound
-    musicLoop: PcmSound
+    gong: SoundHandle
+    musicLoop: SoundHandle
     handle: PlayingSoundHandle
 
 
@@ -86,13 +86,13 @@ var
 [export]
 def initialize
     set_window_title("Sound Demo")
-    gong <- create_sound("gong.wav")
+    gong <- create_managed_sound("gong.wav")
     print("gong.channels = {gong.channels}\n")
     print("gong.frequency = {gong.frequency}\n")
     print("gong.samples = {gong.samples}\n")
     print("gong.duration = {gong.duration} sec\n\n")
 
-    musicLoop <- create_sound("music_loop.wav")
+    musicLoop <- create_managed_sound("music_loop.wav")
     print("musicLoop.channels = {musicLoop.channels}\n")
     print("musicLoop.frequency = {musicLoop.frequency}\n")
     print("musicLoop.samples = {musicLoop.samples}\n")

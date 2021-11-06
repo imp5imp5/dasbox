@@ -2,9 +2,9 @@ require daslib/media
 
 var points: array<float2>
 var points2: array<float2>
-var image1: Image
-var image2: Image
-var texture: Image
+var image1: ImageHandle
+var image2: ImageHandle
+var texture: ImageHandle
 
 
 [export]
@@ -13,7 +13,7 @@ def initialize()
     set_window_title("Graphics Demo")
     //set_antialiasing(4)
 
-    image1 <- create_image(24, 17,
+    image1 <- create_managed_image(24, 17,
         "...............x......x." +
         "...............xx....xx." +
         "...............xxx..xxx." +
@@ -39,7 +39,7 @@ def initialize()
         }}
         )
 
-    image2 <- create_image(24, 17,
+    image2 <- create_managed_image(24, 17,
         "........................" +
         "...............x......x." +
         "...............xx....xx." +
@@ -65,7 +65,7 @@ def initialize()
         }}
         )
 
-    texture <- create_image(16, 16)
+    texture <- create_managed_image(16, 16)
     texture |> set_image_smooth(true)
     for y in range(16)
         for x in range(16)

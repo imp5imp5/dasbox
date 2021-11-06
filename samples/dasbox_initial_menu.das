@@ -74,7 +74,7 @@ struct MenuItem
     editorDir: string
     clipboardText: string
     newApplication: bool
-    image: Image const
+    image: ImageHandle const
     description: array<string>
 
 
@@ -207,7 +207,7 @@ def fill_menu_items()
 
     menuItems |> emplace(
         [[MenuItem name = "Flappy Box",
-          image <- create_image("flappy_box/_preview.png"),
+          image <- create_managed_image("flappy_box/_preview.png"),
           source = "flappy_box/flappy_box.das",
           editorDir = empty(samples_dir) ? "" : samples_dir + "/flappy_box",
           description <- [{string[]
@@ -226,7 +226,7 @@ def fill_menu_items()
 
     menuItems |> emplace(
         [[MenuItem name = "Space, Rocks and Lasers",
-          image <- create_image("space_rocks_and_lasers/_preview.png"),
+          image <- create_managed_image("space_rocks_and_lasers/_preview.png"),
           source = "space_rocks_and_lasers/rocks_and_lasers.das",
           editorDir = empty(samples_dir) ? "" : samples_dir + "/space_rocks_and_lasers",
           description <- [{string[]
@@ -246,7 +246,7 @@ def fill_menu_items()
 
     menuItems |> emplace(
         [[MenuItem name = "Keyboard Input",
-          image <- create_image("controls/_preview_keyboard.png"),
+          image <- create_managed_image("controls/_preview_keyboard.png"),
           source = "controls/keyboard_input_demo.das",
           editorDir = empty(samples_dir) ? "" : samples_dir + "/controls",
           description <- [{string[]
@@ -263,7 +263,7 @@ def fill_menu_items()
 
     menuItems |> emplace(
         [[MenuItem name = "Mouse Input",
-          image <- create_image("controls/_preview_mouse.png"),
+          image <- create_managed_image("controls/_preview_mouse.png"),
           source = "controls/mouse_input_demo.das",
           editorDir = empty(samples_dir) ? "" : samples_dir + "/controls",
           description <- [{string[]
@@ -280,7 +280,7 @@ def fill_menu_items()
 
     menuItems |> emplace(
         [[MenuItem name = "Gamepad Input",
-          image <- create_image("controls/_preview_gamepad.png"),
+          image <- create_managed_image("controls/_preview_gamepad.png"),
           source = "controls/gamepad_input_demo.das",
           editorDir = empty(samples_dir) ? "" : samples_dir + "/controls",
           description <- [{string[]
@@ -297,7 +297,7 @@ def fill_menu_items()
 
     menuItems |> emplace(
         [[MenuItem name = "Graphics",
-          image <- create_image("graphics/_preview_graphics.png"),
+          image <- create_managed_image("graphics/_preview_graphics.png"),
           source = "graphics/graphics_demo.das",
           editorDir = empty(samples_dir) ? "" : samples_dir + "/graphics",
           description <- [{string[]
@@ -314,11 +314,11 @@ def fill_menu_items()
 
     menuItems |> emplace(
         [[MenuItem name = "Images",
-          image <- create_image("images/_preview_images.png"),
+          image <- create_managed_image("images/_preview_images.png"),
           source = "images/images_demo.das",
           editorDir = empty(samples_dir) ? "" : samples_dir + "/images",
           description <- [{string[]
-              "How to work with 'Image'.";
+              "How to work with 'Image' and 'ImageHandle'.";
               "Enter - Execute.";
               "Ctrl+Enter - Open sample folder in 'Visual Studio Code' and execute.";
               "";
@@ -331,7 +331,7 @@ def fill_menu_items()
 
     menuItems |> emplace(
         [[MenuItem name = "Custom Fonts",
-          image <- create_image("custom_fonts/_preview_custom_fonts.png"),
+          image <- create_managed_image("custom_fonts/_preview_custom_fonts.png"),
           source = "custom_fonts/custom_fonts.das",
           editorDir = empty(samples_dir) ? "" : samples_dir + "/custom_fonts",
           description <- [{string[]
@@ -348,7 +348,7 @@ def fill_menu_items()
 
     menuItems |> emplace(
         [[MenuItem name = "Will-o'-Wisp",
-          image <- create_image("will_o_wisp/_preview.png"),
+          image <- create_managed_image("will_o_wisp/_preview.png"),
           source = "will_o_wisp/will_o_wisp.das",
           editorDir = empty(samples_dir) ? "" : samples_dir + "/will_o_wisp",
           description <- [{string[]
@@ -365,7 +365,7 @@ def fill_menu_items()
 
     menuItems |> emplace(
         [[MenuItem name = "Sound",
-          image <- create_image("sound/_preview_sound.png"),
+          image <- create_managed_image("sound/_preview_sound.png"),
           source = "sound/sound_demo.das",
           editorDir = empty(samples_dir) ? "" : samples_dir + "/sound",
           description <- [{string[]
@@ -382,7 +382,7 @@ def fill_menu_items()
 
     menuItems |> emplace(
         [[MenuItem name = "Basic ECS Demo",
-          image <- create_image("ecs/_preview_basic.png"),
+          image <- create_managed_image("ecs/_preview_basic.png"),
           source = "ecs/decs_demo_basic.das",
           editorDir = empty(samples_dir) ? "" : samples_dir + "/ecs",
           description <- [{string[]

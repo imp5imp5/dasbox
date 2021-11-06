@@ -1,23 +1,23 @@
 require daslib/media
 
-var image_tga: Image
-var image_png: Image
-var image_jpg: Image
-var ball: Image
-var ball2: Image
+var image_tga: ImageHandle
+var image_png: ImageHandle
+var image_jpg: ImageHandle
+var ball: ImageHandle
+var ball2: ImageHandle
 
 [export]
 def initialize()
     print("initialize\n")
     set_window_title("Images Demo")
 
-    image_tga <- create_image("test.tga")
-    if !image_tga.valid
+    image_tga <- create_managed_image("test.tga")
+    if image_tga.width == 0
         print("Failed to load test.tga\n")
 
-    image_png <- create_image("test.png")
-    image_jpg <- create_image("test.jpg")
-    ball <- create_image("ball.png")
+    image_png <- create_managed_image("test.png")
+    image_jpg <- create_managed_image("test.jpg")
+    ball <- create_managed_image("ball.png")
     make_image_color_transparent(ball, get_pixel(ball, 0, 0))
     ball2 := ball // clone
     //ball2 |> flip_image_x
@@ -36,7 +36,7 @@ def draw()
     draw_image(image_tga, 100, 30)
     draw_image(image_png, 280, 30)
     draw_image(image_jpg, 460, 30)
-    text_out(640, 80, "create_image(\"file_name\")", 0xFFF0F0F0)
+    text_out(640, 80, "create_managed_image(\"file_name\")", 0xFFF0F0F0)
 
     var top = get_screen_height() - 200
     for i in range(100)
@@ -64,7 +64,7 @@ def draw()
     draw_image_region(ball2, 100.0, float(y) + 100.0,
             float4(0.0, 8.0 + 8.0 * sin(get_time_after_start()), 16.0, 16.0), 0xFFFFFFFF, float2(64.0, 64.0))
 
-    text_out(180, y, "image_b := image_a // clone image", 0xFFF0F0F0)
+    text_out(180, y, "image_b := image_a // clone image handle", 0xFFF0F0F0)
     y += 22
     text_out(180, y, "make_image_color_transparent(image, color)", 0xFFF0F0F0)
     y += 22

@@ -898,7 +898,7 @@ void get_image_data(const Image & b, das::TArray<uint32_t> & out_pixels)
     for (int i = 0; i < size; i++)
     {
       uint32_t c = b.cached_pixels[i];
-      out_pixels.data[i] = SWAP_RB(c);
+      out_pixels[i] = SWAP_RB(c);
     }
   }
 }

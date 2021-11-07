@@ -650,29 +650,16 @@ void process_args(int argc, char **argv)
 
           if (!arg.empty())
           {
-            const char * p = std::max(strrchr(arg.c_str(), '\\'), strrchr(arg.c_str(), '/'));
-            string projectName(p ? string(p + 1) : arg);
+            // temorary "trust mode"
+            bool t = trust_mode;
+            trust_mode = true;
+            string fn = fs::find_main_das_file_in_directory(arg.c_str());
+            trust_mode = t;
 
-            if (fs::is_file_exists((arg + "/main.das").c_str()))
+            if (!fn.empty())
             {
-              main_das_file_name = "main.das";
+              main_das_file_name = fs::extract_file_name(fn);
               root_dir = arg;
-            }
-            else if (fs::is_file_exists((arg + "/" + projectName + "_main.das").c_str()))
-            {
-              main_das_file_name = projectName + "_main.das";
-              root_dir = arg;
-            }
-            else
-            {
-              for (auto & ch: projectName)
-                ch = tolower(ch);
-
-              if (fs::is_file_exists((arg + "/" + projectName + "_main.das").c_str()))
-              {
-                main_das_file_name = projectName + "_main.das";
-                root_dir = arg;
-              }
             }
           }
         }

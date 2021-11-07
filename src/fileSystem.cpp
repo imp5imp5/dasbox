@@ -5,6 +5,7 @@
 
 #ifdef _WIN32
 #define NOMINMAX
+#include <io.h>
 #include <iostream>
 #include <codecvt>
 #include <locale>
@@ -14,7 +15,9 @@
 #define chdir _chdir
 #define getcwd _getcwd
 #else
-#include "unistd.h"
+#include <libgen.h>
+#include <unistd.h>
+#include <dirent.h>
 #include <sys/stat.h>
 #endif
 
@@ -456,6 +459,82 @@ uint64_t get_file_time(const char * file_name)
     return uint64_t(buf.st_mtime);
   return 0;
 }
+
+
+void enumerate_files(const char * path, vector<string> & files)
+{
+  files.clear();
+  if (!path || !path[0])
+    path = ".";
+
+#ifdef _WIN32
+  _finddata_t c_file;
+  intptr_t hFile;
+  string findPath = string(path) + "/*";
+  if ((hFile = _findfirst(findPath.c_str(), &c_file)) != -1L)
+  {
+    do
+    {
+      files.push_back(string(c_file.name));
+    } while (_findnext(hFile, &c_file) == 0);
+  }
+  _findclose(hFile);
+#else
+  DIR *dir;
+  struct dirent *ent;
+  if ((dir = opendir(path)) != NULL)
+  {
+    while ((ent = readdir(dir)) != NULL)
+      files.push_back(string(ent->d_name));
+    closedir (dir);
+  }
+#endif
+
+}
+
+
+string find_main_das_file_in_directory(const char * path)
+{
+  if (!path || !path[0])
+    path = "";
+
+  const char * p = std::max(strrchr(path, '\\'), strrchr(path, '/'));
+  string projectName(p ? string(p + 1) : path);
+
+  string t = string(path) + "/main.das";
+  if (fs::is_file_exists(t.c_str()))
+    return t;
+
+  vector<string> files;
+  enumerate_files(path, files);
+  sort(files.begin(), files.end());
+
+  for (auto && fn : files)
+  {
+    const char * ptr = strstr(fn.c_str(), "_main.das");
+    if (ptr && !ptr[9])
+      return string(path) + "/" + fn;
+  }
+
+  for (auto && fn : files)
+  {
+    const char * ptr = strstr(fn.c_str(), ".das");
+    if (ptr && !ptr[4])
+    {
+      string data = read_whole_file((string(path) + "/" + fn).c_str());
+      if (strstr(data.c_str(), "\ndef initialize") &&
+          strstr(data.c_str(), "\ndef draw") &&
+          strstr(data.c_str(), "\ndef act") &&
+          strstr(data.c_str(), "\n[export]"))
+      {
+        return string(path) + "/" + fn;
+      }
+    }
+  }
+
+  return string();
+}
+
 
 
 #ifdef _WIN32

@@ -271,6 +271,15 @@ const char * get_dasbox_exe_path()
 #endif
 }
 
+const char * builtin_find_main_das_file_in_directory(const char * path, Context * context, LineInfoArg * at)
+{
+  string fn = fs::find_main_das_file_in_directory(path);
+  if (fn.empty())
+    return nullptr;
+  char * fname = context->stringHeap->allocateString(fn.c_str(), uint32_t(fn.size()));
+  return fname;
+}
+
 const char * get_dasbox_version()
 {
   return DASBOX_VERSION;
@@ -677,6 +686,9 @@ public:
 
     addExtern<DAS_BIND_FUN(dasbox_execute_editor)>
       (*this, lib, "dasbox_execute_editor", SideEffects::modifyExternal, "dasbox_execute_editor");
+
+    addExtern<DAS_BIND_FUN(builtin_find_main_das_file_in_directory)>
+      (*this, lib, "dasbox_find_main_das_file_in_directory", SideEffects::modifyExternal, "builtin_find_main_das_file_in_directory");
 
     addExtern<DAS_BIND_FUN(randomize_seed)>
       (*this, lib, "randomize_seed", SideEffects::modifyArgument, "randomize_seed");

@@ -90,6 +90,7 @@ var
     wishSelectBoxPos = SELECT_Y
     fadeout = 0.0
     fadeoutTrend = -1.0
+    isMouseOnItem = false
 
     enteringName = false
     enteredName: array<uint8>
@@ -169,7 +170,7 @@ def add_projects_to_menu()
                           name = replace(fname, "_", " "),
                           clipboardText = dirName,
                           editorDir = dirName,
-                          source = dirName + "/" + to_lower(fname) + "_main.das",
+                          source = "[find]",
                           description <- [{string[]
                               "{dirName}";
                               "Enter - Execute.";
@@ -457,8 +458,12 @@ def update_select_item(dt: float)
             itemAlphaTrend = -1.0
             wishScrollPos = float(nextIndex)
 
-    if (get_key_press(VK_RETURN) || get_key_press(VK_SPACE)) && fadeout <= 0.0
+    if (get_key_press(VK_RETURN) || get_key_press(VK_SPACE) ||
+            (get_mouse_button_up(MB_LEFT) && isMouseOnItem)) && fadeout <= 0.0
         let editorDir = menuItems[nextIndex].editorDir
+        if menuItems[nextIndex].source == "[find]" || !is_file_exists(menuItems[nextIndex].source)
+            menuItems[nextIndex].source = dasbox_find_main_das_file_in_directory(editorDir)
+
         if ctrl && !empty(editorDir)
             check_and_create_vs_code_settings(editorDir)
             dasbox_execute_editor(editorDir, menuItems[nextIndex].source)
@@ -542,7 +547,14 @@ def draw()
     set_font_name("sans")
     set_font_size(get_screen_height() / 22)
 
-    let selectorAlpha = 1.0 - clamp(abs((selectBoxPos - SELECT_Y) * 0.02), 0.0, 1.0)
+    var selectorAlpha = 1.0 - clamp(abs((selectBoxPos - SELECT_Y) * 0.02), 0.0, 1.0)
+    isMouseOnItem = false
+    if !enteringName
+        let mouse = get_mouse_position()
+        if mouse.x > 30.0 && mouse.y <= 30.0 + 640.0 && mouse.y > SELECT_Y && mouse.y < SELECT_Y + LIST_LINE_HEIGHT
+            isMouseOnItem = true
+            selectorAlpha *= 1.3
+
     fill_rect(30.0, SELECT_Y, 640.0, LIST_LINE_HEIGHT, make_color(1.0, 0.1 * selectorAlpha))
 
     for s, i in menuItems, range(99999)

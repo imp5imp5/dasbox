@@ -496,7 +496,7 @@ void enumerate_files(const char * path, vector<string> & files)
 string find_main_das_file_in_directory(const char * path)
 {
   if (!path || !path[0])
-    path = "";
+    path = ".";
 
   const char * p = std::max(strrchr(path, '\\'), strrchr(path, '/'));
   string projectName(p ? string(p + 1) : path);

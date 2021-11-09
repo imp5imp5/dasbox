@@ -461,7 +461,8 @@ def update_select_item(dt: float)
     if (get_key_press(VK_RETURN) || get_key_press(VK_SPACE) ||
             (get_mouse_button_up(MB_LEFT) && isMouseOnItem)) && fadeout <= 0.0
         let editorDir = menuItems[nextIndex].editorDir
-        if menuItems[nextIndex].source == "[find]" || !is_file_exists(menuItems[nextIndex].source)
+        var src = menuItems[nextIndex].source
+        if !empty(src) && (src == "[find]" || !is_file_exists(src))
             menuItems[nextIndex].source = dasbox_find_main_das_file_in_directory(editorDir)
 
         if ctrl && !empty(editorDir)

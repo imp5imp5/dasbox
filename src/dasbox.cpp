@@ -37,6 +37,8 @@ string root_dir = "";
 string main_das_file_name = "";
 string return_to_file_name = "";
 string return_to_root = "";
+int exit_code_on_error = 1;
+bool exit_on_error = false;
 bool return_to_trust_mode = false;
 const char * initial_dir = ".";
 bool has_errors = false;
@@ -663,6 +665,12 @@ void process_args(int argc, char **argv)
             }
           }
         }
+      }
+
+      if (!strncmp(arg.c_str(), "--exit-on-error:", sizeof("--exit-on-error:") - 1))
+      {
+        exit_on_error = true;
+        exit_code_on_error = atoi(arg.c_str() + sizeof("--exit-on-error:") - 1);
       }
 
       if (arg == "--trust")

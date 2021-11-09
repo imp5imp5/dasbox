@@ -78,6 +78,9 @@ void print_error(const char * format, ...)
     logger.setState(LOGGER_NORMAL);
     has_errors = true;
   }
+
+  if (exit_on_error)
+    exit(exit_code_on_error);
 }
 
 void print_exception(const char * format, ...)

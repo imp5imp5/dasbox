@@ -377,12 +377,43 @@ static void set_new_live_context(Context * ctx, bool full_reload)
   }
 }
 
-static void find_function(SimFunction ** fn, const char * fn_name, bool required)
+static void find_function(SimFunction ** fn, const char * fn_name, bool required, bool has_float_arg)
 {
   if (!das_file->ctx.get())
     return;
 
-  *fn = das_file->ctx->findFunction(fn_name);
+  SimFunction * res = nullptr;
+  vector<SimFunction *> functions = das_file->ctx->findFunctions(fn_name);
+  for (auto f : functions)  
+  {
+    if (has_float_arg)
+    {
+      if (verifyCall<void, float>(f->debugInfo, das_file->dummyLibGroup))
+      {
+        if (res)
+        {
+          print_error("Too many functions '%s(float)' found. Expected only one.", fn_name);
+          break;
+        }
+        res = f;
+      }
+    }
+    else
+    {
+      if (verifyCall<void>(f->debugInfo, das_file->dummyLibGroup))
+      {
+        if (res)
+        {
+          print_error("Too many functions '%s()' found. Expected only one.", fn_name);
+          break;
+        }
+        res = f;
+      }
+    }
+  }
+
+  *fn = res;
+
   if (!*fn)
   {
     if (required)
@@ -492,8 +523,8 @@ bool load_module(const string & file_name, DasFile ** das_file)
 
 void find_dasbox_api_functions(bool hard_reload)
 {
-  find_function(&fn_act, "act", true);
-  find_function(&fn_draw, "draw", true);
+  find_function(&fn_act, "act", true, true);
+  find_function(&fn_draw, "draw", true, false);
 }
 
 

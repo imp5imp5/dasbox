@@ -34,6 +34,16 @@ def private allocate_sound(): int
     deleted_sounds |> pop()
     return res
 
+def move_to_handled_storage(var sound: PcmSound &): SoundHandle
+    var i = allocate_sound()
+    sounds[i] <- sound
+    return setup_sound(i)
+
+def clone_to_handled_storage(sound: PcmSound): SoundHandle
+    var i = allocate_sound()
+    sounds[i] := sound
+    return setup_sound(i)
+
 def delete_managed_sound(sound_handle: SoundHandle)
     if (sound_handle.index > 0 && sounds[sound_handle.index].valid)
         deleted_sounds |> push(sound_handle.index)

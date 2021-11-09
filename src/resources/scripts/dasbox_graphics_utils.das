@@ -134,6 +134,16 @@ def private allocate_image(): int
     deleted_images |> pop()
     return res
 
+def move_to_handled_storage(var image: Image &): ImageHandle
+    var i = allocate_image()
+    images[i] <- image
+    return setup_image(i)
+
+def clone_to_handled_storage(image: Image): ImageHandle
+    var i = allocate_image()
+    images[i] := image
+    return setup_image(i)
+
 def delete_managed_image(image_handle: ImageHandle)
     if (image_handle.index > 0 && images[image_handle.index].valid)
         deleted_images |> push(image_handle.index)

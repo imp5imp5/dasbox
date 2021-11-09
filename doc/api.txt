@@ -45,7 +45,7 @@ class Image
   var img: Image
   var img <- create_image(width, height)
   var img <- create_image("file_name")  // .png .jpg .tga
-  var img <- create_image(width, height, [[uint[] 0xFF000000; 0xFF002042 ... ]])
+  var img <- create_image(width, height, [{uint[] 0xFF000000; 0xFF002042 ... }])
   var img <- create_image(width, height, ".ABC", {{ '.' => 0x0; 'A' => 0xFFA0AFFF; 'B' => 0xFFFFFFFF }})
 
   img.valid

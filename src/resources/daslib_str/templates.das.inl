@@ -82,7 +82,7 @@
 "        fclone.annotations |> erase(taidx)\n"
 "        // name it\n"
 "        fclone.name := \"`template{extra}`{fclone.name}\"\n"
-"        newcall.name := fclone.name\n"
+"        newcall.name := \"_::{fclone.name}\"\n"
 "        // result\n"
 "        compiling_module() |> add_function(fclone)\n"
 "        return newcall\n"

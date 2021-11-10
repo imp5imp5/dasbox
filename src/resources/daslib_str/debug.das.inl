@@ -7,7 +7,6 @@
 "options no_unused_block_arguments = false\n"
 "options no_unused_function_arguments = false\n"
 "options persistent_heap = true\n"
-"options persistent_string_heap = true\n"
 "module debug shared\n"
 "\n"
 "require math\n"

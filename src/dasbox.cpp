@@ -386,7 +386,7 @@ static void find_function(SimFunction ** fn, const char * fn_name, bool required
 
   SimFunction * res = nullptr;
   vector<SimFunction *> functions = das_file->ctx->findFunctions(fn_name);
-  for (auto f : functions)  
+  for (auto f : functions)
   {
     if (has_float_arg)
     {
@@ -420,8 +420,6 @@ static void find_function(SimFunction ** fn, const char * fn_name, bool required
   {
     if (required)
       print_error("Function '%s' not found", fn_name);
-    else
-      print_note("Function '%s' not found", fn_name);
   }
 }
 

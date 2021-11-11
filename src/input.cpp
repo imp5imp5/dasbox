@@ -33,6 +33,7 @@ static bool is_last_key_repeat = false;
 static float gamepad_axes[GAMEPAD_AXES] = { 0 };
 static bool delayed_relative_mode = false;
 static bool relative_mouse_mode = false;
+static bool prev_window_is_active = false;
 
 static float mouse_vel_x = 0.f;
 static float mouse_vel_y = 0.f;
@@ -40,6 +41,8 @@ static float mouse_dx = 0.f;
 static float mouse_dy = 0.f;
 static float mouse_x = 0.f;
 static float mouse_y = 0.f;
+static float virtual_mouse_x = 0.f;
+static float virtual_mouse_y = 0.f;
 
 void reset_input()
 {
@@ -188,7 +191,7 @@ float get_mouse_scroll_delta()
 
 das::float2 get_mouse_position()
 {
-  return das::float2(mouse_x, mouse_y);
+  return relative_mouse_mode ? das::float2(virtual_mouse_x, virtual_mouse_y) : das::float2(mouse_x, mouse_y);
 }
 
 das::float2 get_mouse_position_delta()
@@ -213,6 +216,7 @@ float get_axis(int axis)
 
 void release_input()
 {
+  prev_window_is_active = false;
   release_input(key, countof(key));
   release_input(mouse_button, countof(mouse_button));
 //  release_input(gamepad_button, countof(gamepad_button));
@@ -243,11 +247,19 @@ void update_mouse_input(float dt, bool active)
 
   if (relative_mouse_mode && window_is_active)
   {
+    if (!prev_window_is_active)
+    {
+      virtual_mouse_x = sf::Mouse::getPosition(*g_window).x * invScale;
+      virtual_mouse_y = sf::Mouse::getPosition(*g_window).y * invScale;
+    }
+
     g_window->setMouseCursorVisible(false);
     sf::Vector2i center = sf::Vector2i(screen_width * screen_global_scale / 2, screen_height * screen_global_scale / 2);
     sf::Mouse::setPosition(center, *g_window);
     mouse_x = screen_width / 2;
     mouse_y = screen_height / 2;
+    virtual_mouse_x = ::clamp(virtual_mouse_x + mouse_dx, 0.0f, screen_width - 1.0f);
+    virtual_mouse_y = ::clamp(virtual_mouse_y + mouse_dy, 0.0f, screen_height - 1.0f);
   }
 
   float k = 1.5f;//fabsf(mouse_dx) < 3 && fabsf(mouse_dx) < 3 ? 1.1f : 1.5f;
@@ -290,6 +302,7 @@ void update_mouse_input(float dt, bool active)
 
 void post_update_input()
 {
+  prev_window_is_active = window_is_active;
   is_last_key_repeat = false;
   is_any_key_down = false;
   mouse_dx = 0.f;
@@ -394,6 +407,9 @@ void set_relative_mouse_mode(bool relative)
       delayed_relative_mode = true;
       return;
     }
+
+    virtual_mouse_x = mouse_x;
+    virtual_mouse_y = mouse_y;
 
     g_window->setMouseCursorGrabbed(true);
     g_window->setMouseCursorVisible(false);

@@ -235,8 +235,8 @@ void update_mouse_input(float dt, bool active)
   float prevY = mouse_y;
   mouse_x = sf::Mouse::getPosition(*g_window).x * invScale;
   mouse_y = sf::Mouse::getPosition(*g_window).y * invScale;
-  mouse_dx = (mouse_x - prevX) * invScale;
-  mouse_dy = (mouse_y - prevY) * invScale;
+  mouse_dx = (mouse_x - prevX);
+  mouse_dy = (mouse_y - prevY);
 
   if (delayed_relative_mode)
     set_relative_mouse_mode(true);

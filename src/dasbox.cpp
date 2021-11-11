@@ -55,6 +55,7 @@ locale * g_locale;
 static jmp_buf eval_buf;
 static bool use_separate_render_target = false;
 static bool vsync_enabled = false;
+static bool disable_auto_upscale_arg = false;
 
 int screen_global_scale = 0;
 int screen_width = 1280;
@@ -715,6 +716,9 @@ void process_args(int argc, char **argv)
       if (arg == "--trust")
         trust_mode = true;
 
+      if (arg == "--disable-auto-upscale")
+        disable_auto_upscale_arg = true;
+
       if ((arg == "-main" || arg == "--main") && i < argc - 1)
       {
         plugin_main_function = argv[i + 1];
@@ -788,10 +792,15 @@ void create_window()
 
   if (screen_global_scale <= 0) // auto upscale
   {
-    if (resolution.x < sf::VideoMode::getDesktopMode().width / 2.5f && resolution.y < sf::VideoMode::getDesktopMode().height / 2.5f)
+    if (resolution.x < sf::VideoMode::getDesktopMode().width / 2.5f && resolution.y < sf::VideoMode::getDesktopMode().height / 2.5f &&
+        disable_auto_upscale_arg == false)
+    {
       screen_global_scale = 2;
+    }
     else
+    {
       screen_global_scale = 1;
+    }
   }
 
   use_separate_render_target = (screen_global_scale != 1);

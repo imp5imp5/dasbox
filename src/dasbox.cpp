@@ -333,6 +333,8 @@ static DasFile * das_file = new DasFile();
 static DasFile * das_live_file = new DasFile();
 static float time_to_check = 1.0f;
 
+SimFunction * fn_before_gc = nullptr;
+SimFunction * fn_after_gc = nullptr;
 SimFunction * fn_act = nullptr;
 SimFunction * fn_draw = nullptr;
 SimFunction * fn_live_set_new_context = nullptr;
@@ -458,18 +460,21 @@ const char * das_str_dup(const char * s)
 }
 
 
-bool load_module(const string & file_name, DasFile ** das_file)
+DasFile * load_module(const string & file_name, DasFile ** das_file)
 {
-  delete *das_file;
+  DasFile * oldFile = *das_file;
   *das_file = new DasFile;
 
   fn_act = nullptr;
   fn_draw = nullptr;
+  fn_before_gc = nullptr;
+  fn_after_gc = nullptr;
 
   if (!fs::is_file_exists(file_name.c_str()))
   {
     print_error("File not found: '%s'", file_name.c_str());
-    return false;
+    delete oldFile;
+    return nullptr;
   }
 
   print_note("Executing file '%s'", file_name.c_str());
@@ -490,7 +495,8 @@ bool load_module(const string & file_name, DasFile ** das_file)
       s += "\n";
     }
     print_error("%s\n", s.c_str());
-    return false;
+    delete oldFile;
+    return nullptr;
   }
 
   program->policies.persistent_heap = true;
@@ -514,10 +520,11 @@ bool load_module(const string & file_name, DasFile ** das_file)
     }
 
     print_error("%s\n", s.c_str());
-    return false;
+    delete oldFile;
+    return nullptr;
   }
 
-  return true;
+  return oldFile;
 }
 
 
@@ -525,6 +532,8 @@ void find_dasbox_api_functions(bool hard_reload)
 {
   find_function(&fn_act, "act", true, true);
   find_function(&fn_draw, "draw", true, false);
+  find_function(&fn_before_gc, "before_gc", false, false);
+  find_function(&fn_after_gc, "after_gc", false, false);
 }
 
 
@@ -573,8 +582,9 @@ void das_file_manual_reload(bool hard_reload)
   is_first_frame = true;
   fs::flush_local_storage();
   fs::initialize_local_storage(main_das_file_name.c_str());
-  load_module(main_das_file_name, &das_file);
+  DasFile * oldFile = load_module(main_das_file_name, &das_file);
   initialize_das_file(hard_reload);
+  delete oldFile;
 }
 
 void das_file_reload_update(float dt)
@@ -988,8 +998,9 @@ void run_das_for_ui()
   {
     fs::initialize_local_storage(main_das_file_name.c_str());
     is_first_frame = true;
-    load_module(main_das_file_name, &das_file);
+    DasFile * oldFile = load_module(main_das_file_name, &das_file);
     initialize_das_file(true);
+    delete oldFile;
   }
 
   /////////////////////////////////////////////////////////
@@ -1210,7 +1221,11 @@ void run_das_for_ui()
     check_window_pos_changed();
 
     if (das_file && das_file->ctx)
+    {
+      exec_function(fn_before_gc, nullptr);
       das_file->ctx->collectHeap(nullptr, true, false);
+      exec_function(fn_after_gc, nullptr);
+    }
 
     if (is_quit_scheduled)
       g_window->close();
@@ -1312,8 +1327,9 @@ int main(int argc, char **argv)
   NEED_MODULE(ModuleSound);
 
   das_live_file = new DasFile();
-  load_module("daslib/live.das", &das_live_file);
+  DasFile * oldFile = load_module("daslib/live.das", &das_live_file);
   find_dasbox_live_api_fnctions();
+  delete oldFile;
 
 
   if (run_for_plugin && trust_mode)

@@ -44,6 +44,7 @@ call python stringify.py --array JetBrainsMonoNL-Medium.ttf font.JetBrainsMonoNL
 %L% unroll.das
 %L% decs.das
 %L% decs_boost.das
+%L% archive.das
 
 %I% internal_menu_background.das
 %I% media.das

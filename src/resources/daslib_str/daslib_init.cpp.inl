@@ -173,6 +173,11 @@ static const char decs_boost_das[] =
 ;
 daslib_inc_files[string("decs_boost.das")] = new das::TextFileInfo(decs_boost_das, sizeof(decs_boost_das) - 1, false);
 
+static const char archive_das[] =
+#include "resources/daslib_str/archive.das.inl"
+;
+daslib_inc_files[string("archive.das")] = new das::TextFileInfo(archive_das, sizeof(archive_das) - 1, false);
+
 static const char internal_menu_background_das[] =
 #include "resources/daslib_str/internal_menu_background.das.inl"
 ;

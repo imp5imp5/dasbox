@@ -114,8 +114,9 @@ class ImageHandle
   image_handle.height
 
   clone_managed_image(image_handle: ImageHandle): ImageHandle
-
   delete_managed_image(image_handle: ImageHandle)
+  move_to_managed_storage(var image: Image &): ImageHandle
+  clone_to_managed_storage(image: Image): ImageHandle
 
   image_handle |> draw_image_transformed(x, y, texture_rect, color, size, angle, relative_pivot_x, relative_pivot_y)
   image_handle |> draw_image_transformed(x, y, texture_rect, color, size, angle)
@@ -395,7 +396,9 @@ class SoundHandle
   sound_handle |> get_sound_data(data)  // var data: array<float2>; data.resize(snd.samples)
 
   delete_managed_sound(sound_handle)
-  clone_imaged_sound(sound_handle)
+  clone_managed_sound(sound_handle)
+  move_to_managed_storage(var sound: PcmSound &): SoundHandle
+  clone_to_managed_storage(sound: PcmSound): SoundHandle
 
   sound_handle |> play_sound()
   sound_handle |> play_sound(volume)

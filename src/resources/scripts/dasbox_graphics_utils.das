@@ -134,12 +134,12 @@ def private allocate_image(): int
     deleted_images |> pop()
     return res
 
-def move_to_handled_storage(var image: Image &): ImageHandle
+def move_to_managed_storage(var image: Image &): ImageHandle
     var i = allocate_image()
     images[i] <- image
     return setup_image(i)
 
-def clone_to_handled_storage(image: Image): ImageHandle
+def clone_to_managed_storage(image: Image): ImageHandle
     var i = allocate_image()
     images[i] := image
     return setup_image(i)

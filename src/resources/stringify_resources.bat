@@ -62,6 +62,7 @@ echo static const char %identifier%[] =>> %init_file%
 echo #include "resources/daslib_str/%name%.inl">> %init_file%
 echo ;>> %init_file%
 echo daslib_inc_files[string("%name%")] = new das::TextFileInfo(%identifier%, sizeof(%identifier%) - 1, false);>> %init_file%
+echo daslib_inc_files[string("%name%")]-^>name = "daslib/%name%";>> %init_file%
 echo.>> %init_file%
 exit/b
 
@@ -74,6 +75,7 @@ echo static const char %identifier%[] =>> %init_file%
 echo #include "resources/daslib_str/%name%.inl">> %init_file%
 echo ;>> %init_file%
 echo daslib_inc_files[string("%name%")] = new das::TextFileInfo(%identifier%, sizeof(%identifier%) - 1, false);>> %init_file%
+echo daslib_inc_files[string("%name%")]-^>name = "_dasbox_/daslib/%name%";>> %init_file%
 echo.>> %init_file%
 exit/b
 

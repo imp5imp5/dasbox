@@ -222,6 +222,50 @@ void release_input()
 //  release_input(gamepad_button, countof(gamepad_button));
 }
 
+static sf::Cursor * empty_cursor = nullptr;
+static sf::Cursor * arrow_cursor = nullptr;
+
+static void create_cursors()
+{
+  if (empty_cursor)
+    return;
+
+  empty_cursor = new sf::Cursor();
+  vector<uint8_t> buf(4 * 32 * 32, 0);
+  buf[0] = 0x7f;
+  buf[1] = 0x7f;
+  buf[2] = 0x7f;
+  buf[3] = 0x01;
+
+  empty_cursor->loadFromPixels(&buf[0], sf::Vector2u(32, 32), sf::Vector2u(1, 1));
+
+  arrow_cursor = new sf::Cursor();
+  arrow_cursor->loadFromSystem(sf::Cursor::Arrow);
+}
+
+
+
+static void hide_cursor()
+{
+#ifdef _WIN32
+  create_cursors();
+  g_window->setMouseCursor(*empty_cursor);
+#else
+  g_window->setMouseCursorVisible(false);
+#endif
+}
+
+static void show_cursor()
+{
+#ifdef _WIN32
+  create_cursors();
+  g_window->setMouseCursor(*arrow_cursor);
+#else
+  g_window->setMouseCursorVisible(false);
+#endif
+}
+
+
 void update_mouse_input(float dt, bool active)
 {
   if (!active)
@@ -253,7 +297,6 @@ void update_mouse_input(float dt, bool active)
       virtual_mouse_y = sf::Mouse::getPosition(*g_window).y * invScale;
     }
 
-    g_window->setMouseCursorVisible(false);
     sf::Vector2i center = sf::Vector2i(screen_width * screen_global_scale / 2, screen_height * screen_global_scale / 2);
     sf::Mouse::setPosition(center, *g_window);
     mouse_x = screen_width / 2;
@@ -398,6 +441,12 @@ void set_relative_mouse_mode(bool relative)
     return;
   }
 
+  if (g_window && relative && !window_is_active)
+  {
+    delayed_relative_mode = relative;
+    return;
+  }
+
   bool mouseDown = sf::Mouse::isButtonPressed(sf::Mouse::Left) || sf::Mouse::isButtonPressed(sf::Mouse::Right);
 
   if (relative)
@@ -412,16 +461,17 @@ void set_relative_mouse_mode(bool relative)
     virtual_mouse_y = mouse_y;
 
     g_window->setMouseCursorGrabbed(true);
-    g_window->setMouseCursorVisible(false);
+    hide_cursor();
     sf::Vector2i center = sf::Vector2i(screen_width * screen_global_scale / 2, screen_height * screen_global_scale / 2);
     sf::Mouse::setPosition(center, *g_window);
     mouse_x = screen_width / 2;
     mouse_y = screen_height / 2;
     relative_mouse_mode = true;
+    delayed_relative_mode = false;
   }
   else
   {
-    g_window->setMouseCursorVisible(true);
+    show_cursor();
     g_window->setMouseCursorGrabbed(false);
   }
 }

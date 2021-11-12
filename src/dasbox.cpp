@@ -999,6 +999,18 @@ void run_das_for_plugin(const string & file_name, const string & main_func_name)
 }
 
 
+void win32_check_for_active_hack()
+{
+#ifdef _WIN32
+  if (!g_window || !g_window->getSystemHandle())
+    return;
+
+  if (GetActiveWindow() == g_window->getSystemHandle() && GetForegroundWindow() == g_window->getSystemHandle())
+    window_is_active = true;
+#endif
+}
+
+
 void run_das_for_ui()
 {
   if (!main_das_file_name.empty())
@@ -1088,6 +1100,9 @@ void run_das_for_ui()
       default: break;
       }
     }
+
+    if (!window_is_active)
+      win32_check_for_active_hack();
 
     float dt = deltaClock.restart().asSeconds();
     if (is_first_frame)

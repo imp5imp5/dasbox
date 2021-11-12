@@ -502,26 +502,38 @@ DasFile * load_module(const string & file_name, DasFile ** das_file)
   if (!program->options.find("gc", Type::tBool))
     program->options.emplace_back("gc", true);
 
-  // create daScript context
-  (*das_file)->ctx = make_smart<PlaygroundContext>(program->getContextStackSize());
-  if (!program->simulate(*(*das_file)->ctx, logger))
+
+
+  if (setjmp(eval_buf) != 1)
   {
-    string s;
-    s += "Failed to simulate '";
-    s += file_name;
-    s += "'\n";
-
-    for (Error & e : program->errors)
+    // create daScript context
+    (*das_file)->ctx = make_smart<PlaygroundContext>(program->getContextStackSize());
+    if (!program->simulate(*(*das_file)->ctx, logger))
     {
-      s += "\n";
-      s += reportError(e.at, e.what, e.extra, e.fixme, e.cerr);
-      s += "\n";
-    }
+      string s;
+      s += "Failed to simulate '";
+      s += file_name;
+      s += "'\n";
 
-    print_error("%s\n", s.c_str());
+      for (Error & e : program->errors)
+      {
+        s += "\n";
+        s += reportError(e.at, e.what, e.extra, e.fixme, e.cerr);
+        s += "\n";
+      }
+
+      print_error("%s\n", s.c_str());
+      delete oldFile;
+      return nullptr;
+    }
+  }
+  else
+  {
+    print_exception("Failed to simulate");
     delete oldFile;
     return nullptr;
   }
+
 
   return oldFile;
 }

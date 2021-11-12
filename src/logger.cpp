@@ -26,6 +26,7 @@ using namespace std;
 Logger logger;
 static bool error_as_note = false;
 static bool saved_relative_mode = false;
+static bool saved_cursor_hidden = false;
 
 std::string replace_all(std::string str, const std::string & from, const std::string & to)
 {
@@ -526,6 +527,8 @@ void draw_log_screen()
 
 void on_return_from_log_screen()
 {
+  if (saved_cursor_hidden)
+    input::hide_cursor();
   input::set_relative_mouse_mode(saved_relative_mode);
 }
 
@@ -533,6 +536,7 @@ void on_return_from_log_screen()
 void on_switch_to_log_screen()
 {
   saved_relative_mode = input::is_relative_mouse_mode();
+  saved_cursor_hidden = input::is_cursor_hidden();
   input::set_relative_mouse_mode(false);
   mouse_down = false;
   clear_selection();

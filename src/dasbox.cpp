@@ -560,7 +560,8 @@ void initialize_das_file(bool hard_reload)
   if (das_file->ctx.get())
   {
     inside_initialization = true;
-    input::set_relative_mouse_mode(false);
+    if (input::is_relative_mouse_mode)
+      input::set_relative_mouse_mode(false);
     prepare_delayed_variables();
     set_new_live_context(das_file->ctx.get(), hard_reload);
     find_dasbox_api_functions(hard_reload);
@@ -866,6 +867,9 @@ void create_window()
 
   if (input::is_relative_mouse_mode())
     input::set_relative_mouse_mode(true);
+
+  if (input::is_cursor_hidden())
+    input::hide_cursor();
 
   delayed_window_antialiasing.first = false;
   delayed_upscale.first = false;

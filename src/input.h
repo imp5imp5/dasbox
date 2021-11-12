@@ -31,6 +31,7 @@ das::float2 get_mouse_position_delta();
 das::float2 get_mouse_velocity();
 void set_relative_mouse_mode(bool relative);
 bool is_relative_mouse_mode();
+bool is_cursor_hidden();
 float get_axis(int axis);
 int get_pressed_key_index();
 
@@ -47,5 +48,9 @@ void gkc_button_up(int btn_idx);
 void joy_button_down(int btn_idx);
 void joy_button_up(int btn_idx);
 void joy_axis_position(int axis_idx, float axis_pos);
+
+
+void hide_cursor();
+void show_cursor();
 
 }

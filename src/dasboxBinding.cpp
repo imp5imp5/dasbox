@@ -693,6 +693,13 @@ public:
     addExtern<DAS_BIND_FUN(randomize_seed)>
       (*this, lib, "randomize_seed", SideEffects::modifyArgument, "randomize_seed");
 
+    addExtern<DAS_BIND_FUN(input::hide_cursor)>
+      (*this, lib, "hide_mouse_cursor", SideEffects::modifyExternal, "input::hide_cursor");
+
+    addExtern<DAS_BIND_FUN(input::show_cursor)>
+      (*this, lib, "show_mouse_cursor", SideEffects::modifyExternal, "input::show_cursor");
+
+
     compileBuiltinModule("utils.das", (unsigned char *)utils_das, sizeof(utils_das));
 
     // its AOT ready

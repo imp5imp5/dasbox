@@ -231,6 +231,9 @@ class Mesh      // 2D
   set_relative_mouse_mode(is_relative)
   is_relative_mouse_mode()
 
+  show_mouse_cursor()  // don't use with set_relative_mouse_mode()
+  hide_mouse_cursor()  // don't use with set_relative_mouse_mode()
+
   get_axis(axis_code)
 
   get_key_code(key_name: string): int

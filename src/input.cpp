@@ -33,6 +33,10 @@ static bool is_last_key_repeat = false;
 static float gamepad_axes[GAMEPAD_AXES] = { 0 };
 static bool delayed_relative_mode = false;
 static bool relative_mouse_mode = false;
+static bool cursor_hidden = false;
+
+static bool delayed_hide_cursor_mode = false;
+
 static bool prev_window_is_active = false;
 
 static float mouse_vel_x = 0.f;
@@ -244,9 +248,16 @@ static void create_cursors()
 }
 
 
-
-static void hide_cursor()
+void hide_cursor()
 {
+  if (!g_window || !g_window->isOpen())
+  {
+    delayed_hide_cursor_mode = true;
+    return;
+  }
+
+  cursor_hidden = true;
+
 #ifdef _WIN32
   create_cursors();
   g_window->setMouseCursor(*empty_cursor);
@@ -255,8 +266,13 @@ static void hide_cursor()
 #endif
 }
 
-static void show_cursor()
+void show_cursor()
 {
+  if (!g_window)
+    return;
+
+  cursor_hidden = false;
+
 #ifdef _WIN32
   create_cursors();
   g_window->setMouseCursor(*arrow_cursor);
@@ -288,6 +304,12 @@ void update_mouse_input(float dt, bool active)
 
   if (delayed_relative_mode)
     set_relative_mouse_mode(true);
+
+  if (delayed_hide_cursor_mode)
+  {
+    hide_cursor();
+    delayed_hide_cursor_mode = false;
+  }
 
   if (relative_mouse_mode && window_is_active)
   {
@@ -425,6 +447,11 @@ void joy_axis_position(int axis_idx, float axis_pos)
 bool is_relative_mouse_mode()
 {
   return delayed_relative_mode || relative_mouse_mode;
+}
+
+bool is_cursor_hidden()
+{
+  return delayed_relative_mode || relative_mouse_mode || delayed_hide_cursor_mode || cursor_hidden;
 }
 
 void set_relative_mouse_mode(bool relative)

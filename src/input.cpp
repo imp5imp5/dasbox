@@ -261,7 +261,7 @@ static void show_cursor()
   create_cursors();
   g_window->setMouseCursor(*arrow_cursor);
 #else
-  g_window->setMouseCursorVisible(false);
+  g_window->setMouseCursorVisible(true);
 #endif
 }
 

@@ -422,7 +422,6 @@
 "        ++insideQuery; invoke(blk, arch, lookup.index); -- insideQuery\n"
 "        return true\n"
 "    else\n"
-"        panic(\"archetype not found\")\n"
 "        return false\n"
 "\n"
 "def public for_each_archetype ( hash:ComponentHash; var erq : function<():EcsReq"

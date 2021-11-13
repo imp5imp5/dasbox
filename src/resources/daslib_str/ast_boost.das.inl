@@ -395,6 +395,7 @@
 "        left <- vcast,\n"
 "        right <- enull\n"
 "    ]]\n"
+"    tri.genFlags = expr.genFlags\n"
 "    return tri\n"
 "\n"
 "// replacing ExprIsVariant(value,name) => ExprOp2('==\",value.__rtti,\"name\")\n"

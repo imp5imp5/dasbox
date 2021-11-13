@@ -236,6 +236,7 @@
 "                index <- new [[ExprVar() at=a.at, name:=\"entity_index\"]]\n"
 "            ]]\n"
 "    var vlet <- new [[ExprLet() at=a.at, atInit=a.at]]\n"
+"    vlet.genFlags |= ExprGenFlags alwaysSafe\n"
 "    vlet.variables |> emplace_new() <| new [[Variable() at = a.at,\n"
 "        name := \"{prefix}{a.name}{suffix}\",\n"
 "        _type <- clone_type(a._type),\n"

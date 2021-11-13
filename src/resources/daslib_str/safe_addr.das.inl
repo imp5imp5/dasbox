@@ -29,6 +29,6 @@
 "class SafeAddrMacro : AstFunctionAnnotation\n"
 "    def override transform ( var call : smart_ptr<ExprCallFunc>; var errors : da"
 "s_string ) : ExpressionPtr\n"
-"        if !is_scope_expr(ExpressionPtr(call.arguments[0]))\n"
+"        if !is_local_or_global_expr(ExpressionPtr(call.arguments[0]))\n"
 "            compiling_program() |> macro_error(call.at,\"not a local value\")\n"
 "        return [[ExpressionPtr]]\n"

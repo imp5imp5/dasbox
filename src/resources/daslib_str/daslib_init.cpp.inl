@@ -208,6 +208,12 @@ static const char decs_boost_das[] =
 daslib_inc_files[string("decs_boost.das")] = new das::TextFileInfo(decs_boost_das, sizeof(decs_boost_das) - 1, false);
 daslib_inc_files[string("decs_boost.das")]->name = "daslib/decs_boost.das";
 
+static const char decs_state_das[] =
+#include "resources/daslib_str/decs_state.das.inl"
+;
+daslib_inc_files[string("decs_state.das")] = new das::TextFileInfo(decs_state_das, sizeof(decs_state_das) - 1, false);
+daslib_inc_files[string("decs_state.das")]->name = "daslib/decs_state.das";
+
 static const char archive_das[] =
 #include "resources/daslib_str/archive.das.inl"
 ;

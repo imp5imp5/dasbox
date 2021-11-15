@@ -464,10 +464,16 @@ const char * das_str_dup(const char * s)
 }
 
 
-DasFile * load_module(const string & file_name, DasFile ** das_file)
+DasFile * load_module(const string & file_name, DasFile ** das_file, bool hard_reload)
 {
   DasFile * oldFile = *das_file;
   *das_file = new DasFile;
+
+  if (hard_reload)
+  {
+    delete oldFile;
+    oldFile = nullptr;
+  }
 
   fn_act = nullptr;
   fn_draw = nullptr;
@@ -484,7 +490,11 @@ DasFile * load_module(const string & file_name, DasFile ** das_file)
   print_note("Executing file '%s'", file_name.c_str());
   EXCEPTION_POS("compile");
 
-  (*das_file)->program = compileDaScript(file_name, (*das_file)->fAccess, logger, (*das_file)->dummyLibGroup);
+
+  CodeOfPolicies policies;
+  policies.ignore_shared_modules = true;
+
+  (*das_file)->program = compileDaScript(file_name, (*das_file)->fAccess, logger, (*das_file)->dummyLibGroup, false, policies);
   ProgramPtr program = (*das_file)->program;
   if (program->failed())
   {
@@ -504,7 +514,7 @@ DasFile * load_module(const string & file_name, DasFile ** das_file)
     return nullptr;
   }
 
-  program->policies.persistent_heap = true;
+  program->policies.persistent_heap = true; // must be set after compileDaScript()
   if (!program->options.find("gc", Type::tBool))
     program->options.emplace_back("gc", true);
 
@@ -602,7 +612,7 @@ void das_file_manual_reload(bool hard_reload)
   is_first_frame = true;
   fs::flush_local_storage();
   fs::initialize_local_storage(main_das_file_name.c_str());
-  DasFile * oldFile = load_module(main_das_file_name, &das_file);
+  DasFile * oldFile = load_module(main_das_file_name, &das_file, hard_reload);
   initialize_das_file(hard_reload);
   delete oldFile;
 }
@@ -1041,7 +1051,7 @@ void run_das_for_ui()
   {
     fs::initialize_local_storage(main_das_file_name.c_str());
     is_first_frame = true;
-    DasFile * oldFile = load_module(main_das_file_name, &das_file);
+    DasFile * oldFile = load_module(main_das_file_name, &das_file, true);
     initialize_das_file(true);
     delete oldFile;
   }
@@ -1401,7 +1411,7 @@ int main(int argc, char **argv)
   NEED_MODULE(ModuleSound);
 
   das_live_file = new DasFile();
-  DasFile * oldFile = load_module("daslib/live.das", &das_live_file);
+  DasFile * oldFile = load_module("daslib/live.das", &das_live_file, false);
   find_dasbox_live_api_fnctions();
   delete oldFile;
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#define DASBOX_VERSION "0.1.57"
+#define DASBOX_VERSION "0.1.58"
 
 namespace sf
 {
@@ -32,6 +32,7 @@ extern int current_frame;
 extern bool window_is_active;
 extern int exit_code_on_error;
 extern bool exit_on_error;
+extern const char * exception_pos;
 
 void print_error(const char * format, ...);
 void print_exception(const char * format, ...);
@@ -50,6 +51,8 @@ const char * das_str_dup(const char * s);
 #ifndef _MSC_VER
 #  define stricmp strcasecmp
 #endif
+
+#define EXCEPTION_POS(x) exception_pos=x;
 
 inline float ssmooth(float t, float min = 0.f, float max = 1.f)
 {

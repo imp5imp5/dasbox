@@ -32,6 +32,7 @@ public:
 
   void setTopErrorLine();
   void clear();
+  void printAllLog();
 
   void setState(int state_)
   {

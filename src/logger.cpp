@@ -158,6 +158,12 @@ void Logger::output()
   }
 }
 
+void Logger::printAllLog()
+{
+  for (auto & s : logStrings)
+    cout << s;
+}
+
 uint32_t Logger::setLogColor(uint32_t color)
 {
   uint32_t c = curColor;

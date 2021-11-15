@@ -51,6 +51,7 @@ bool run_for_plugin = false;
 bool log_to_console = false;
 string plugin_main_function = "main";
 
+const char * exception_pos = "unknown";
 locale * g_locale;
 static jmp_buf eval_buf;
 static bool use_separate_render_target = false;
@@ -429,6 +430,8 @@ void exec_function(SimFunction * fn, vec4f * args)
   if (!das_file->ctx || !fn)
     return;
 
+  EXCEPTION_POS(fn->mangledName);
+
   if (setjmp(eval_buf) != 1)
   {
     das_file->ctx->eval(fn, args);
@@ -441,6 +444,8 @@ void exec_function(SimFunction * fn, vec4f * args)
       print_exception("%s", s.c_str());
     }
   }
+
+  EXCEPTION_POS("unknown");
 }
 
 
@@ -477,6 +482,7 @@ DasFile * load_module(const string & file_name, DasFile ** das_file)
   }
 
   print_note("Executing file '%s'", file_name.c_str());
+  EXCEPTION_POS("compile");
 
   (*das_file)->program = compileDaScript(file_name, (*das_file)->fAccess, logger, (*das_file)->dummyLibGroup);
   ProgramPtr program = (*das_file)->program;
@@ -503,6 +509,7 @@ DasFile * load_module(const string & file_name, DasFile ** das_file)
     program->options.emplace_back("gc", true);
 
 
+  EXCEPTION_POS("simulate");
 
   if (setjmp(eval_buf) != 1)
   {
@@ -534,6 +541,7 @@ DasFile * load_module(const string & file_name, DasFile ** das_file)
     return nullptr;
   }
 
+  EXCEPTION_POS("");
 
   return oldFile;
 }
@@ -1261,6 +1269,7 @@ void run_das_for_ui()
     if (das_file && das_file->ctx)
     {
       exec_function(fn_before_gc, nullptr);
+      EXCEPTION_POS("ctx->collectHeap");
       das_file->ctx->collectHeap(nullptr, true, false);
       exec_function(fn_after_gc, nullptr);
     }
@@ -1290,6 +1299,33 @@ void hide_console()
   if (consolePid == curPid)
     ShowWindow(::GetConsoleWindow(), SW_HIDE);
 #endif
+}
+
+
+void run_das_for_ui_with_try_except()
+{
+  __try
+  {
+    run_das_for_ui();
+  }
+  __except (EXCEPTION_EXECUTE_HANDLER)
+  {
+    if (exit_code_on_error != 1)
+    {
+      printf("\nNATIVE EXCEPTION code = 0x%X, at = \"%s\"\n", exception_code(), exception_pos);
+      exit(exit_code_on_error);
+    }
+
+#ifdef _WIN32
+    if (!log_to_console)
+      logger.printAllLog();
+    ShowWindow(::GetConsoleWindow(), SW_SHOW);
+    SetForegroundWindow(::GetConsoleWindow());
+    printf("\n\nNATIVE EXCEPTION code = 0x%X, at = \"%s\"\nPress any key to exit.\n", exception_code(), exception_pos);
+    system("@pause > nul");
+    exit(exit_code_on_error);
+#endif
+  }
 }
 
 
@@ -1377,7 +1413,7 @@ int main(int argc, char **argv)
   }
   else
   {
-    run_das_for_ui();
+    run_das_for_ui_with_try_except();
   }
 
   return 0;

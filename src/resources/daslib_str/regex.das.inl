@@ -2,915 +2,1280 @@
 // AUTO-GENERATED FILE - DO NOT EDIT!!
 //
 
-"options no_unused_block_arguments = false\n"
-"options no_unused_function_arguments = false\n"
-"options indenting = 4\n"
-"\n"
-"module regex shared public\n"
-"\n"
-"require strings\n"
-"\n"
-"enum ReOp\n"
-"    Char\n"
-"    Set\n"
-"    Any\n"
-"    Eos\n"
-"    Group\n"
-"    Plus\n"
-"    Star\n"
-"    Question\n"
-"    Concat\n"
-"    Union\n"
-"\n"
-"typedef\n"
-"    CharSet = uint[8]\n"
-"\n"
-"struct ReNode\n"
-"    op      : ReOp\n"
-"    id      : int\n"
-"    [[do_not_convert]] fun2 : function< (var regex:Regex; var node:ReNode?; str:"
-"uint8?) : uint8? >\n"
-"    at      : range\n"
-"    text    : string\n"
-"    textLen : int\n"
-"    all     : array<ReNode?>\n"
-"    left    : ReNode?\n"
-"    right   : ReNode?\n"
-"    subexpr : ReNode?\n"
-"    [[do_not_delete,do_not_convert]] next : ReNode?\n"
-"    cset    : CharSet\n"
-"    index   : int\n"
-"    [[do_not_convert]] tail : uint8?\n"
-"\n"
-"struct Regex\n"
-"    root        : ReNode?\n"
-"    [[do_not_convert]] match : uint8?\n"
-"    groups      : array<tuple<range;string>>\n"
-"    earlyOut    : CharSet\n"
-"    canEarlyOut : bool\n"
-"\n"
-"variant MaybeReNode\n"
-"    value   : ReNode?\n"
-"    nothing : void?\n"
-"\n"
-"/*\n"
-"    Parser\n"
-"*/\n"
-"\n"
-"let\n"
-"    log_parse_enabled = false\n"
-"    log_match_enabled = false\n"
-"    range_check_enabled = false\n"
-"\n"
-"var\n"
-"    trace_tab = 0\n"
-"\n"
-"def private trace(msg:string; offset:int)\n"
-"    static_if log_parse_enabled\n"
-"        print(\"{repeat(\" \",trace_tab)}{offset}: {msg}\\n\")\n"
-"        trace_tab ++\n"
-"\n"
-"def private note(msg:string; offset:int)\n"
-"    static_if log_parse_enabled\n"
-"        print(\"{repeat(\" \",trace_tab)}{offset}: {msg}\\n\")\n"
-"\n"
-"def private trace_backtrack()\n"
-"    static_if log_parse_enabled\n"
-"        trace_tab --\n"
-"        print(\"{repeat(\" \",trace_tab)}backtrack\\n\")\n"
-"\n"
-"def private trace_value(value : ReNode?)\n"
-"    static_if log_parse_enabled\n"
-"        if value==null\n"
-"            panic(\"trace_value null?\")\n"
-"        trace_tab --\n"
-"        print(\"{repeat(\" \",trace_tab)}matched {value.op}, next {value.at.y}\\n\")\n"
-"\n"
-"def private nada()\n"
-"    trace_backtrack()\n"
-"    return [[MaybeReNode nothing=null]]\n"
-"\n"
-"def private maybe( value : ReNode? )\n"
-"    trace_value(value)\n"
-"    return [[MaybeReNode value=value]]\n"
-"\n"
-"def private eos(expr:string; offset:int)\n"
-"    return offset >= length(expr)\n"
-"\n"
-"def private at(expr:string; offset:int) : int\n"
-"    static_if range_check_enabled\n"
-"        let len = length(expr)\n"
-"        if offset<len\n"
-"            return character_at(expr, offset)\n"
-"        elif offset==len\n"
-"            return 0\n"
-"        else\n"
-"            stackwalk()\n"
-"            panic(\"out of range {offset} of {len}\")\n"
-"            return 0\n"
-"    else\n"
-"        unsafe\n"
-"            return character_uat(expr, offset)\n"
-"\n"
-"def private next(re:MaybeReNode)\n"
-"    if !(re is value)\n"
-"        stackwalk()\n"
-"        panic(\"expecting value\")\n"
-"    return (re as value).at.y\n"
-"\n"
-"def private is_set_empty(cset:CharSet)\n"
-"    for x in cset\n"
-"        if x != 0u\n"
-"            return false\n"
-"    return true\n"
-"\n"
-"def private set_or_char(var cset:CharSet; ch:int)\n"
-"    cset[ch>>5] |= uint(1 << (ch & 31))\n"
-"\n"
-"def private set_or_range(var cset:CharSet; bits:range)\n"
-"    for ch in range(bits.x,bits.y+1)\n"
-"        cset[ch>>5] |= uint(1 << (ch & 31))\n"
-"\n"
-"def private set_invert(var cset:CharSet)\n"
-"    for x in cset\n"
-"        x ^= 0xffffffff\n"
-"\n"
-"def private set_or_set(var cset:CharSet; eset:CharSet)\n"
-"    for x,y in cset,eset\n"
-"        x |= y\n"
-"\n"
-"def private set_negative(var cset:CharSet)\n"
-"    for x in cset\n"
-"        x = ~x\n"
-"\n"
-"def private set_meta(var cset:CharSet; che:int)\n"
-"    if che=='w'\n"
-"        set_or_range(cset,range('a','z'))\n"
-"        set_or_range(cset,range('A','Z'))\n"
-"        set_or_range(cset,range('0','9'))\n"
-"        set_or_char(cset,'_')\n"
-"    elif che=='W'\n"
-"        var eset:CharSet\n"
-"        set_meta(eset,'w')\n"
-"        set_or_set(cset,eset)\n"
-"    elif che=='s'\n"
-"        set_or_char(cset,' ')\n"
-"        set_or_char(cset,'\\t')\n"
-"    elif che=='S'\n"
-"        var eset:CharSet\n"
-"        set_meta(eset,'s')\n"
-"        set_or_set(cset,eset)\n"
-"    elif che=='d'\n"
-"        set_or_range(cset,range('0','9'))\n"
-"    elif che=='D'\n"
-"        var eset:CharSet\n"
-"        set_meta(eset,'d')\n"
-"        set_or_set(cset,eset)\n"
-"    else\n"
-"        set_or_char(cset,che)\n"
-"\n"
-"let\n"
-"    meta = \"\\\\+-*.()[]|^\"\n"
-"    meta_set = \"wWsSdD\"\n"
-"\n"
-"def private is_meta_character(ch:int) : bool\n"
-"    return find(meta,ch) != -1\n"
-"\n"
-"def private is_set_character(ch:int) : bool\n"
-"    return find(meta_set,ch) != -1\n"
-"\n"
-"// <char>	::=	any non metacharacter | \"\\\" metacharacter\n"
-"def private re_char (expr : string; offset:int) : MaybeReNode\n"
-"    trace(\"re_char\",offset)\n"
-"    if eos(expr,offset)\n"
-"        return nada()\n"
-"    let ch = at(expr,offset)\n"
-"    if ch == '\\\\'\n"
-"        let ech = at(expr,offset+1)\n"
-"        if ech==0\n"
-"            note(\"syntax error, expecting meta\", offset+1)\n"
-"            return nada()\n"
-"        if is_set_character(ech)\n"
-"            var cset : CharSet\n"
-"            set_meta(cset,ech)\n"
-"            return maybe(new [[ReNode op=ReOp Set, cset=cset, at=range(offset,of"
-"fset+2)]])\n"
-"        return maybe(new [[ReNode op=ReOp Char, text=to_char(ech), textLen=1, at"
-"=range(offset,offset+2)]])\n"
-"    elif is_meta_character(ch)\n"
-"        return nada()\n"
-"    return maybe(new [[ReNode op=ReOp Char, text=to_char(ch), textLen=1, at=rang"
-"e(offset,offset+1)]])\n"
-"\n"
-"// <set-items>	::=	<set-item> | <set-item> <set-items>\n"
-"// <set-item>	::=	<range> | <char>\n"
-"// <range>	::=	<char> \"-\" <char>\n"
-"// <char>	::=	any non metacharacter | \"\\\" metacharacter\n"
-"def private re_set_items(expr:string; offset:int) : MaybeReNode\n"
-"    trace(\"re_set_items\",offset)\n"
-"    if eos(expr,offset)\n"
-"        return nada()\n"
-"    var cset : CharSet\n"
-"    var iofs = offset\n"
-"    while !eos(expr,iofs)\n"
-"        let ch = at(expr,iofs)\n"
-"        if ch == ']'\n"
-"            note(\"set - break - ]\",iofs)\n"
-"            break\n"
-"        elif ch=='\\\\'\n"
-"            let che = at(expr,iofs+1)\n"
-"            if che==0\n"
-"                note(\"syntax error, expecting meta\", iofs)\n"
-"                return nada()\n"
-"            set_meta(cset,che)\n"
-"            note(\"set - meta\",iofs)\n"
-"            iofs += 2\n"
-"        elif at(expr,iofs+1)=='-' && at(expr,iofs+2)!=']'\n"
-"            let che = at(expr,iofs+2)\n"
-"            if che==0\n"
-"                note(\"syntax error, expecting range\", iofs+1)\n"
-"                return nada()\n"
-"            elif ch > che\n"
-"                note(\"syntax error, character range out of order\", iofs)\n"
-"                return nada()\n"
-"            set_or_range(cset,range(ch,che))\n"
-"            note(\"set - range\",iofs)\n"
-"            iofs += 3\n"
-"        else\n"
-"            set_or_char(cset,ch)\n"
-"            note(\"set - character\",iofs)\n"
-"            iofs += 1\n"
-"    return maybe(new [[ReNode op=ReOp Set, cset=cset, at=range(offset,iofs)]])\n"
-"\n"
-"// <negative-set>	::=	\"[^\" <set-items> \"]\"\n"
-"// <positive-set>	::=	\"[\" <set-items> \"]\"\n"
-"// <set>	::=	<positive-set> | <negative-set>\n"
-"def private re_set(expr:string; offset:int) : MaybeReNode\n"
-"    trace(\"re_set\",offset)\n"
-"    if eos(expr,offset)\n"
-"        return nada()\n"
-"    if at(expr,offset)!='['\n"
-"        return nada()\n"
-"    var negative = false\n"
-"    if at(expr,offset+1)=='^'\n"
-"        negative = true\n"
-"    var oset = re_set_items(expr,negative ? offset+2 : offset+1)\n"
-"    if oset is nothing\n"
-"        return nada()\n"
-"    if at(expr,next(oset)) != ']'\n"
-"        delete oset\n"
-"        return nada()\n"
-"    var oval = oset as value\n"
-"    oval.at.x = offset\n"
-"    oval.at.y ++\n"
-"    oval.op = ReOp Set\n"
-"    if negative\n"
-"        set_negative(oval.cset)\n"
-"    trace_value(oval)\n"
-"    return oset\n"
-"\n"
-"// <any>	::=	\".\"\n"
-"def private re_any(expr:string; offset:int) : MaybeReNode\n"
-"    trace(\"re_any\",offset)\n"
-"    if eos(expr,offset)\n"
-"        return nada()\n"
-"    if at(expr,offset)=='.'\n"
-"        return maybe(new [[ReNode op=ReOp Any, at=range(offset,offset+1)]])\n"
-"    return nada()\n"
-"\n"
-"// <eos>	::=	\"$\"\n"
-"def private re_eos(expr:string; offset:int) : MaybeReNode\n"
-"    trace(\"re_eos\",offset)\n"
-"    if eos(expr,offset)\n"
-"        return nada()\n"
-"    if at(expr,offset)=='$'\n"
-"        return maybe(new [[ReNode op=ReOp Eos, at=range(offset,offset+1)]])\n"
-"    return nada()\n"
-"\n"
-"// <group>	::=	\"(\" <RE> \")\"\n"
-"def private re_group(expr:string; offset:int) : MaybeReNode\n"
-"    trace(\"re_group\",offset)\n"
-"    if eos(expr,offset)\n"
-"        return nada()\n"
-"    if at(expr,offset)!='('\n"
-"        return nada()\n"
-"    var ore = re_re(expr,offset+1)\n"
-"    if ore is nothing\n"
-"        return nada()\n"
-"    if at(expr,next(ore))!=')'\n"
-"        delete ore\n"
-"        return nada()\n"
-"    return maybe(new [[ReNode op=ReOp Group, subexpr=ore as value, at=range(offs"
-"et,next(ore)+1)]])\n"
-"\n"
-"// <elementary-RE>	::=	<group> | <any> | <eos> | <set> | <char>\n"
-"def private re_elementary(expr:string; offset:int) : MaybeReNode\n"
-"    trace(\"re_elementary\",offset)\n"
-"    if eos(expr,offset)\n"
-"        return nada()\n"
-"    var ogr = re_group(expr,offset)\n"
-"    if ogr is value\n"
-"        return ogr\n"
-"    var oany = re_any(expr,offset)\n"
-"    if oany is value\n"
-"        return oany\n"
-"    var oeos = re_eos(expr,offset)\n"
-"    if oeos is value\n"
-"        return oeos\n"
-"    var oset = re_set(expr,offset)\n"
-"    if oset is value\n"
-"        return oset\n"
-"    var ochr = re_char(expr,offset)\n"
-"    if ochr is value\n"
-"        return ochr\n"
-"    return nada()\n"
-"\n"
-"def private mk_concat(var left,right:ReNode?)\n"
-"    if left == null\n"
-"        return right\n"
-"    elif left.op==ReOp Char && right.op==ReOp Char\n"
-"        // mk_concat(char(x),char(y)) = char(xy)\n"
-"        left.at.y = right.at.y\n"
-"        left.text += right.text\n"
-"        left.textLen += right.textLen\n"
-"        unsafe\n"
-"            delete right\n"
-"        return left\n"
-"    elif left.op==ReOp Concat && left.right.op==ReOp Char && right.op==ReOp Char"
-"\n"
-"        // mk_concat(concat(z,char(x)),char(y)) = concat(z,char(xy))\n"
-"        var lor = left.right\n"
-"        left.at.y = right.at.y\n"
-"        lor.at.y = right.at.y\n"
-"        lor.text += right.text\n"
-"        lor.textLen += right.textLen\n"
-"        unsafe\n"
-"            delete right\n"
-"        return left\n"
-"    else\n"
-"        return new [[ReNode op=ReOp Concat, left = left, right = right, at=range"
-"(left.at.x,right.at.y)]]\n"
-"\n"
-"def private mk_union(var left,right:ReNode?) : ReNode?\n"
-"    if left.op==ReOp Union\n"
-"        left.at.y = right.at.y\n"
-"        if right.op==ReOp Union                    // union(union(x),union(y)) ="
-" union(xy)\n"
-"            for x in right.all\n"
-"                push(left.all,x)\n"
-"            unsafe\n"
-"                delete right\n"
-"        else                                       // union(union(x),y) = union("
-"xy)\n"
-"            push(left.all,right)\n"
-"        return left\n"
-"    elif right.op==ReOp Union\n"
-"        right.at.x = left.at.x\n"
-"        push(right.all,left)                      // union(x,union(y)) = union(x"
-"y)\n"
-"        return right\n"
-"    else\n"
-"        return new [[ReNode op=ReOp Union, all <- [{ReNode? left; right}], at=ra"
-"nge(left.at.x,right.at.y)]]\n"
-"\n"
-"// <RE>	::=	<union> | <simple-RE>\n"
-"// <union>	::=	<RE> \"|\" <simple-RE>\n"
-"// <simple-RE>	::=	<concatenation> | <basic-RE>\n"
-"// <concatenation>	::=	<simple-RE> <basic-RE>\n"
-"def private  re_re(expr:string; offset:int) : MaybeReNode\n"
-"    trace(\"re_re\",offset)\n"
-"    if eos(expr,offset)\n"
-"        return nada()\n"
-"    var cofs = offset\n"
-"    var last : ReNode?\n"
-"    while !eos(expr,cofs)\n"
-"        if at(expr,cofs)=='|'\n"
-"            if last == null\n"
-"                note(\"syntax error, nada | union\", cofs)\n"
-"                return nada()\n"
-"            var oright = re_re(expr,cofs+1)\n"
-"            if oright is nothing\n"
-"                note(\"syntax error, re | nada\", cofs+1)\n"
-"                return nada()\n"
-"            last = mk_union(last,oright as value)\n"
-"            cofs = last.at.y\n"
-"        else\n"
-"            var onext = re_basic(expr, cofs)\n"
-"            if onext is nothing\n"
-"                return last==null? nada() : maybe(last)\n"
-"            last = mk_concat(last,onext as value)\n"
-"            cofs = last.at.y\n"
-"    return maybe(last)\n"
-"\n"
-"// <basic-RE>	::=	<star> | <plus> | <elementary-RE>\n"
-"// <star>	::=	<elementary-RE> \"*\"\n"
-"// <plus>	::=	<elementary-RE> \"+\"\n"
-"def private re_basic(expr:string; offset:int) : MaybeReNode\n"
-"    trace(\"re_basic\",offset)\n"
-"    if eos(expr,offset)\n"
-"        return nada()\n"
-"    var oelem = re_elementary(expr,offset)\n"
-"    if oelem is nothing\n"
-"        return nada()\n"
-"    let ch = at(expr,next(oelem))\n"
-"    if ch=='*'\n"
-"        return maybe(new [[ReNode op=ReOp Star, subexpr=oelem as value, at=range"
-"(offset,next(oelem)+1)]])\n"
-"    elif ch=='+'\n"
-"        return maybe(new [[ReNode op=ReOp Plus, subexpr=oelem as value, at=range"
-"(offset,next(oelem)+1)]])\n"
-"    elif ch=='?'\n"
-"        return maybe(new [[ReNode op=ReOp Question, subexpr=oelem as value, at=r"
-"ange(offset,next(oelem)+1)]])\n"
-"    return oelem\n"
-"\n"
-"def private re_parse ( expr:string ) : ReNode?\n"
-"    var ore = re_re(expr, 0)\n"
-"    if ore is nothing\n"
-"        return null\n"
-"    let at = next(ore)\n"
-"    if at != length(expr)\n"
-"        note(\"syntax error\",at)\n"
-"        return null\n"
-"    return ore as value\n"
-"\n"
-"def private visit_top_down ( var node:ReNode?; blk : block<(var n:ReNode?):void>"
-" )\n"
-"    invoke(blk,node)\n"
-"    for x in node.all\n"
-"        visit_top_down(x, blk)\n"
-"    if node.subexpr!=null\n"
-"        visit_top_down(node.subexpr, blk)\n"
-"    if node.left!=null\n"
-"        visit_top_down(node.left, blk)\n"
-"    if node.right!=null\n"
-"        visit_top_down(node.right, blk)\n"
-"\n"
-"def private re_assign_next ( var re:Regex )\n"
-"    var id = 0\n"
-"    visit_top_down(re.root) <| $ ( var node )\n"
-"        node.id = id ++\n"
-"        if node.op == ReOp Concat\n"
-"            node.left.next = node.right\n"
-"            node.right.next = node.next\n"
-"        elif node.op == ReOp Group\n"
-"            node.subexpr.next = node.next\n"
-"        elif node.op == ReOp Union\n"
-"            for sub in node.all\n"
-"                sub.next = node.next\n"
-"\n"
-"def private re_assign_groups ( var re:Regex )\n"
-"    push(re.groups, [[auto range(0),\"\"]])\n"
-"    visit_top_down(re.root) <| $ ( var node )\n"
-"        if node.op == ReOp Group\n"
-"            let index = length(re.groups)\n"
-"            node.index = index\n"
-"            push(re.groups, [[auto range(0),\"{index}\"]])\n"
-"\n"
-"/*\n"
-"    matching\n"
-"*/\n"
-"\n"
-"def private re_assign_match_functions ( var re:Regex )\n"
-"    visit_top_down(re.root) <| $ ( var node )\n"
-"        if node.op==ReOp Char\n"
-"            if node.textLen==1\n"
-"                node.fun2 = @@re_match2_single_char\n"
-"            else\n"
-"                node.fun2 = @@re_match2_char\n"
-"        elif node.op==ReOp Union\n"
-"            node.fun2 = @@re_match2_union\n"
-"        elif node.op==ReOp Set\n"
-"            node.fun2 = @@re_match2_set\n"
-"        elif node.op==ReOp Any\n"
-"            node.fun2 = @@re_match2_any\n"
-"        elif node.op==ReOp Eos\n"
-"            node.fun2 = @@re_match2_eos\n"
-"        elif node.op==ReOp Concat\n"
-"            node.fun2 = @@re_match2_concat\n"
-"        elif node.op==ReOp Plus\n"
-"            if node.subexpr.op==ReOp Set\n"
-"                node.cset = node.subexpr.cset\n"
-"                node.fun2 = @@re_match2_plus_set\n"
-"            else\n"
-"                node.fun2 = @@re_match2_plus\n"
-"            node.fun2 = @@re_match2_plus\n"
-"        elif node.op==ReOp Star\n"
-"            node.fun2 = @@re_match2_star\n"
-"        elif node.op==ReOp Question\n"
-"            node.fun2 = @@re_match2_question\n"
-"        elif node.op==ReOp Group\n"
-"            node.fun2 = @@re_match2_group\n"
-"        else\n"
-"            panic(\"unsupported {node.op}\")\n"
-"\n"
-"[unsafe_deref]\n"
-"def private re_match2_single_char ( var regex:Regex; var node:ReNode?; str:uint8"
-"? ) : uint8?\n"
-"    if log_match_enabled\n"
-"        print(\"match single char `{node.text}` {str}\\n\")\n"
-"    unsafe\n"
-"        if character_uat(node.text,0) != int(*str)\n"
-"            return null\n"
-"        var tail = str + 1\n"
-"        node.tail = tail\n"
-"        var node2 = node.next\n"
-"        if node2!=null\n"
-"            return invoke(node2.fun2,regex,node2,tail)\n"
-"        else\n"
-"            return tail\n"
-"\n"
-"[unsafe_deref]\n"
-"def private re_match2_char ( var regex:Regex; var node:ReNode?; str:uint8? ) : u"
-"int8?\n"
-"    if log_match_enabled\n"
-"        print(\"match char `{node.text}` {str}\\n\")\n"
-"    unsafe\n"
-"        if memcmp(reinterpret<uint8?> node.text,str,node.textLen) != 0\n"
-"            return null\n"
-"        var tail = str + node.textLen\n"
-"        node.tail = tail\n"
-"        var node2 = node.next\n"
-"        if node2!=null\n"
-"            if log_match_enabled\n"
-"                print(\"NOP invoke\\n\")\n"
-"            return invoke(node2.fun2,regex,node2,tail)\n"
-"        else\n"
-"            return tail\n"
-"\n"
-"[unsafe_deref]\n"
-"def private re_match2_union ( var regex:Regex; var node:ReNode?; str:uint8? ) : "
-"uint8?\n"
-"    if log_match_enabled\n"
-"        print(\"match union {str}\\n\")\n"
-"    for sub in node.all\n"
-"        let osub = invoke(sub.fun2,regex,sub,str)\n"
-"        if osub != null\n"
-"            node.tail = sub.tail\n"
-"            return osub\n"
-"    return null\n"
-"\n"
-"[unsafe_deref]\n"
-"def private re_match2_set ( var regex:Regex; var node:ReNode?; str:uint8? ) : ui"
-"nt8?\n"
-"    if log_match_enabled\n"
-"        print(\"match2 set {str}\\n\")\n"
-"    if !is_char_in_set(int(*str),node.cset)\n"
-"        return null\n"
-"    unsafe\n"
-"        var tail = str + 1\n"
-"        node.tail = tail\n"
-"        var node2 = node.next\n"
-"        if node2!=null\n"
-"            return invoke(node2.fun2,regex, node2, tail)\n"
-"        else\n"
-"            return tail\n"
-"\n"
-"[unsafe_deref]\n"
-"def private re_match2_any ( var regex:Regex; var node:ReNode?; str:uint8? ) : ui"
-"nt8?\n"
-"    if log_match_enabled\n"
-"        print(\"match2 any {str}\\n\")\n"
-"    if int(*str)==0\n"
-"        return null\n"
-"    unsafe\n"
-"        var tail = str + 1\n"
-"        node.tail = tail\n"
-"        var node2 = node.next\n"
-"        if node2!=null\n"
-"            return invoke(node2.fun2,regex, node2, tail)\n"
-"        else\n"
-"            return tail\n"
-"\n"
-"[unsafe_deref]\n"
-"def private re_match2_concat ( var regex:Regex; var node:ReNode?; str:uint8? ) :"
-" uint8?\n"
-"    if log_match_enabled\n"
-"        print(\"match2 concat {str}\\n\")\n"
-"    var left = node.left\n"
-"    let oleft = invoke(left.fun2, regex, left, str)\n"
-"    if oleft == null\n"
-"        return null\n"
-"    node.tail = node.right.tail\n"
-"    return oleft\n"
-"\n"
-"[unsafe_deref]\n"
-"def private re_match2_eos ( var regex:Regex; var node:ReNode?; str:uint8? ) : ui"
-"nt8?\n"
-"    if log_match_enabled\n"
-"        print(\"match eos {str}\\n\")\n"
-"    if int(*str)!=0\n"
-"        return null\n"
-"    node.tail = str\n"
-"    var node2 = node.next\n"
-"    if node2!=null\n"
-"        return invoke(node2.fun2,regex, node2, str)\n"
-"    else\n"
-"        return str\n"
-"\n"
-"[unsafe_deref]\n"
-"def private re_match2_question ( var regex:Regex; var node:ReNode?; str:uint8? )"
-" : uint8?\n"
-"    if log_match_enabled\n"
-"        print(\"match question {str}\\n\")\n"
-"    var nsub = node.subexpr\n"
-"    var tail = invoke(nsub.fun2,regex,nsub,str)\n"
-"    if tail == null\n"
-"        tail = str\n"
-"    node.tail = tail\n"
-"    var node2 = node.next\n"
-"    if node2!=null\n"
-"        return invoke(node2.fun2,regex,node2,tail)\n"
-"    else\n"
-"        return tail\n"
-"\n"
-"[unsafe_deref]\n"
-"def private re_match2_plus ( var regex:Regex; var node:ReNode?; str:uint8? ) : u"
-"int8?\n"
-"    if log_match_enabled\n"
-"        print(\"match2 plus {str}\\n\")\n"
-"    var nsub = node.subexpr\n"
-"    var osym = invoke(nsub.fun2,regex,nsub,str)\n"
-"    if osym == null\n"
-"        return null\n"
-"    var ofs = osym\n"
-"    var node2 = node.next\n"
-"    if node2!=null\n"
-"        while osym != null\n"
-"            node.tail = osym\n"
-"            var otail = invoke(node2.fun2,regex,node2,osym)\n"
-"            if otail != null\n"
-"                return otail\n"
-"            osym = invoke(nsub.fun2,regex,nsub,osym)\n"
-"        return null\n"
-"    else\n"
-"        while osym != null\n"
-"            ofs = osym\n"
-"            osym = invoke(nsub.fun2,regex,nsub,ofs)\n"
-"        node.tail = ofs\n"
-"        return ofs\n"
-"\n"
-"[unsafe_deref]\n"
-"def private re_match2_plus_set ( var regex:Regex; var node:ReNode?; str:uint8? )"
-" : uint8?\n"
-"    if log_match_enabled\n"
-"        print(\"match2 plus {str}\\n\")\n"
-"    var nsub = node.subexpr\n"
-"    if !is_char_in_set(int(*str),node.cset)\n"
-"        return null\n"
-"    unsafe\n"
-"        var ofs = str + 1\n"
-"        var osym = ofs\n"
-"        var node2 = node.next\n"
-"        if node2!=null\n"
-"            while osym != null\n"
-"                node.tail = osym\n"
-"                var otail = invoke(node2.fun2,regex,node2,osym)\n"
-"                if otail != null\n"
-"                    return otail\n"
-"                if !is_char_in_set(int(*osym),node.cset)\n"
-"                    return null\n"
-"                osym++\n"
-"            return null\n"
-"        else\n"
-"            while osym != null\n"
-"                ofs = osym\n"
-"                if !is_char_in_set(int(*osym),node.cset)\n"
-"                    break\n"
-"                osym++\n"
-"            node.tail = ofs\n"
-"            return ofs\n"
-"\n"
-"[unsafe_deref]\n"
-"def private re_match2_star ( var regex:Regex; var node:ReNode?; str:uint8? ) : u"
-"int8?\n"
-"    if log_match_enabled\n"
-"        print(\"match2 plus {str}\\n\")\n"
-"    var ofs = str\n"
-"    var node2 = node.next\n"
-"    var nsub = node.subexpr\n"
-"    if node2!=null\n"
-"        while ofs != null\n"
-"            node.tail = ofs\n"
-"            let oany = invoke(node2.fun2,regex,node2,ofs)\n"
-"            if oany != null\n"
-"                return oany\n"
-"            ofs = invoke(nsub.fun2,regex,nsub,ofs)\n"
-"        return null\n"
-"    else\n"
-"        var osym = ofs\n"
-"        while osym != null\n"
-"            ofs = osym\n"
-"            osym = invoke(nsub.fun2,regex,nsub,ofs)\n"
-"        node.tail = ofs\n"
-"        return ofs\n"
-"\n"
-"[unsafe_deref]\n"
-"def private re_match2_group ( var regex:Regex; var node:ReNode?; str:uint8? ) : "
-"uint8?\n"
-"    if log_match_enabled\n"
-"        print(\"match2 group {str}\\n\")\n"
-"    var nsub = node.subexpr\n"
-"    let osub = invoke(nsub.fun2,regex,nsub,str)\n"
-"    if osub==null\n"
-"        return null\n"
-"    regex.groups[node.index]._0 = range(int(str-regex.match),int(node.subexpr.ta"
-"il-regex.match))\n"
-"    return osub\n"
-"\n"
-"/*\n"
-"    early out\n"
-"*/\n"
-"\n"
-"def re_early_out ( var cset:CharSet; node:ReNode? ) : bool\n"
-"    if node.op==ReOp Char\n"
-"        set_or_char(cset,character_at(node.text,0))\n"
-"        return false\n"
-"    elif node.op==ReOp Set\n"
-"        set_or_set(cset,node.cset)\n"
-"        return false\n"
-"    elif node.op==ReOp Any\n"
-"        for x in cset\n"
-"            x = 0xffffffffu\n"
-"        return false\n"
-"    elif node.op==ReOp Eos\n"
-"        return false\n"
-"    elif node.op==ReOp Group\n"
-"        return re_early_out(cset,node.subexpr)\n"
-"    elif node.op==ReOp Plus\n"
-"        return re_early_out(cset,node.subexpr)\n"
-"    elif node.op==ReOp Star\n"
-"        re_early_out(cset,node.subexpr)\n"
-"        return true\n"
-"    elif node.op==ReOp Question\n"
-"        re_early_out(cset,node.subexpr)\n"
-"        return true\n"
-"    elif node.op==ReOp Concat\n"
-"        let left = re_early_out(cset,node.left)\n"
-"        return left ? re_early_out(cset,node.right) : false\n"
-"    elif node.op==ReOp Union\n"
-"        var any = false\n"
-"        for sub in node.all\n"
-"            any = re_early_out(cset,sub) || any\n"
-"        return any\n"
-"    else\n"
-"        panic(\"unsupported operation\")\n"
-"        return false\n"
-"\n"
-"/*\n"
-"    top level API\n"
-"*/\n"
-"\n"
-"def is_valid(var re:Regex)\n"
-"    return re.root != null\n"
-"\n"
-"def regex_compile( var re:Regex; expr:string ) : bool\n"
-"    re.root = re_parse(expr)\n"
-"    if re.root != null\n"
-"        re_assign_next(re)\n"
-"        re_assign_groups(re)\n"
-"        re_assign_match_functions(re)\n"
-"        re_early_out(re.earlyOut, re.root)\n"
-"        re.canEarlyOut = !is_set_empty(re.earlyOut)\n"
-"    return re.root != null\n"
-"\n"
-"def regex_compile ( expr : string )\n"
-"    var re:Regex\n"
-"    if !regex_compile(re,expr)\n"
-"        panic(\"regular expression {expr} did not compile\")\n"
-"    return <- re\n"
-"\n"
-"def regex_compile ( var re:Regex )\n"
-"    if re.root != null\n"
-"        re_assign_next(re)\n"
-"        re_assign_match_functions(re)\n"
-"    return <- re\n"
-"\n"
-"def regex_match ( var regex:Regex; str:string; offset:int=0 ) : int\n"
-"    if empty(str)\n"
-"        return -1\n"
-"    if log_match_enabled\n"
-"        print(\"matching with `{str}` at {offset}\\n\")\n"
-"    unsafe\n"
-"        regex.match = reinterpret<uint8?> str\n"
-"        let mptr = invoke(regex.root.fun2,regex,regex.root,regex.match)\n"
-"        if mptr == null\n"
-"            return -1\n"
-"        return int(mptr-regex.match)\n"
-"\n"
-"def regex_group ( regex:Regex; index:int; match:string )\n"
-"    let sub_range = regex.groups[index]._0\n"
-"    return slice(match, sub_range.x, sub_range.y)\n"
-"\n"
-"[unsafe_deref]\n"
-"def regex_foreach ( var regex:Regex; str:string; blk : block<(at:range):bool> )\n"
-"    if empty(str)\n"
-"        return\n"
-"    unsafe\n"
-"        regex.match = reinterpret<uint8?> str\n"
-"        var root = regex.root\n"
-"        var pstr = reinterpret<uint8?> str\n"
-"        var cstr = pstr\n"
-"        if regex.canEarlyOut\n"
-"            // lets try if it helps\n"
-"            while true\n"
-"                let Ch = int(*cstr)\n"
-"                if Ch==0\n"
-"                    break\n"
-"                if is_char_in_set(Ch,regex.earlyOut)\n"
-"                    let om = invoke(root.fun2,regex,root,cstr)\n"
-"                    if om != null\n"
-"                        if !invoke(blk,range(int(cstr-pstr),int(om-pstr)))\n"
-"                            break\n"
-"                        cstr = om\n"
-"                    else\n"
-"                        cstr++\n"
-"                else\n"
-"                    cstr++\n"
-"        else\n"
-"            while int(*cstr) != 0\n"
-"                let om = invoke(root.fun2,regex,root,cstr)\n"
-"                if om != null\n"
-"                    if !invoke(blk,range(int(cstr-pstr),int(om-pstr)))\n"
-"                        break\n"
-"                    cstr = om\n"
-"                else\n"
-"                    cstr ++\n"
-"\n"
-"/*\n"
-"    printer\n"
-"*/\n"
-"\n"
-"def regex_debug ( regex:Regex )\n"
-"    debug_re(regex.root,1)\n"
-"    print(\"\\n\")\n"
-"    if regex.canEarlyOut\n"
-"        print(\"early out: \")\n"
-"        debug_set(regex.earlyOut)\n"
-"        print(\"\\n\")\n"
-"    if length(regex.groups) != 0\n"
-"        print(\"groups:\")\n"
-"        for g in regex.groups\n"
-"            print(\"\\t{g._1}\\n\")\n"
-"\n"
-"def debug_set(cset:CharSet)\n"
-"    for x in range(256)\n"
-"        if (cset[x>>5] & uint(1<<(x & 31))) != 0u\n"
-"            if x>=32 && x<=127\n"
-"                print(\"{to_char(x)}\")\n"
-"            else\n"
-"                print(\"\\\\{x}\")\n"
-"\n"
-"def private debug_re ( node: ReNode?; tab:int )\n"
-"    print(\"(\")\n"
-"    if node != null\n"
-"        print(\"#{node.id}\")\n"
-"        if node.next!=null\n"
-"            print(\"->{node.next.id}\")\n"
-"        else\n"
-"            print(\"->!\")\n"
-"        print(\" \")\n"
-"    if node==null\n"
-"        print(\"null)\")\n"
-"    elif node.op==ReOp Char\n"
-"        print(\"Char `{node.text}`)\")\n"
-"    elif node.op==ReOp Set\n"
-"        print(\"Set \")\n"
-"        debug_set(node.cset)\n"
-"        print(\")\")\n"
-"    elif node.op==ReOp Any\n"
-"        print(\"Any)\")\n"
-"    elif node.op==ReOp Eos\n"
-"        print(\"Eos)\")\n"
-"    elif node.op==ReOp Group\n"
-"        print(\"Group \")\n"
-"        debug_re(node.subexpr,tab+1)\n"
-"        print(\")\")\n"
-"    elif node.op==ReOp Plus\n"
-"        print(\"Plus \")\n"
-"        debug_re(node.subexpr,tab)\n"
-"        print(\")\")\n"
-"    elif node.op==ReOp Star\n"
-"        print(\"Star \")\n"
-"        debug_re(node.subexpr,tab)\n"
-"        print(\")\")\n"
-"    elif node.op==ReOp Question\n"
-"        print(\"Question \")\n"
-"        debug_re(node.subexpr,tab)\n"
-"        print(\")\")\n"
-"    elif node.op==ReOp Concat\n"
-"        print(\"Contact\")\n"
-"        print(\"\\n{repeat(\"\\t\",tab)}\")\n"
-"        debug_re(node.left,tab+1)\n"
-"        print(\"\\n{repeat(\"\\t\",tab)}\")\n"
-"        debug_re(node.right,tab+1)\n"
-"        print(\"\\n{repeat(\"\\t\",tab-1)})\")\n"
-"    elif node.op==ReOp Union\n"
-"        print(\"Union\\n\")\n"
-"        for sub in node.all\n"
-"            print(\"{repeat(\"\\t\",tab)}\")\n"
-"            debug_re(sub,tab+1)\n"
-"            print(\"\\n\")\n"
-"        print(\"{repeat(\"\\t\",tab-1)})\")\n"
-"    else\n"
-"        panic(\"unsupported op\")\n"
+111,112,116,105,111,110,115,32,110,111,95,117,110,117,115,101,100,95,98,108,111,99,107,95,97,114,103,117,109,101,110,
+116,115,32,61,32,102,97,108,115,101,13,10,
+111,112,116,105,111,110,115,32,110,111,95,117,110,117,115,101,100,95,102,117,110,99,116,105,111,110,95,97,114,103,117,
+109,101,110,116,115,32,61,32,102,97,108,115,101,13,10,
+111,112,116,105,111,110,115,32,105,110,100,101,110,116,105,110,103,32,61,32,52,13,10,
+13,10,
+109,111,100,117,108,101,32,114,101,103,101,120,32,115,104,97,114,101,100,32,112,117,98,108,105,99,13,10,
+13,10,
+114,101,113,117,105,114,101,32,115,116,114,105,110,103,115,13,10,
+13,10,
+101,110,117,109,32,82,101,79,112,13,10,
+32,32,32,32,67,104,97,114,13,10,
+32,32,32,32,83,101,116,13,10,
+32,32,32,32,65,110,121,13,10,
+32,32,32,32,69,111,115,13,10,
+32,32,32,32,71,114,111,117,112,13,10,
+32,32,32,32,80,108,117,115,13,10,
+32,32,32,32,83,116,97,114,13,10,
+32,32,32,32,81,117,101,115,116,105,111,110,13,10,
+32,32,32,32,67,111,110,99,97,116,13,10,
+32,32,32,32,85,110,105,111,110,13,10,
+13,10,
+116,121,112,101,100,101,102,13,10,
+32,32,32,32,67,104,97,114,83,101,116,32,61,32,117,105,110,116,91,56,93,13,10,
+13,10,
+115,116,114,117,99,116,32,82,101,78,111,100,101,13,10,
+32,32,32,32,111,112,32,32,32,32,32,32,58,32,82,101,79,112,13,10,
+32,32,32,32,105,100,32,32,32,32,32,32,58,32,105,110,116,13,10,
+32,32,32,32,91,91,100,111,95,110,111,116,95,99,111,110,118,101,114,116,93,93,32,102,117,110,50,32,58,32,102,
+117,110,99,116,105,111,110,60,32,40,118,97,114,32,114,101,103,101,120,58,82,101,103,101,120,59,32,118,97,114,32,
+110,111,100,101,58,82,101,78,111,100,101,63,59,32,115,116,114,58,117,105,110,116,56,63,41,32,58,32,117,105,110,
+116,56,63,32,62,13,10,
+32,32,32,32,97,116,32,32,32,32,32,32,58,32,114,97,110,103,101,13,10,
+32,32,32,32,116,101,120,116,32,32,32,32,58,32,115,116,114,105,110,103,13,10,
+32,32,32,32,116,101,120,116,76,101,110,32,58,32,105,110,116,13,10,
+32,32,32,32,97,108,108,32,32,32,32,32,58,32,97,114,114,97,121,60,82,101,78,111,100,101,63,62,13,10,
+32,32,32,32,108,101,102,116,32,32,32,32,58,32,82,101,78,111,100,101,63,13,10,
+32,32,32,32,114,105,103,104,116,32,32,32,58,32,82,101,78,111,100,101,63,13,10,
+32,32,32,32,115,117,98,101,120,112,114,32,58,32,82,101,78,111,100,101,63,13,10,
+32,32,32,32,91,91,100,111,95,110,111,116,95,100,101,108,101,116,101,44,100,111,95,110,111,116,95,99,111,110,118,
+101,114,116,93,93,32,110,101,120,116,32,58,32,82,101,78,111,100,101,63,13,10,
+32,32,32,32,99,115,101,116,32,32,32,32,58,32,67,104,97,114,83,101,116,13,10,
+32,32,32,32,105,110,100,101,120,32,32,32,58,32,105,110,116,13,10,
+32,32,32,32,91,91,100,111,95,110,111,116,95,99,111,110,118,101,114,116,93,93,32,116,97,105,108,32,58,32,117,
+105,110,116,56,63,13,10,
+13,10,
+115,116,114,117,99,116,32,82,101,103,101,120,13,10,
+32,32,32,32,114,111,111,116,32,32,32,32,32,32,32,32,58,32,82,101,78,111,100,101,63,13,10,
+32,32,32,32,91,91,100,111,95,110,111,116,95,99,111,110,118,101,114,116,93,93,32,109,97,116,99,104,32,58,32,
+117,105,110,116,56,63,13,10,
+32,32,32,32,103,114,111,117,112,115,32,32,32,32,32,32,58,32,97,114,114,97,121,60,116,117,112,108,101,60,114,
+97,110,103,101,59,115,116,114,105,110,103,62,62,13,10,
+32,32,32,32,101,97,114,108,121,79,117,116,32,32,32,32,58,32,67,104,97,114,83,101,116,13,10,
+32,32,32,32,99,97,110,69,97,114,108,121,79,117,116,32,58,32,98,111,111,108,13,10,
+13,10,
+118,97,114,105,97,110,116,32,77,97,121,98,101,82,101,78,111,100,101,13,10,
+32,32,32,32,118,97,108,117,101,32,32,32,58,32,82,101,78,111,100,101,63,13,10,
+32,32,32,32,110,111,116,104,105,110,103,32,58,32,118,111,105,100,63,13,10,
+13,10,
+47,42,13,10,
+32,32,32,32,80,97,114,115,101,114,13,10,
+42,47,13,10,
+13,10,
+108,101,116,13,10,
+32,32,32,32,108,111,103,95,112,97,114,115,101,95,101,110,97,98,108,101,100,32,61,32,102,97,108,115,101,13,10,
+32,32,32,32,108,111,103,95,109,97,116,99,104,95,101,110,97,98,108,101,100,32,61,32,102,97,108,115,101,13,10,
+32,32,32,32,114,97,110,103,101,95,99,104,101,99,107,95,101,110,97,98,108,101,100,32,61,32,102,97,108,115,101,
+13,10,
+13,10,
+118,97,114,13,10,
+32,32,32,32,116,114,97,99,101,95,116,97,98,32,61,32,48,13,10,
+13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,116,114,97,99,101,40,109,115,103,58,115,116,114,105,110,103,59,32,111,
+102,102,115,101,116,58,105,110,116,41,13,10,
+32,32,32,32,115,116,97,116,105,99,95,105,102,32,108,111,103,95,112,97,114,115,101,95,101,110,97,98,108,101,100,
+13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,123,114,101,112,101,97,116,40,34,32,34,44,116,114,97,99,
+101,95,116,97,98,41,125,123,111,102,102,115,101,116,125,58,32,123,109,115,103,125,92,110,34,41,13,10,
+32,32,32,32,32,32,32,32,116,114,97,99,101,95,116,97,98,32,43,43,13,10,
+13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,110,111,116,101,40,109,115,103,58,115,116,114,105,110,103,59,32,111,102,
+102,115,101,116,58,105,110,116,41,13,10,
+32,32,32,32,115,116,97,116,105,99,95,105,102,32,108,111,103,95,112,97,114,115,101,95,101,110,97,98,108,101,100,
+13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,123,114,101,112,101,97,116,40,34,32,34,44,116,114,97,99,
+101,95,116,97,98,41,125,123,111,102,102,115,101,116,125,58,32,123,109,115,103,125,92,110,34,41,13,10,
+13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,116,114,97,99,101,95,98,97,99,107,116,114,97,99,107,40,41,13,10,
+32,32,32,32,115,116,97,116,105,99,95,105,102,32,108,111,103,95,112,97,114,115,101,95,101,110,97,98,108,101,100,
+13,10,
+32,32,32,32,32,32,32,32,116,114,97,99,101,95,116,97,98,32,45,45,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,123,114,101,112,101,97,116,40,34,32,34,44,116,114,97,99,
+101,95,116,97,98,41,125,98,97,99,107,116,114,97,99,107,92,110,34,41,13,10,
+13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,116,114,97,99,101,95,118,97,108,117,101,40,118,97,108,117,101,32,58,
+32,82,101,78,111,100,101,63,41,13,10,
+32,32,32,32,115,116,97,116,105,99,95,105,102,32,108,111,103,95,112,97,114,115,101,95,101,110,97,98,108,101,100,
+13,10,
+32,32,32,32,32,32,32,32,105,102,32,118,97,108,117,101,61,61,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,112,97,110,105,99,40,34,116,114,97,99,101,95,118,97,108,117,101,32,
+110,117,108,108,63,34,41,13,10,
+32,32,32,32,32,32,32,32,116,114,97,99,101,95,116,97,98,32,45,45,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,123,114,101,112,101,97,116,40,34,32,34,44,116,114,97,99,
+101,95,116,97,98,41,125,109,97,116,99,104,101,100,32,123,118,97,108,117,101,46,111,112,125,44,32,110,101,120,116,
+32,123,118,97,108,117,101,46,97,116,46,121,125,92,110,34,41,13,10,
+13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,110,97,100,97,40,41,13,10,
+32,32,32,32,116,114,97,99,101,95,98,97,99,107,116,114,97,99,107,40,41,13,10,
+32,32,32,32,114,101,116,117,114,110,32,91,91,77,97,121,98,101,82,101,78,111,100,101,32,110,111,116,104,105,110,
+103,61,110,117,108,108,93,93,13,10,
+13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,109,97,121,98,101,40,32,118,97,108,117,101,32,58,32,82,101,78,111,
+100,101,63,32,41,13,10,
+32,32,32,32,116,114,97,99,101,95,118,97,108,117,101,40,118,97,108,117,101,41,13,10,
+32,32,32,32,114,101,116,117,114,110,32,91,91,77,97,121,98,101,82,101,78,111,100,101,32,118,97,108,117,101,61,
+118,97,108,117,101,93,93,13,10,
+13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,101,111,115,40,101,120,112,114,58,115,116,114,105,110,103,59,32,111,102,
+102,115,101,116,58,105,110,116,41,13,10,
+32,32,32,32,114,101,116,117,114,110,32,111,102,102,115,101,116,32,62,61,32,108,101,110,103,116,104,40,101,120,112,
+114,41,13,10,
+13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,97,116,40,101,120,112,114,58,115,116,114,105,110,103,59,32,111,102,102,
+115,101,116,58,105,110,116,41,32,58,32,105,110,116,13,10,
+32,32,32,32,115,116,97,116,105,99,95,105,102,32,114,97,110,103,101,95,99,104,101,99,107,95,101,110,97,98,108,
+101,100,13,10,
+32,32,32,32,32,32,32,32,108,101,116,32,108,101,110,32,61,32,108,101,110,103,116,104,40,101,120,112,114,41,13,
+10,
+32,32,32,32,32,32,32,32,105,102,32,111,102,102,115,101,116,60,108,101,110,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,99,104,97,114,97,99,116,101,114,95,97,116,
+40,101,120,112,114,44,32,111,102,102,115,101,116,41,13,10,
+32,32,32,32,32,32,32,32,101,108,105,102,32,111,102,102,115,101,116,61,61,108,101,110,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,48,13,10,
+32,32,32,32,32,32,32,32,101,108,115,101,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,115,116,97,99,107,119,97,108,107,40,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,112,97,110,105,99,40,34,111,117,116,32,111,102,32,114,97,110,103,101,
+32,123,111,102,102,115,101,116,125,32,111,102,32,123,108,101,110,125,34,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,48,13,10,
+32,32,32,32,101,108,115,101,13,10,
+32,32,32,32,32,32,32,32,117,110,115,97,102,101,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,99,104,97,114,97,99,116,101,114,95,117,97,
+116,40,101,120,112,114,44,32,111,102,102,115,101,116,41,13,10,
+13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,110,101,120,116,40,114,101,58,77,97,121,98,101,82,101,78,111,100,101,
+41,13,10,
+32,32,32,32,105,102,32,33,40,114,101,32,105,115,32,118,97,108,117,101,41,13,10,
+32,32,32,32,32,32,32,32,115,116,97,99,107,119,97,108,107,40,41,13,10,
+32,32,32,32,32,32,32,32,112,97,110,105,99,40,34,101,120,112,101,99,116,105,110,103,32,118,97,108,117,101,34,
+41,13,10,
+32,32,32,32,114,101,116,117,114,110,32,40,114,101,32,97,115,32,118,97,108,117,101,41,46,97,116,46,121,13,10,
+13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,105,115,95,115,101,116,95,101,109,112,116,121,40,99,115,101,116,58,67,
+104,97,114,83,101,116,41,13,10,
+32,32,32,32,102,111,114,32,120,32,105,110,32,99,115,101,116,13,10,
+32,32,32,32,32,32,32,32,105,102,32,120,32,33,61,32,48,117,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,102,97,108,115,101,13,10,
+32,32,32,32,114,101,116,117,114,110,32,116,114,117,101,13,10,
+13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,115,101,116,95,111,114,95,99,104,97,114,40,118,97,114,32,99,115,101,
+116,58,67,104,97,114,83,101,116,59,32,99,104,58,105,110,116,41,13,10,
+32,32,32,32,99,115,101,116,91,99,104,62,62,53,93,32,124,61,32,117,105,110,116,40,49,32,60,60,32,40,99,
+104,32,38,32,51,49,41,41,13,10,
+13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,115,101,116,95,111,114,95,114,97,110,103,101,40,118,97,114,32,99,115,
+101,116,58,67,104,97,114,83,101,116,59,32,98,105,116,115,58,114,97,110,103,101,41,13,10,
+32,32,32,32,102,111,114,32,99,104,32,105,110,32,114,97,110,103,101,40,98,105,116,115,46,120,44,98,105,116,115,
+46,121,43,49,41,13,10,
+32,32,32,32,32,32,32,32,99,115,101,116,91,99,104,62,62,53,93,32,124,61,32,117,105,110,116,40,49,32,60,
+60,32,40,99,104,32,38,32,51,49,41,41,13,10,
+13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,115,101,116,95,105,110,118,101,114,116,40,118,97,114,32,99,115,101,116,
+58,67,104,97,114,83,101,116,41,13,10,
+32,32,32,32,102,111,114,32,120,32,105,110,32,99,115,101,116,13,10,
+32,32,32,32,32,32,32,32,120,32,94,61,32,48,120,102,102,102,102,102,102,102,102,13,10,
+13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,115,101,116,95,111,114,95,115,101,116,40,118,97,114,32,99,115,101,116,
+58,67,104,97,114,83,101,116,59,32,101,115,101,116,58,67,104,97,114,83,101,116,41,13,10,
+32,32,32,32,102,111,114,32,120,44,121,32,105,110,32,99,115,101,116,44,101,115,101,116,13,10,
+32,32,32,32,32,32,32,32,120,32,124,61,32,121,13,10,
+13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,115,101,116,95,110,101,103,97,116,105,118,101,40,118,97,114,32,99,115,
+101,116,58,67,104,97,114,83,101,116,41,13,10,
+32,32,32,32,102,111,114,32,120,32,105,110,32,99,115,101,116,13,10,
+32,32,32,32,32,32,32,32,120,32,61,32,126,120,13,10,
+13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,115,101,116,95,109,101,116,97,40,118,97,114,32,99,115,101,116,58,67,
+104,97,114,83,101,116,59,32,99,104,101,58,105,110,116,41,13,10,
+32,32,32,32,105,102,32,99,104,101,61,61,39,119,39,13,10,
+32,32,32,32,32,32,32,32,115,101,116,95,111,114,95,114,97,110,103,101,40,99,115,101,116,44,114,97,110,103,101,
+40,39,97,39,44,39,122,39,41,41,13,10,
+32,32,32,32,32,32,32,32,115,101,116,95,111,114,95,114,97,110,103,101,40,99,115,101,116,44,114,97,110,103,101,
+40,39,65,39,44,39,90,39,41,41,13,10,
+32,32,32,32,32,32,32,32,115,101,116,95,111,114,95,114,97,110,103,101,40,99,115,101,116,44,114,97,110,103,101,
+40,39,48,39,44,39,57,39,41,41,13,10,
+32,32,32,32,32,32,32,32,115,101,116,95,111,114,95,99,104,97,114,40,99,115,101,116,44,39,95,39,41,13,10,
+32,32,32,32,101,108,105,102,32,99,104,101,61,61,39,87,39,13,10,
+32,32,32,32,32,32,32,32,118,97,114,32,101,115,101,116,58,67,104,97,114,83,101,116,13,10,
+32,32,32,32,32,32,32,32,115,101,116,95,109,101,116,97,40,101,115,101,116,44,39,119,39,41,13,10,
+32,32,32,32,32,32,32,32,115,101,116,95,111,114,95,115,101,116,40,99,115,101,116,44,101,115,101,116,41,13,10,
+32,32,32,32,101,108,105,102,32,99,104,101,61,61,39,115,39,13,10,
+32,32,32,32,32,32,32,32,115,101,116,95,111,114,95,99,104,97,114,40,99,115,101,116,44,39,32,39,41,13,10,
+32,32,32,32,32,32,32,32,115,101,116,95,111,114,95,99,104,97,114,40,99,115,101,116,44,39,92,116,39,41,13,
+10,
+32,32,32,32,101,108,105,102,32,99,104,101,61,61,39,83,39,13,10,
+32,32,32,32,32,32,32,32,118,97,114,32,101,115,101,116,58,67,104,97,114,83,101,116,13,10,
+32,32,32,32,32,32,32,32,115,101,116,95,109,101,116,97,40,101,115,101,116,44,39,115,39,41,13,10,
+32,32,32,32,32,32,32,32,115,101,116,95,111,114,95,115,101,116,40,99,115,101,116,44,101,115,101,116,41,13,10,
+32,32,32,32,101,108,105,102,32,99,104,101,61,61,39,100,39,13,10,
+32,32,32,32,32,32,32,32,115,101,116,95,111,114,95,114,97,110,103,101,40,99,115,101,116,44,114,97,110,103,101,
+40,39,48,39,44,39,57,39,41,41,13,10,
+32,32,32,32,101,108,105,102,32,99,104,101,61,61,39,68,39,13,10,
+32,32,32,32,32,32,32,32,118,97,114,32,101,115,101,116,58,67,104,97,114,83,101,116,13,10,
+32,32,32,32,32,32,32,32,115,101,116,95,109,101,116,97,40,101,115,101,116,44,39,100,39,41,13,10,
+32,32,32,32,32,32,32,32,115,101,116,95,111,114,95,115,101,116,40,99,115,101,116,44,101,115,101,116,41,13,10,
+32,32,32,32,101,108,115,101,13,10,
+32,32,32,32,32,32,32,32,115,101,116,95,111,114,95,99,104,97,114,40,99,115,101,116,44,99,104,101,41,13,10,
+13,10,
+108,101,116,13,10,
+32,32,32,32,109,101,116,97,32,61,32,34,92,92,43,45,42,46,40,41,91,93,124,94,34,13,10,
+32,32,32,32,109,101,116,97,95,115,101,116,32,61,32,34,119,87,115,83,100,68,34,13,10,
+13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,105,115,95,109,101,116,97,95,99,104,97,114,97,99,116,101,114,40,99,
+104,58,105,110,116,41,32,58,32,98,111,111,108,13,10,
+32,32,32,32,114,101,116,117,114,110,32,102,105,110,100,40,109,101,116,97,44,99,104,41,32,33,61,32,45,49,13,
+10,
+13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,105,115,95,115,101,116,95,99,104,97,114,97,99,116,101,114,40,99,104,
+58,105,110,116,41,32,58,32,98,111,111,108,13,10,
+32,32,32,32,114,101,116,117,114,110,32,102,105,110,100,40,109,101,116,97,95,115,101,116,44,99,104,41,32,33,61,
+32,45,49,13,10,
+13,10,
+47,47,32,60,99,104,97,114,62,9,58,58,61,9,97,110,121,32,110,111,110,32,109,101,116,97,99,104,97,114,97,
+99,116,101,114,32,124,32,34,92,34,32,109,101,116,97,99,104,97,114,97,99,116,101,114,13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,114,101,95,99,104,97,114,32,40,101,120,112,114,32,58,32,115,116,114,
+105,110,103,59,32,111,102,102,115,101,116,58,105,110,116,41,32,58,32,77,97,121,98,101,82,101,78,111,100,101,13,
+10,
+32,32,32,32,116,114,97,99,101,40,34,114,101,95,99,104,97,114,34,44,111,102,102,115,101,116,41,13,10,
+32,32,32,32,105,102,32,101,111,115,40,101,120,112,114,44,111,102,102,115,101,116,41,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,97,100,97,40,41,13,10,
+32,32,32,32,108,101,116,32,99,104,32,61,32,97,116,40,101,120,112,114,44,111,102,102,115,101,116,41,13,10,
+32,32,32,32,105,102,32,99,104,32,61,61,32,39,92,92,39,13,10,
+32,32,32,32,32,32,32,32,108,101,116,32,101,99,104,32,61,32,97,116,40,101,120,112,114,44,111,102,102,115,101,
+116,43,49,41,13,10,
+32,32,32,32,32,32,32,32,105,102,32,101,99,104,61,61,48,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,110,111,116,101,40,34,115,121,110,116,97,120,32,101,114,114,111,114,44,
+32,101,120,112,101,99,116,105,110,103,32,109,101,116,97,34,44,32,111,102,102,115,101,116,43,49,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,97,100,97,40,41,13,10,
+32,32,32,32,32,32,32,32,105,102,32,105,115,95,115,101,116,95,99,104,97,114,97,99,116,101,114,40,101,99,104,
+41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,118,97,114,32,99,115,101,116,32,58,32,67,104,97,114,83,101,116,13,
+10,
+32,32,32,32,32,32,32,32,32,32,32,32,115,101,116,95,109,101,116,97,40,99,115,101,116,44,101,99,104,41,13,
+10,
+32,32,32,32,32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,109,97,121,98,101,40,110,101,119,32,91,91,
+82,101,78,111,100,101,32,111,112,61,82,101,79,112,32,83,101,116,44,32,99,115,101,116,61,99,115,101,116,44,32,
+97,116,61,114,97,110,103,101,40,111,102,102,115,101,116,44,111,102,102,115,101,116,43,50,41,93,93,41,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,109,97,121,98,101,40,110,101,119,32,91,91,82,101,78,111,
+100,101,32,111,112,61,82,101,79,112,32,67,104,97,114,44,32,116,101,120,116,61,116,111,95,99,104,97,114,40,101,
+99,104,41,44,32,116,101,120,116,76,101,110,61,49,44,32,97,116,61,114,97,110,103,101,40,111,102,102,115,101,116,
+44,111,102,102,115,101,116,43,50,41,93,93,41,13,10,
+32,32,32,32,101,108,105,102,32,105,115,95,109,101,116,97,95,99,104,97,114,97,99,116,101,114,40,99,104,41,13,
+10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,97,100,97,40,41,13,10,
+32,32,32,32,114,101,116,117,114,110,32,109,97,121,98,101,40,110,101,119,32,91,91,82,101,78,111,100,101,32,111,
+112,61,82,101,79,112,32,67,104,97,114,44,32,116,101,120,116,61,116,111,95,99,104,97,114,40,99,104,41,44,32,
+116,101,120,116,76,101,110,61,49,44,32,97,116,61,114,97,110,103,101,40,111,102,102,115,101,116,44,111,102,102,115,
+101,116,43,49,41,93,93,41,13,10,
+13,10,
+47,47,32,60,115,101,116,45,105,116,101,109,115,62,9,58,58,61,9,60,115,101,116,45,105,116,101,109,62,32,124,
+32,60,115,101,116,45,105,116,101,109,62,32,60,115,101,116,45,105,116,101,109,115,62,13,10,
+47,47,32,60,115,101,116,45,105,116,101,109,62,9,58,58,61,9,60,114,97,110,103,101,62,32,124,32,60,99,104,
+97,114,62,13,10,
+47,47,32,60,114,97,110,103,101,62,9,58,58,61,9,60,99,104,97,114,62,32,34,45,34,32,60,99,104,97,114,
+62,13,10,
+47,47,32,60,99,104,97,114,62,9,58,58,61,9,97,110,121,32,110,111,110,32,109,101,116,97,99,104,97,114,97,
+99,116,101,114,32,124,32,34,92,34,32,109,101,116,97,99,104,97,114,97,99,116,101,114,13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,114,101,95,115,101,116,95,105,116,101,109,115,40,101,120,112,114,58,115,
+116,114,105,110,103,59,32,111,102,102,115,101,116,58,105,110,116,41,32,58,32,77,97,121,98,101,82,101,78,111,100,
+101,13,10,
+32,32,32,32,116,114,97,99,101,40,34,114,101,95,115,101,116,95,105,116,101,109,115,34,44,111,102,102,115,101,116,
+41,13,10,
+32,32,32,32,105,102,32,101,111,115,40,101,120,112,114,44,111,102,102,115,101,116,41,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,97,100,97,40,41,13,10,
+32,32,32,32,118,97,114,32,99,115,101,116,32,58,32,67,104,97,114,83,101,116,13,10,
+32,32,32,32,118,97,114,32,105,111,102,115,32,61,32,111,102,102,115,101,116,13,10,
+32,32,32,32,119,104,105,108,101,32,33,101,111,115,40,101,120,112,114,44,105,111,102,115,41,13,10,
+32,32,32,32,32,32,32,32,108,101,116,32,99,104,32,61,32,97,116,40,101,120,112,114,44,105,111,102,115,41,13,
+10,
+32,32,32,32,32,32,32,32,105,102,32,99,104,32,61,61,32,39,93,39,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,110,111,116,101,40,34,115,101,116,32,45,32,98,114,101,97,107,32,45,
+32,93,34,44,105,111,102,115,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,98,114,101,97,107,13,10,
+32,32,32,32,32,32,32,32,101,108,105,102,32,99,104,61,61,39,92,92,39,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,108,101,116,32,99,104,101,32,61,32,97,116,40,101,120,112,114,44,105,
+111,102,115,43,49,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,105,102,32,99,104,101,61,61,48,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,110,111,116,101,40,34,115,121,110,116,97,120,32,101,114,
+114,111,114,44,32,101,120,112,101,99,116,105,110,103,32,109,101,116,97,34,44,32,105,111,102,115,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,97,100,97,40,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,115,101,116,95,109,101,116,97,40,99,115,101,116,44,99,104,101,41,13,
+10,
+32,32,32,32,32,32,32,32,32,32,32,32,110,111,116,101,40,34,115,101,116,32,45,32,109,101,116,97,34,44,105,
+111,102,115,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,105,111,102,115,32,43,61,32,50,13,10,
+32,32,32,32,32,32,32,32,101,108,105,102,32,97,116,40,101,120,112,114,44,105,111,102,115,43,49,41,61,61,39,
+45,39,32,38,38,32,97,116,40,101,120,112,114,44,105,111,102,115,43,50,41,33,61,39,93,39,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,108,101,116,32,99,104,101,32,61,32,97,116,40,101,120,112,114,44,105,
+111,102,115,43,50,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,105,102,32,99,104,101,61,61,48,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,110,111,116,101,40,34,115,121,110,116,97,120,32,101,114,
+114,111,114,44,32,101,120,112,101,99,116,105,110,103,32,114,97,110,103,101,34,44,32,105,111,102,115,43,49,41,13,
+10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,97,100,97,40,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,101,108,105,102,32,99,104,32,62,32,99,104,101,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,110,111,116,101,40,34,115,121,110,116,97,120,32,101,114,
+114,111,114,44,32,99,104,97,114,97,99,116,101,114,32,114,97,110,103,101,32,111,117,116,32,111,102,32,111,114,100,
+101,114,34,44,32,105,111,102,115,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,97,100,97,40,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,115,101,116,95,111,114,95,114,97,110,103,101,40,99,115,101,116,44,114,
+97,110,103,101,40,99,104,44,99,104,101,41,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,110,111,116,101,40,34,115,101,116,32,45,32,114,97,110,103,101,34,44,
+105,111,102,115,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,105,111,102,115,32,43,61,32,51,13,10,
+32,32,32,32,32,32,32,32,101,108,115,101,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,115,101,116,95,111,114,95,99,104,97,114,40,99,115,101,116,44,99,104,
+41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,110,111,116,101,40,34,115,101,116,32,45,32,99,104,97,114,97,99,116,
+101,114,34,44,105,111,102,115,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,105,111,102,115,32,43,61,32,49,13,10,
+32,32,32,32,114,101,116,117,114,110,32,109,97,121,98,101,40,110,101,119,32,91,91,82,101,78,111,100,101,32,111,
+112,61,82,101,79,112,32,83,101,116,44,32,99,115,101,116,61,99,115,101,116,44,32,97,116,61,114,97,110,103,101,
+40,111,102,102,115,101,116,44,105,111,102,115,41,93,93,41,13,10,
+13,10,
+47,47,32,60,110,101,103,97,116,105,118,101,45,115,101,116,62,9,58,58,61,9,34,91,94,34,32,60,115,101,116,
+45,105,116,101,109,115,62,32,34,93,34,13,10,
+47,47,32,60,112,111,115,105,116,105,118,101,45,115,101,116,62,9,58,58,61,9,34,91,34,32,60,115,101,116,45,
+105,116,101,109,115,62,32,34,93,34,13,10,
+47,47,32,60,115,101,116,62,9,58,58,61,9,60,112,111,115,105,116,105,118,101,45,115,101,116,62,32,124,32,60,
+110,101,103,97,116,105,118,101,45,115,101,116,62,13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,114,101,95,115,101,116,40,101,120,112,114,58,115,116,114,105,110,103,59,
+32,111,102,102,115,101,116,58,105,110,116,41,32,58,32,77,97,121,98,101,82,101,78,111,100,101,13,10,
+32,32,32,32,116,114,97,99,101,40,34,114,101,95,115,101,116,34,44,111,102,102,115,101,116,41,13,10,
+32,32,32,32,105,102,32,101,111,115,40,101,120,112,114,44,111,102,102,115,101,116,41,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,97,100,97,40,41,13,10,
+32,32,32,32,105,102,32,97,116,40,101,120,112,114,44,111,102,102,115,101,116,41,33,61,39,91,39,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,97,100,97,40,41,13,10,
+32,32,32,32,118,97,114,32,110,101,103,97,116,105,118,101,32,61,32,102,97,108,115,101,13,10,
+32,32,32,32,105,102,32,97,116,40,101,120,112,114,44,111,102,102,115,101,116,43,49,41,61,61,39,94,39,13,10,
+32,32,32,32,32,32,32,32,110,101,103,97,116,105,118,101,32,61,32,116,114,117,101,13,10,
+32,32,32,32,118,97,114,32,111,115,101,116,32,61,32,114,101,95,115,101,116,95,105,116,101,109,115,40,101,120,112,
+114,44,110,101,103,97,116,105,118,101,32,63,32,111,102,102,115,101,116,43,50,32,58,32,111,102,102,115,101,116,43,
+49,41,13,10,
+32,32,32,32,105,102,32,111,115,101,116,32,105,115,32,110,111,116,104,105,110,103,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,97,100,97,40,41,13,10,
+32,32,32,32,105,102,32,97,116,40,101,120,112,114,44,110,101,120,116,40,111,115,101,116,41,41,32,33,61,32,39,
+93,39,13,10,
+32,32,32,32,32,32,32,32,100,101,108,101,116,101,32,111,115,101,116,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,97,100,97,40,41,13,10,
+32,32,32,32,118,97,114,32,111,118,97,108,32,61,32,111,115,101,116,32,97,115,32,118,97,108,117,101,13,10,
+32,32,32,32,111,118,97,108,46,97,116,46,120,32,61,32,111,102,102,115,101,116,13,10,
+32,32,32,32,111,118,97,108,46,97,116,46,121,32,43,43,13,10,
+32,32,32,32,111,118,97,108,46,111,112,32,61,32,82,101,79,112,32,83,101,116,13,10,
+32,32,32,32,105,102,32,110,101,103,97,116,105,118,101,13,10,
+32,32,32,32,32,32,32,32,115,101,116,95,110,101,103,97,116,105,118,101,40,111,118,97,108,46,99,115,101,116,41,
+13,10,
+32,32,32,32,116,114,97,99,101,95,118,97,108,117,101,40,111,118,97,108,41,13,10,
+32,32,32,32,114,101,116,117,114,110,32,111,115,101,116,13,10,
+13,10,
+47,47,32,60,97,110,121,62,9,58,58,61,9,34,46,34,13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,114,101,95,97,110,121,40,101,120,112,114,58,115,116,114,105,110,103,59,
+32,111,102,102,115,101,116,58,105,110,116,41,32,58,32,77,97,121,98,101,82,101,78,111,100,101,13,10,
+32,32,32,32,116,114,97,99,101,40,34,114,101,95,97,110,121,34,44,111,102,102,115,101,116,41,13,10,
+32,32,32,32,105,102,32,101,111,115,40,101,120,112,114,44,111,102,102,115,101,116,41,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,97,100,97,40,41,13,10,
+32,32,32,32,105,102,32,97,116,40,101,120,112,114,44,111,102,102,115,101,116,41,61,61,39,46,39,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,109,97,121,98,101,40,110,101,119,32,91,91,82,101,78,111,
+100,101,32,111,112,61,82,101,79,112,32,65,110,121,44,32,97,116,61,114,97,110,103,101,40,111,102,102,115,101,116,
+44,111,102,102,115,101,116,43,49,41,93,93,41,13,10,
+32,32,32,32,114,101,116,117,114,110,32,110,97,100,97,40,41,13,10,
+13,10,
+47,47,32,60,101,111,115,62,9,58,58,61,9,34,36,34,13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,114,101,95,101,111,115,40,101,120,112,114,58,115,116,114,105,110,103,59,
+32,111,102,102,115,101,116,58,105,110,116,41,32,58,32,77,97,121,98,101,82,101,78,111,100,101,13,10,
+32,32,32,32,116,114,97,99,101,40,34,114,101,95,101,111,115,34,44,111,102,102,115,101,116,41,13,10,
+32,32,32,32,105,102,32,101,111,115,40,101,120,112,114,44,111,102,102,115,101,116,41,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,97,100,97,40,41,13,10,
+32,32,32,32,105,102,32,97,116,40,101,120,112,114,44,111,102,102,115,101,116,41,61,61,39,36,39,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,109,97,121,98,101,40,110,101,119,32,91,91,82,101,78,111,
+100,101,32,111,112,61,82,101,79,112,32,69,111,115,44,32,97,116,61,114,97,110,103,101,40,111,102,102,115,101,116,
+44,111,102,102,115,101,116,43,49,41,93,93,41,13,10,
+32,32,32,32,114,101,116,117,114,110,32,110,97,100,97,40,41,13,10,
+13,10,
+47,47,32,60,103,114,111,117,112,62,9,58,58,61,9,34,40,34,32,60,82,69,62,32,34,41,34,13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,114,101,95,103,114,111,117,112,40,101,120,112,114,58,115,116,114,105,110,
+103,59,32,111,102,102,115,101,116,58,105,110,116,41,32,58,32,77,97,121,98,101,82,101,78,111,100,101,13,10,
+32,32,32,32,116,114,97,99,101,40,34,114,101,95,103,114,111,117,112,34,44,111,102,102,115,101,116,41,13,10,
+32,32,32,32,105,102,32,101,111,115,40,101,120,112,114,44,111,102,102,115,101,116,41,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,97,100,97,40,41,13,10,
+32,32,32,32,105,102,32,97,116,40,101,120,112,114,44,111,102,102,115,101,116,41,33,61,39,40,39,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,97,100,97,40,41,13,10,
+32,32,32,32,118,97,114,32,111,114,101,32,61,32,114,101,95,114,101,40,101,120,112,114,44,111,102,102,115,101,116,
+43,49,41,13,10,
+32,32,32,32,105,102,32,111,114,101,32,105,115,32,110,111,116,104,105,110,103,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,97,100,97,40,41,13,10,
+32,32,32,32,105,102,32,97,116,40,101,120,112,114,44,110,101,120,116,40,111,114,101,41,41,33,61,39,41,39,13,
+10,
+32,32,32,32,32,32,32,32,100,101,108,101,116,101,32,111,114,101,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,97,100,97,40,41,13,10,
+32,32,32,32,114,101,116,117,114,110,32,109,97,121,98,101,40,110,101,119,32,91,91,82,101,78,111,100,101,32,111,
+112,61,82,101,79,112,32,71,114,111,117,112,44,32,115,117,98,101,120,112,114,61,111,114,101,32,97,115,32,118,97,
+108,117,101,44,32,97,116,61,114,97,110,103,101,40,111,102,102,115,101,116,44,110,101,120,116,40,111,114,101,41,43,
+49,41,93,93,41,13,10,
+13,10,
+47,47,32,60,101,108,101,109,101,110,116,97,114,121,45,82,69,62,9,58,58,61,9,60,103,114,111,117,112,62,32,
+124,32,60,97,110,121,62,32,124,32,60,101,111,115,62,32,124,32,60,115,101,116,62,32,124,32,60,99,104,97,114,
+62,13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,114,101,95,101,108,101,109,101,110,116,97,114,121,40,101,120,112,114,58,
+115,116,114,105,110,103,59,32,111,102,102,115,101,116,58,105,110,116,41,32,58,32,77,97,121,98,101,82,101,78,111,
+100,101,13,10,
+32,32,32,32,116,114,97,99,101,40,34,114,101,95,101,108,101,109,101,110,116,97,114,121,34,44,111,102,102,115,101,
+116,41,13,10,
+32,32,32,32,105,102,32,101,111,115,40,101,120,112,114,44,111,102,102,115,101,116,41,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,97,100,97,40,41,13,10,
+32,32,32,32,118,97,114,32,111,103,114,32,61,32,114,101,95,103,114,111,117,112,40,101,120,112,114,44,111,102,102,
+115,101,116,41,13,10,
+32,32,32,32,105,102,32,111,103,114,32,105,115,32,118,97,108,117,101,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,111,103,114,13,10,
+32,32,32,32,118,97,114,32,111,97,110,121,32,61,32,114,101,95,97,110,121,40,101,120,112,114,44,111,102,102,115,
+101,116,41,13,10,
+32,32,32,32,105,102,32,111,97,110,121,32,105,115,32,118,97,108,117,101,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,111,97,110,121,13,10,
+32,32,32,32,118,97,114,32,111,101,111,115,32,61,32,114,101,95,101,111,115,40,101,120,112,114,44,111,102,102,115,
+101,116,41,13,10,
+32,32,32,32,105,102,32,111,101,111,115,32,105,115,32,118,97,108,117,101,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,111,101,111,115,13,10,
+32,32,32,32,118,97,114,32,111,115,101,116,32,61,32,114,101,95,115,101,116,40,101,120,112,114,44,111,102,102,115,
+101,116,41,13,10,
+32,32,32,32,105,102,32,111,115,101,116,32,105,115,32,118,97,108,117,101,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,111,115,101,116,13,10,
+32,32,32,32,118,97,114,32,111,99,104,114,32,61,32,114,101,95,99,104,97,114,40,101,120,112,114,44,111,102,102,
+115,101,116,41,13,10,
+32,32,32,32,105,102,32,111,99,104,114,32,105,115,32,118,97,108,117,101,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,111,99,104,114,13,10,
+32,32,32,32,114,101,116,117,114,110,32,110,97,100,97,40,41,13,10,
+13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,109,107,95,99,111,110,99,97,116,40,118,97,114,32,108,101,102,116,44,
+114,105,103,104,116,58,82,101,78,111,100,101,63,41,13,10,
+32,32,32,32,105,102,32,108,101,102,116,32,61,61,32,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,114,105,103,104,116,13,10,
+32,32,32,32,101,108,105,102,32,108,101,102,116,46,111,112,61,61,82,101,79,112,32,67,104,97,114,32,38,38,32,
+114,105,103,104,116,46,111,112,61,61,82,101,79,112,32,67,104,97,114,13,10,
+32,32,32,32,32,32,32,32,47,47,32,109,107,95,99,111,110,99,97,116,40,99,104,97,114,40,120,41,44,99,104,
+97,114,40,121,41,41,32,61,32,99,104,97,114,40,120,121,41,13,10,
+32,32,32,32,32,32,32,32,108,101,102,116,46,97,116,46,121,32,61,32,114,105,103,104,116,46,97,116,46,121,13,
+10,
+32,32,32,32,32,32,32,32,108,101,102,116,46,116,101,120,116,32,43,61,32,114,105,103,104,116,46,116,101,120,116,
+13,10,
+32,32,32,32,32,32,32,32,108,101,102,116,46,116,101,120,116,76,101,110,32,43,61,32,114,105,103,104,116,46,116,
+101,120,116,76,101,110,13,10,
+32,32,32,32,32,32,32,32,117,110,115,97,102,101,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,100,101,108,101,116,101,32,114,105,103,104,116,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,108,101,102,116,13,10,
+32,32,32,32,101,108,105,102,32,108,101,102,116,46,111,112,61,61,82,101,79,112,32,67,111,110,99,97,116,32,38,
+38,32,108,101,102,116,46,114,105,103,104,116,46,111,112,61,61,82,101,79,112,32,67,104,97,114,32,38,38,32,114,
+105,103,104,116,46,111,112,61,61,82,101,79,112,32,67,104,97,114,13,10,
+32,32,32,32,32,32,32,32,47,47,32,109,107,95,99,111,110,99,97,116,40,99,111,110,99,97,116,40,122,44,99,
+104,97,114,40,120,41,41,44,99,104,97,114,40,121,41,41,32,61,32,99,111,110,99,97,116,40,122,44,99,104,97,
+114,40,120,121,41,41,13,10,
+32,32,32,32,32,32,32,32,118,97,114,32,108,111,114,32,61,32,108,101,102,116,46,114,105,103,104,116,13,10,
+32,32,32,32,32,32,32,32,108,101,102,116,46,97,116,46,121,32,61,32,114,105,103,104,116,46,97,116,46,121,13,
+10,
+32,32,32,32,32,32,32,32,108,111,114,46,97,116,46,121,32,61,32,114,105,103,104,116,46,97,116,46,121,13,10,
+32,32,32,32,32,32,32,32,108,111,114,46,116,101,120,116,32,43,61,32,114,105,103,104,116,46,116,101,120,116,13,
+10,
+32,32,32,32,32,32,32,32,108,111,114,46,116,101,120,116,76,101,110,32,43,61,32,114,105,103,104,116,46,116,101,
+120,116,76,101,110,13,10,
+32,32,32,32,32,32,32,32,117,110,115,97,102,101,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,100,101,108,101,116,101,32,114,105,103,104,116,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,108,101,102,116,13,10,
+32,32,32,32,101,108,115,101,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,101,119,32,91,91,82,101,78,111,100,101,32,111,112,61,
+82,101,79,112,32,67,111,110,99,97,116,44,32,108,101,102,116,32,61,32,108,101,102,116,44,32,114,105,103,104,116,
+32,61,32,114,105,103,104,116,44,32,97,116,61,114,97,110,103,101,40,108,101,102,116,46,97,116,46,120,44,114,105,
+103,104,116,46,97,116,46,121,41,93,93,13,10,
+13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,109,107,95,117,110,105,111,110,40,118,97,114,32,108,101,102,116,44,114,
+105,103,104,116,58,82,101,78,111,100,101,63,41,32,58,32,82,101,78,111,100,101,63,13,10,
+32,32,32,32,105,102,32,108,101,102,116,46,111,112,61,61,82,101,79,112,32,85,110,105,111,110,13,10,
+32,32,32,32,32,32,32,32,108,101,102,116,46,97,116,46,121,32,61,32,114,105,103,104,116,46,97,116,46,121,13,
+10,
+32,32,32,32,32,32,32,32,105,102,32,114,105,103,104,116,46,111,112,61,61,82,101,79,112,32,85,110,105,111,110,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,47,47,32,117,110,105,111,110,40,117,110,
+105,111,110,40,120,41,44,117,110,105,111,110,40,121,41,41,32,61,32,117,110,105,111,110,40,120,121,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,102,111,114,32,120,32,105,110,32,114,105,103,104,116,46,97,108,108,13,
+10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,112,117,115,104,40,108,101,102,116,46,97,108,108,44,120,
+41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,117,110,115,97,102,101,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,100,101,108,101,116,101,32,114,105,103,104,116,13,10,
+32,32,32,32,32,32,32,32,101,108,115,101,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,47,47,32,117,110,105,111,110,40,117,110,
+105,111,110,40,120,41,44,121,41,32,61,32,117,110,105,111,110,40,120,121,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,112,117,115,104,40,108,101,102,116,46,97,108,108,44,114,105,103,104,116,
+41,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,108,101,102,116,13,10,
+32,32,32,32,101,108,105,102,32,114,105,103,104,116,46,111,112,61,61,82,101,79,112,32,85,110,105,111,110,13,10,
+32,32,32,32,32,32,32,32,114,105,103,104,116,46,97,116,46,120,32,61,32,108,101,102,116,46,97,116,46,120,13,
+10,
+32,32,32,32,32,32,32,32,112,117,115,104,40,114,105,103,104,116,46,97,108,108,44,108,101,102,116,41,32,32,32,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,47,47,32,117,110,105,111,110,40,120,44,117,
+110,105,111,110,40,121,41,41,32,61,32,117,110,105,111,110,40,120,121,41,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,114,105,103,104,116,13,10,
+32,32,32,32,101,108,115,101,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,101,119,32,91,91,82,101,78,111,100,101,32,111,112,61,
+82,101,79,112,32,85,110,105,111,110,44,32,97,108,108,32,60,45,32,91,123,82,101,78,111,100,101,63,32,108,101,
+102,116,59,32,114,105,103,104,116,125,93,44,32,97,116,61,114,97,110,103,101,40,108,101,102,116,46,97,116,46,120,
+44,114,105,103,104,116,46,97,116,46,121,41,93,93,13,10,
+13,10,
+47,47,32,60,82,69,62,9,58,58,61,9,60,117,110,105,111,110,62,32,124,32,60,115,105,109,112,108,101,45,82,
+69,62,13,10,
+47,47,32,60,117,110,105,111,110,62,9,58,58,61,9,60,82,69,62,32,34,124,34,32,60,115,105,109,112,108,101,
+45,82,69,62,13,10,
+47,47,32,60,115,105,109,112,108,101,45,82,69,62,9,58,58,61,9,60,99,111,110,99,97,116,101,110,97,116,105,
+111,110,62,32,124,32,60,98,97,115,105,99,45,82,69,62,13,10,
+47,47,32,60,99,111,110,99,97,116,101,110,97,116,105,111,110,62,9,58,58,61,9,60,115,105,109,112,108,101,45,
+82,69,62,32,60,98,97,115,105,99,45,82,69,62,13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,32,114,101,95,114,101,40,101,120,112,114,58,115,116,114,105,110,103,59,
+32,111,102,102,115,101,116,58,105,110,116,41,32,58,32,77,97,121,98,101,82,101,78,111,100,101,13,10,
+32,32,32,32,116,114,97,99,101,40,34,114,101,95,114,101,34,44,111,102,102,115,101,116,41,13,10,
+32,32,32,32,105,102,32,101,111,115,40,101,120,112,114,44,111,102,102,115,101,116,41,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,97,100,97,40,41,13,10,
+32,32,32,32,118,97,114,32,99,111,102,115,32,61,32,111,102,102,115,101,116,13,10,
+32,32,32,32,118,97,114,32,108,97,115,116,32,58,32,82,101,78,111,100,101,63,13,10,
+32,32,32,32,119,104,105,108,101,32,33,101,111,115,40,101,120,112,114,44,99,111,102,115,41,13,10,
+32,32,32,32,32,32,32,32,105,102,32,97,116,40,101,120,112,114,44,99,111,102,115,41,61,61,39,124,39,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,105,102,32,108,97,115,116,32,61,61,32,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,110,111,116,101,40,34,115,121,110,116,97,120,32,101,114,
+114,111,114,44,32,110,97,100,97,32,124,32,117,110,105,111,110,34,44,32,99,111,102,115,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,97,100,97,40,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,118,97,114,32,111,114,105,103,104,116,32,61,32,114,101,95,114,101,40,
+101,120,112,114,44,99,111,102,115,43,49,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,105,102,32,111,114,105,103,104,116,32,105,115,32,110,111,116,104,105,110,
+103,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,110,111,116,101,40,34,115,121,110,116,97,120,32,101,114,
+114,111,114,44,32,114,101,32,124,32,110,97,100,97,34,44,32,99,111,102,115,43,49,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,97,100,97,40,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,108,97,115,116,32,61,32,109,107,95,117,110,105,111,110,40,108,97,115,
+116,44,111,114,105,103,104,116,32,97,115,32,118,97,108,117,101,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,99,111,102,115,32,61,32,108,97,115,116,46,97,116,46,121,13,10,
+32,32,32,32,32,32,32,32,101,108,115,101,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,118,97,114,32,111,110,101,120,116,32,61,32,114,101,95,98,97,115,105,
+99,40,101,120,112,114,44,32,99,111,102,115,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,105,102,32,111,110,101,120,116,32,105,115,32,110,111,116,104,105,110,103,
+13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,108,97,115,116,61,61,110,117,
+108,108,63,32,110,97,100,97,40,41,32,58,32,109,97,121,98,101,40,108,97,115,116,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,108,97,115,116,32,61,32,109,107,95,99,111,110,99,97,116,40,108,97,
+115,116,44,111,110,101,120,116,32,97,115,32,118,97,108,117,101,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,99,111,102,115,32,61,32,108,97,115,116,46,97,116,46,121,13,10,
+32,32,32,32,114,101,116,117,114,110,32,109,97,121,98,101,40,108,97,115,116,41,13,10,
+13,10,
+47,47,32,60,98,97,115,105,99,45,82,69,62,9,58,58,61,9,60,115,116,97,114,62,32,124,32,60,112,108,117,
+115,62,32,124,32,60,101,108,101,109,101,110,116,97,114,121,45,82,69,62,13,10,
+47,47,32,60,115,116,97,114,62,9,58,58,61,9,60,101,108,101,109,101,110,116,97,114,121,45,82,69,62,32,34,
+42,34,13,10,
+47,47,32,60,112,108,117,115,62,9,58,58,61,9,60,101,108,101,109,101,110,116,97,114,121,45,82,69,62,32,34,
+43,34,13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,114,101,95,98,97,115,105,99,40,101,120,112,114,58,115,116,114,105,110,
+103,59,32,111,102,102,115,101,116,58,105,110,116,41,32,58,32,77,97,121,98,101,82,101,78,111,100,101,13,10,
+32,32,32,32,116,114,97,99,101,40,34,114,101,95,98,97,115,105,99,34,44,111,102,102,115,101,116,41,13,10,
+32,32,32,32,105,102,32,101,111,115,40,101,120,112,114,44,111,102,102,115,101,116,41,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,97,100,97,40,41,13,10,
+32,32,32,32,118,97,114,32,111,101,108,101,109,32,61,32,114,101,95,101,108,101,109,101,110,116,97,114,121,40,101,
+120,112,114,44,111,102,102,115,101,116,41,13,10,
+32,32,32,32,105,102,32,111,101,108,101,109,32,105,115,32,110,111,116,104,105,110,103,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,97,100,97,40,41,13,10,
+32,32,32,32,108,101,116,32,99,104,32,61,32,97,116,40,101,120,112,114,44,110,101,120,116,40,111,101,108,101,109,
+41,41,13,10,
+32,32,32,32,105,102,32,99,104,61,61,39,42,39,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,109,97,121,98,101,40,110,101,119,32,91,91,82,101,78,111,
+100,101,32,111,112,61,82,101,79,112,32,83,116,97,114,44,32,115,117,98,101,120,112,114,61,111,101,108,101,109,32,
+97,115,32,118,97,108,117,101,44,32,97,116,61,114,97,110,103,101,40,111,102,102,115,101,116,44,110,101,120,116,40,
+111,101,108,101,109,41,43,49,41,93,93,41,13,10,
+32,32,32,32,101,108,105,102,32,99,104,61,61,39,43,39,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,109,97,121,98,101,40,110,101,119,32,91,91,82,101,78,111,
+100,101,32,111,112,61,82,101,79,112,32,80,108,117,115,44,32,115,117,98,101,120,112,114,61,111,101,108,101,109,32,
+97,115,32,118,97,108,117,101,44,32,97,116,61,114,97,110,103,101,40,111,102,102,115,101,116,44,110,101,120,116,40,
+111,101,108,101,109,41,43,49,41,93,93,41,13,10,
+32,32,32,32,101,108,105,102,32,99,104,61,61,39,63,39,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,109,97,121,98,101,40,110,101,119,32,91,91,82,101,78,111,
+100,101,32,111,112,61,82,101,79,112,32,81,117,101,115,116,105,111,110,44,32,115,117,98,101,120,112,114,61,111,101,
+108,101,109,32,97,115,32,118,97,108,117,101,44,32,97,116,61,114,97,110,103,101,40,111,102,102,115,101,116,44,110,
+101,120,116,40,111,101,108,101,109,41,43,49,41,93,93,41,13,10,
+32,32,32,32,114,101,116,117,114,110,32,111,101,108,101,109,13,10,
+13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,114,101,95,112,97,114,115,101,32,40,32,101,120,112,114,58,115,116,114,
+105,110,103,32,41,32,58,32,82,101,78,111,100,101,63,13,10,
+32,32,32,32,118,97,114,32,111,114,101,32,61,32,114,101,95,114,101,40,101,120,112,114,44,32,48,41,13,10,
+32,32,32,32,105,102,32,111,114,101,32,105,115,32,110,111,116,104,105,110,103,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,117,108,108,13,10,
+32,32,32,32,108,101,116,32,97,116,32,61,32,110,101,120,116,40,111,114,101,41,13,10,
+32,32,32,32,105,102,32,97,116,32,33,61,32,108,101,110,103,116,104,40,101,120,112,114,41,13,10,
+32,32,32,32,32,32,32,32,110,111,116,101,40,34,115,121,110,116,97,120,32,101,114,114,111,114,34,44,97,116,41,
+13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,117,108,108,13,10,
+32,32,32,32,114,101,116,117,114,110,32,111,114,101,32,97,115,32,118,97,108,117,101,13,10,
+13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,118,105,115,105,116,95,116,111,112,95,100,111,119,110,32,40,32,118,97,
+114,32,110,111,100,101,58,82,101,78,111,100,101,63,59,32,98,108,107,32,58,32,98,108,111,99,107,60,40,118,97,
+114,32,110,58,82,101,78,111,100,101,63,41,58,118,111,105,100,62,32,41,13,10,
+32,32,32,32,105,110,118,111,107,101,40,98,108,107,44,110,111,100,101,41,13,10,
+32,32,32,32,102,111,114,32,120,32,105,110,32,110,111,100,101,46,97,108,108,13,10,
+32,32,32,32,32,32,32,32,118,105,115,105,116,95,116,111,112,95,100,111,119,110,40,120,44,32,98,108,107,41,13,
+10,
+32,32,32,32,105,102,32,110,111,100,101,46,115,117,98,101,120,112,114,33,61,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,118,105,115,105,116,95,116,111,112,95,100,111,119,110,40,110,111,100,101,46,115,117,98,
+101,120,112,114,44,32,98,108,107,41,13,10,
+32,32,32,32,105,102,32,110,111,100,101,46,108,101,102,116,33,61,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,118,105,115,105,116,95,116,111,112,95,100,111,119,110,40,110,111,100,101,46,108,101,102,
+116,44,32,98,108,107,41,13,10,
+32,32,32,32,105,102,32,110,111,100,101,46,114,105,103,104,116,33,61,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,118,105,115,105,116,95,116,111,112,95,100,111,119,110,40,110,111,100,101,46,114,105,103,
+104,116,44,32,98,108,107,41,13,10,
+13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,114,101,95,97,115,115,105,103,110,95,110,101,120,116,32,40,32,118,97,
+114,32,114,101,58,82,101,103,101,120,32,41,13,10,
+32,32,32,32,118,97,114,32,105,100,32,61,32,48,13,10,
+32,32,32,32,118,105,115,105,116,95,116,111,112,95,100,111,119,110,40,114,101,46,114,111,111,116,41,32,60,124,32,
+36,32,40,32,118,97,114,32,110,111,100,101,32,41,13,10,
+32,32,32,32,32,32,32,32,110,111,100,101,46,105,100,32,61,32,105,100,32,43,43,13,10,
+32,32,32,32,32,32,32,32,105,102,32,110,111,100,101,46,111,112,32,61,61,32,82,101,79,112,32,67,111,110,99,
+97,116,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,110,111,100,101,46,108,101,102,116,46,110,101,120,116,32,61,32,110,111,
+100,101,46,114,105,103,104,116,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,110,111,100,101,46,114,105,103,104,116,46,110,101,120,116,32,61,32,110,
+111,100,101,46,110,101,120,116,13,10,
+32,32,32,32,32,32,32,32,101,108,105,102,32,110,111,100,101,46,111,112,32,61,61,32,82,101,79,112,32,71,114,
+111,117,112,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,110,111,100,101,46,115,117,98,101,120,112,114,46,110,101,120,116,32,61,
+32,110,111,100,101,46,110,101,120,116,13,10,
+32,32,32,32,32,32,32,32,101,108,105,102,32,110,111,100,101,46,111,112,32,61,61,32,82,101,79,112,32,85,110,
+105,111,110,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,102,111,114,32,115,117,98,32,105,110,32,110,111,100,101,46,97,108,108,
+13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,115,117,98,46,110,101,120,116,32,61,32,110,111,100,101,
+46,110,101,120,116,13,10,
+13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,114,101,95,97,115,115,105,103,110,95,103,114,111,117,112,115,32,40,32,
+118,97,114,32,114,101,58,82,101,103,101,120,32,41,13,10,
+32,32,32,32,112,117,115,104,40,114,101,46,103,114,111,117,112,115,44,32,91,91,97,117,116,111,32,114,97,110,103,
+101,40,48,41,44,34,34,93,93,41,13,10,
+32,32,32,32,118,105,115,105,116,95,116,111,112,95,100,111,119,110,40,114,101,46,114,111,111,116,41,32,60,124,32,
+36,32,40,32,118,97,114,32,110,111,100,101,32,41,13,10,
+32,32,32,32,32,32,32,32,105,102,32,110,111,100,101,46,111,112,32,61,61,32,82,101,79,112,32,71,114,111,117,
+112,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,108,101,116,32,105,110,100,101,120,32,61,32,108,101,110,103,116,104,40,
+114,101,46,103,114,111,117,112,115,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,110,111,100,101,46,105,110,100,101,120,32,61,32,105,110,100,101,120,13,
+10,
+32,32,32,32,32,32,32,32,32,32,32,32,112,117,115,104,40,114,101,46,103,114,111,117,112,115,44,32,91,91,97,
+117,116,111,32,114,97,110,103,101,40,48,41,44,34,123,105,110,100,101,120,125,34,93,93,41,13,10,
+13,10,
+47,42,13,10,
+32,32,32,32,109,97,116,99,104,105,110,103,13,10,
+42,47,13,10,
+13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,114,101,95,97,115,115,105,103,110,95,109,97,116,99,104,95,102,117,110,
+99,116,105,111,110,115,32,40,32,118,97,114,32,114,101,58,82,101,103,101,120,32,41,13,10,
+32,32,32,32,118,105,115,105,116,95,116,111,112,95,100,111,119,110,40,114,101,46,114,111,111,116,41,32,60,124,32,
+36,32,40,32,118,97,114,32,110,111,100,101,32,41,13,10,
+32,32,32,32,32,32,32,32,105,102,32,110,111,100,101,46,111,112,61,61,82,101,79,112,32,67,104,97,114,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,105,102,32,110,111,100,101,46,116,101,120,116,76,101,110,61,61,49,13,
+10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,110,111,100,101,46,102,117,110,50,32,61,32,64,64,114,
+101,95,109,97,116,99,104,50,95,115,105,110,103,108,101,95,99,104,97,114,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,101,108,115,101,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,110,111,100,101,46,102,117,110,50,32,61,32,64,64,114,
+101,95,109,97,116,99,104,50,95,99,104,97,114,13,10,
+32,32,32,32,32,32,32,32,101,108,105,102,32,110,111,100,101,46,111,112,61,61,82,101,79,112,32,85,110,105,111,
+110,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,110,111,100,101,46,102,117,110,50,32,61,32,64,64,114,101,95,109,97,
+116,99,104,50,95,117,110,105,111,110,13,10,
+32,32,32,32,32,32,32,32,101,108,105,102,32,110,111,100,101,46,111,112,61,61,82,101,79,112,32,83,101,116,13,
+10,
+32,32,32,32,32,32,32,32,32,32,32,32,110,111,100,101,46,102,117,110,50,32,61,32,64,64,114,101,95,109,97,
+116,99,104,50,95,115,101,116,13,10,
+32,32,32,32,32,32,32,32,101,108,105,102,32,110,111,100,101,46,111,112,61,61,82,101,79,112,32,65,110,121,13,
+10,
+32,32,32,32,32,32,32,32,32,32,32,32,110,111,100,101,46,102,117,110,50,32,61,32,64,64,114,101,95,109,97,
+116,99,104,50,95,97,110,121,13,10,
+32,32,32,32,32,32,32,32,101,108,105,102,32,110,111,100,101,46,111,112,61,61,82,101,79,112,32,69,111,115,13,
+10,
+32,32,32,32,32,32,32,32,32,32,32,32,110,111,100,101,46,102,117,110,50,32,61,32,64,64,114,101,95,109,97,
+116,99,104,50,95,101,111,115,13,10,
+32,32,32,32,32,32,32,32,101,108,105,102,32,110,111,100,101,46,111,112,61,61,82,101,79,112,32,67,111,110,99,
+97,116,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,110,111,100,101,46,102,117,110,50,32,61,32,64,64,114,101,95,109,97,
+116,99,104,50,95,99,111,110,99,97,116,13,10,
+32,32,32,32,32,32,32,32,101,108,105,102,32,110,111,100,101,46,111,112,61,61,82,101,79,112,32,80,108,117,115,
+13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,105,102,32,110,111,100,101,46,115,117,98,101,120,112,114,46,111,112,61,
+61,82,101,79,112,32,83,101,116,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,110,111,100,101,46,99,115,101,116,32,61,32,110,111,100,
+101,46,115,117,98,101,120,112,114,46,99,115,101,116,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,110,111,100,101,46,102,117,110,50,32,61,32,64,64,114,
+101,95,109,97,116,99,104,50,95,112,108,117,115,95,115,101,116,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,101,108,115,101,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,110,111,100,101,46,102,117,110,50,32,61,32,64,64,114,
+101,95,109,97,116,99,104,50,95,112,108,117,115,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,110,111,100,101,46,102,117,110,50,32,61,32,64,64,114,101,95,109,97,
+116,99,104,50,95,112,108,117,115,13,10,
+32,32,32,32,32,32,32,32,101,108,105,102,32,110,111,100,101,46,111,112,61,61,82,101,79,112,32,83,116,97,114,
+13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,110,111,100,101,46,102,117,110,50,32,61,32,64,64,114,101,95,109,97,
+116,99,104,50,95,115,116,97,114,13,10,
+32,32,32,32,32,32,32,32,101,108,105,102,32,110,111,100,101,46,111,112,61,61,82,101,79,112,32,81,117,101,115,
+116,105,111,110,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,110,111,100,101,46,102,117,110,50,32,61,32,64,64,114,101,95,109,97,
+116,99,104,50,95,113,117,101,115,116,105,111,110,13,10,
+32,32,32,32,32,32,32,32,101,108,105,102,32,110,111,100,101,46,111,112,61,61,82,101,79,112,32,71,114,111,117,
+112,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,110,111,100,101,46,102,117,110,50,32,61,32,64,64,114,101,95,109,97,
+116,99,104,50,95,103,114,111,117,112,13,10,
+32,32,32,32,32,32,32,32,101,108,115,101,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,112,97,110,105,99,40,34,117,110,115,117,112,112,111,114,116,101,100,32,
+123,110,111,100,101,46,111,112,125,34,41,13,10,
+13,10,
+91,117,110,115,97,102,101,95,100,101,114,101,102,93,13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,114,101,95,109,97,116,99,104,50,95,115,105,110,103,108,101,95,99,104,
+97,114,32,40,32,118,97,114,32,114,101,103,101,120,58,82,101,103,101,120,59,32,118,97,114,32,110,111,100,101,58,
+82,101,78,111,100,101,63,59,32,115,116,114,58,117,105,110,116,56,63,32,41,32,58,32,117,105,110,116,56,63,13,
+10,
+32,32,32,32,105,102,32,108,111,103,95,109,97,116,99,104,95,101,110,97,98,108,101,100,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,109,97,116,99,104,32,115,105,110,103,108,101,32,99,104,97,
+114,32,96,123,110,111,100,101,46,116,101,120,116,125,96,32,123,115,116,114,125,92,110,34,41,13,10,
+32,32,32,32,117,110,115,97,102,101,13,10,
+32,32,32,32,32,32,32,32,105,102,32,99,104,97,114,97,99,116,101,114,95,117,97,116,40,110,111,100,101,46,116,
+101,120,116,44,48,41,32,33,61,32,105,110,116,40,42,115,116,114,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,118,97,114,32,116,97,105,108,32,61,32,115,116,114,32,43,32,49,13,10,
+32,32,32,32,32,32,32,32,110,111,100,101,46,116,97,105,108,32,61,32,116,97,105,108,13,10,
+32,32,32,32,32,32,32,32,118,97,114,32,110,111,100,101,50,32,61,32,110,111,100,101,46,110,101,120,116,13,10,
+32,32,32,32,32,32,32,32,105,102,32,110,111,100,101,50,33,61,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,105,110,118,111,107,101,40,110,111,100,101,50,
+46,102,117,110,50,44,114,101,103,101,120,44,110,111,100,101,50,44,116,97,105,108,41,13,10,
+32,32,32,32,32,32,32,32,101,108,115,101,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,116,97,105,108,13,10,
+13,10,
+91,117,110,115,97,102,101,95,100,101,114,101,102,93,13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,114,101,95,109,97,116,99,104,50,95,99,104,97,114,32,40,32,118,97,
+114,32,114,101,103,101,120,58,82,101,103,101,120,59,32,118,97,114,32,110,111,100,101,58,82,101,78,111,100,101,63,
+59,32,115,116,114,58,117,105,110,116,56,63,32,41,32,58,32,117,105,110,116,56,63,13,10,
+32,32,32,32,105,102,32,108,111,103,95,109,97,116,99,104,95,101,110,97,98,108,101,100,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,109,97,116,99,104,32,99,104,97,114,32,96,123,110,111,100,
+101,46,116,101,120,116,125,96,32,123,115,116,114,125,92,110,34,41,13,10,
+32,32,32,32,117,110,115,97,102,101,13,10,
+32,32,32,32,32,32,32,32,105,102,32,109,101,109,99,109,112,40,114,101,105,110,116,101,114,112,114,101,116,60,117,
+105,110,116,56,63,62,32,110,111,100,101,46,116,101,120,116,44,115,116,114,44,110,111,100,101,46,116,101,120,116,76,
+101,110,41,32,33,61,32,48,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,118,97,114,32,116,97,105,108,32,61,32,115,116,114,32,43,32,110,111,100,101,46,116,
+101,120,116,76,101,110,13,10,
+32,32,32,32,32,32,32,32,110,111,100,101,46,116,97,105,108,32,61,32,116,97,105,108,13,10,
+32,32,32,32,32,32,32,32,118,97,114,32,110,111,100,101,50,32,61,32,110,111,100,101,46,110,101,120,116,13,10,
+32,32,32,32,32,32,32,32,105,102,32,110,111,100,101,50,33,61,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,105,102,32,108,111,103,95,109,97,116,99,104,95,101,110,97,98,108,101,
+100,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,78,79,80,32,105,110,118,111,
+107,101,92,110,34,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,105,110,118,111,107,101,40,110,111,100,101,50,
+46,102,117,110,50,44,114,101,103,101,120,44,110,111,100,101,50,44,116,97,105,108,41,13,10,
+32,32,32,32,32,32,32,32,101,108,115,101,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,116,97,105,108,13,10,
+13,10,
+91,117,110,115,97,102,101,95,100,101,114,101,102,93,13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,114,101,95,109,97,116,99,104,50,95,117,110,105,111,110,32,40,32,118,
+97,114,32,114,101,103,101,120,58,82,101,103,101,120,59,32,118,97,114,32,110,111,100,101,58,82,101,78,111,100,101,
+63,59,32,115,116,114,58,117,105,110,116,56,63,32,41,32,58,32,117,105,110,116,56,63,13,10,
+32,32,32,32,105,102,32,108,111,103,95,109,97,116,99,104,95,101,110,97,98,108,101,100,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,109,97,116,99,104,32,117,110,105,111,110,32,123,115,116,114,
+125,92,110,34,41,13,10,
+32,32,32,32,102,111,114,32,115,117,98,32,105,110,32,110,111,100,101,46,97,108,108,13,10,
+32,32,32,32,32,32,32,32,108,101,116,32,111,115,117,98,32,61,32,105,110,118,111,107,101,40,115,117,98,46,102,
+117,110,50,44,114,101,103,101,120,44,115,117,98,44,115,116,114,41,13,10,
+32,32,32,32,32,32,32,32,105,102,32,111,115,117,98,32,33,61,32,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,110,111,100,101,46,116,97,105,108,32,61,32,115,117,98,46,116,97,105,
+108,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,111,115,117,98,13,10,
+32,32,32,32,114,101,116,117,114,110,32,110,117,108,108,13,10,
+13,10,
+91,117,110,115,97,102,101,95,100,101,114,101,102,93,13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,114,101,95,109,97,116,99,104,50,95,115,101,116,32,40,32,118,97,114,
+32,114,101,103,101,120,58,82,101,103,101,120,59,32,118,97,114,32,110,111,100,101,58,82,101,78,111,100,101,63,59,
+32,115,116,114,58,117,105,110,116,56,63,32,41,32,58,32,117,105,110,116,56,63,13,10,
+32,32,32,32,105,102,32,108,111,103,95,109,97,116,99,104,95,101,110,97,98,108,101,100,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,109,97,116,99,104,50,32,115,101,116,32,123,115,116,114,125,
+92,110,34,41,13,10,
+32,32,32,32,105,102,32,33,105,115,95,99,104,97,114,95,105,110,95,115,101,116,40,105,110,116,40,42,115,116,114,
+41,44,110,111,100,101,46,99,115,101,116,41,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,117,108,108,13,10,
+32,32,32,32,117,110,115,97,102,101,13,10,
+32,32,32,32,32,32,32,32,118,97,114,32,116,97,105,108,32,61,32,115,116,114,32,43,32,49,13,10,
+32,32,32,32,32,32,32,32,110,111,100,101,46,116,97,105,108,32,61,32,116,97,105,108,13,10,
+32,32,32,32,32,32,32,32,118,97,114,32,110,111,100,101,50,32,61,32,110,111,100,101,46,110,101,120,116,13,10,
+32,32,32,32,32,32,32,32,105,102,32,110,111,100,101,50,33,61,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,105,110,118,111,107,101,40,110,111,100,101,50,
+46,102,117,110,50,44,114,101,103,101,120,44,32,110,111,100,101,50,44,32,116,97,105,108,41,13,10,
+32,32,32,32,32,32,32,32,101,108,115,101,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,116,97,105,108,13,10,
+13,10,
+91,117,110,115,97,102,101,95,100,101,114,101,102,93,13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,114,101,95,109,97,116,99,104,50,95,97,110,121,32,40,32,118,97,114,
+32,114,101,103,101,120,58,82,101,103,101,120,59,32,118,97,114,32,110,111,100,101,58,82,101,78,111,100,101,63,59,
+32,115,116,114,58,117,105,110,116,56,63,32,41,32,58,32,117,105,110,116,56,63,13,10,
+32,32,32,32,105,102,32,108,111,103,95,109,97,116,99,104,95,101,110,97,98,108,101,100,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,109,97,116,99,104,50,32,97,110,121,32,123,115,116,114,125,
+92,110,34,41,13,10,
+32,32,32,32,105,102,32,105,110,116,40,42,115,116,114,41,61,61,48,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,117,108,108,13,10,
+32,32,32,32,117,110,115,97,102,101,13,10,
+32,32,32,32,32,32,32,32,118,97,114,32,116,97,105,108,32,61,32,115,116,114,32,43,32,49,13,10,
+32,32,32,32,32,32,32,32,110,111,100,101,46,116,97,105,108,32,61,32,116,97,105,108,13,10,
+32,32,32,32,32,32,32,32,118,97,114,32,110,111,100,101,50,32,61,32,110,111,100,101,46,110,101,120,116,13,10,
+32,32,32,32,32,32,32,32,105,102,32,110,111,100,101,50,33,61,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,105,110,118,111,107,101,40,110,111,100,101,50,
+46,102,117,110,50,44,114,101,103,101,120,44,32,110,111,100,101,50,44,32,116,97,105,108,41,13,10,
+32,32,32,32,32,32,32,32,101,108,115,101,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,116,97,105,108,13,10,
+13,10,
+91,117,110,115,97,102,101,95,100,101,114,101,102,93,13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,114,101,95,109,97,116,99,104,50,95,99,111,110,99,97,116,32,40,32,
+118,97,114,32,114,101,103,101,120,58,82,101,103,101,120,59,32,118,97,114,32,110,111,100,101,58,82,101,78,111,100,
+101,63,59,32,115,116,114,58,117,105,110,116,56,63,32,41,32,58,32,117,105,110,116,56,63,13,10,
+32,32,32,32,105,102,32,108,111,103,95,109,97,116,99,104,95,101,110,97,98,108,101,100,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,109,97,116,99,104,50,32,99,111,110,99,97,116,32,123,115,
+116,114,125,92,110,34,41,13,10,
+32,32,32,32,118,97,114,32,108,101,102,116,32,61,32,110,111,100,101,46,108,101,102,116,13,10,
+32,32,32,32,108,101,116,32,111,108,101,102,116,32,61,32,105,110,118,111,107,101,40,108,101,102,116,46,102,117,110,
+50,44,32,114,101,103,101,120,44,32,108,101,102,116,44,32,115,116,114,41,13,10,
+32,32,32,32,105,102,32,111,108,101,102,116,32,61,61,32,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,117,108,108,13,10,
+32,32,32,32,110,111,100,101,46,116,97,105,108,32,61,32,110,111,100,101,46,114,105,103,104,116,46,116,97,105,108,
+13,10,
+32,32,32,32,114,101,116,117,114,110,32,111,108,101,102,116,13,10,
+13,10,
+91,117,110,115,97,102,101,95,100,101,114,101,102,93,13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,114,101,95,109,97,116,99,104,50,95,101,111,115,32,40,32,118,97,114,
+32,114,101,103,101,120,58,82,101,103,101,120,59,32,118,97,114,32,110,111,100,101,58,82,101,78,111,100,101,63,59,
+32,115,116,114,58,117,105,110,116,56,63,32,41,32,58,32,117,105,110,116,56,63,13,10,
+32,32,32,32,105,102,32,108,111,103,95,109,97,116,99,104,95,101,110,97,98,108,101,100,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,109,97,116,99,104,32,101,111,115,32,123,115,116,114,125,92,
+110,34,41,13,10,
+32,32,32,32,105,102,32,105,110,116,40,42,115,116,114,41,33,61,48,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,117,108,108,13,10,
+32,32,32,32,110,111,100,101,46,116,97,105,108,32,61,32,115,116,114,13,10,
+32,32,32,32,118,97,114,32,110,111,100,101,50,32,61,32,110,111,100,101,46,110,101,120,116,13,10,
+32,32,32,32,105,102,32,110,111,100,101,50,33,61,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,105,110,118,111,107,101,40,110,111,100,101,50,46,102,117,110,
+50,44,114,101,103,101,120,44,32,110,111,100,101,50,44,32,115,116,114,41,13,10,
+32,32,32,32,101,108,115,101,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,115,116,114,13,10,
+13,10,
+91,117,110,115,97,102,101,95,100,101,114,101,102,93,13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,114,101,95,109,97,116,99,104,50,95,113,117,101,115,116,105,111,110,32,
+40,32,118,97,114,32,114,101,103,101,120,58,82,101,103,101,120,59,32,118,97,114,32,110,111,100,101,58,82,101,78,
+111,100,101,63,59,32,115,116,114,58,117,105,110,116,56,63,32,41,32,58,32,117,105,110,116,56,63,13,10,
+32,32,32,32,105,102,32,108,111,103,95,109,97,116,99,104,95,101,110,97,98,108,101,100,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,109,97,116,99,104,32,113,117,101,115,116,105,111,110,32,123,
+115,116,114,125,92,110,34,41,13,10,
+32,32,32,32,118,97,114,32,110,115,117,98,32,61,32,110,111,100,101,46,115,117,98,101,120,112,114,13,10,
+32,32,32,32,118,97,114,32,116,97,105,108,32,61,32,105,110,118,111,107,101,40,110,115,117,98,46,102,117,110,50,
+44,114,101,103,101,120,44,110,115,117,98,44,115,116,114,41,13,10,
+32,32,32,32,105,102,32,116,97,105,108,32,61,61,32,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,116,97,105,108,32,61,32,115,116,114,13,10,
+32,32,32,32,110,111,100,101,46,116,97,105,108,32,61,32,116,97,105,108,13,10,
+32,32,32,32,118,97,114,32,110,111,100,101,50,32,61,32,110,111,100,101,46,110,101,120,116,13,10,
+32,32,32,32,105,102,32,110,111,100,101,50,33,61,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,105,110,118,111,107,101,40,110,111,100,101,50,46,102,117,110,
+50,44,114,101,103,101,120,44,110,111,100,101,50,44,116,97,105,108,41,13,10,
+32,32,32,32,101,108,115,101,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,116,97,105,108,13,10,
+13,10,
+91,117,110,115,97,102,101,95,100,101,114,101,102,93,13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,114,101,95,109,97,116,99,104,50,95,112,108,117,115,32,40,32,118,97,
+114,32,114,101,103,101,120,58,82,101,103,101,120,59,32,118,97,114,32,110,111,100,101,58,82,101,78,111,100,101,63,
+59,32,115,116,114,58,117,105,110,116,56,63,32,41,32,58,32,117,105,110,116,56,63,13,10,
+32,32,32,32,105,102,32,108,111,103,95,109,97,116,99,104,95,101,110,97,98,108,101,100,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,109,97,116,99,104,50,32,112,108,117,115,32,123,115,116,114,
+125,92,110,34,41,13,10,
+32,32,32,32,118,97,114,32,110,115,117,98,32,61,32,110,111,100,101,46,115,117,98,101,120,112,114,13,10,
+32,32,32,32,118,97,114,32,111,115,121,109,32,61,32,105,110,118,111,107,101,40,110,115,117,98,46,102,117,110,50,
+44,114,101,103,101,120,44,110,115,117,98,44,115,116,114,41,13,10,
+32,32,32,32,105,102,32,111,115,121,109,32,61,61,32,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,117,108,108,13,10,
+32,32,32,32,118,97,114,32,111,102,115,32,61,32,111,115,121,109,13,10,
+32,32,32,32,118,97,114,32,110,111,100,101,50,32,61,32,110,111,100,101,46,110,101,120,116,13,10,
+32,32,32,32,105,102,32,110,111,100,101,50,33,61,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,119,104,105,108,101,32,111,115,121,109,32,33,61,32,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,110,111,100,101,46,116,97,105,108,32,61,32,111,115,121,109,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,118,97,114,32,111,116,97,105,108,32,61,32,105,110,118,111,107,101,40,
+110,111,100,101,50,46,102,117,110,50,44,114,101,103,101,120,44,110,111,100,101,50,44,111,115,121,109,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,105,102,32,111,116,97,105,108,32,33,61,32,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,111,116,97,105,108,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,111,115,121,109,32,61,32,105,110,118,111,107,101,40,110,115,117,98,46,
+102,117,110,50,44,114,101,103,101,120,44,110,115,117,98,44,111,115,121,109,41,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,117,108,108,13,10,
+32,32,32,32,101,108,115,101,13,10,
+32,32,32,32,32,32,32,32,119,104,105,108,101,32,111,115,121,109,32,33,61,32,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,111,102,115,32,61,32,111,115,121,109,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,111,115,121,109,32,61,32,105,110,118,111,107,101,40,110,115,117,98,46,
+102,117,110,50,44,114,101,103,101,120,44,110,115,117,98,44,111,102,115,41,13,10,
+32,32,32,32,32,32,32,32,110,111,100,101,46,116,97,105,108,32,61,32,111,102,115,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,111,102,115,13,10,
+13,10,
+91,117,110,115,97,102,101,95,100,101,114,101,102,93,13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,114,101,95,109,97,116,99,104,50,95,112,108,117,115,95,115,101,116,32,
+40,32,118,97,114,32,114,101,103,101,120,58,82,101,103,101,120,59,32,118,97,114,32,110,111,100,101,58,82,101,78,
+111,100,101,63,59,32,115,116,114,58,117,105,110,116,56,63,32,41,32,58,32,117,105,110,116,56,63,13,10,
+32,32,32,32,105,102,32,108,111,103,95,109,97,116,99,104,95,101,110,97,98,108,101,100,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,109,97,116,99,104,50,32,112,108,117,115,32,123,115,116,114,
+125,92,110,34,41,13,10,
+32,32,32,32,118,97,114,32,110,115,117,98,32,61,32,110,111,100,101,46,115,117,98,101,120,112,114,13,10,
+32,32,32,32,105,102,32,33,105,115,95,99,104,97,114,95,105,110,95,115,101,116,40,105,110,116,40,42,115,116,114,
+41,44,110,111,100,101,46,99,115,101,116,41,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,117,108,108,13,10,
+32,32,32,32,117,110,115,97,102,101,13,10,
+32,32,32,32,32,32,32,32,118,97,114,32,111,102,115,32,61,32,115,116,114,32,43,32,49,13,10,
+32,32,32,32,32,32,32,32,118,97,114,32,111,115,121,109,32,61,32,111,102,115,13,10,
+32,32,32,32,32,32,32,32,118,97,114,32,110,111,100,101,50,32,61,32,110,111,100,101,46,110,101,120,116,13,10,
+32,32,32,32,32,32,32,32,105,102,32,110,111,100,101,50,33,61,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,119,104,105,108,101,32,111,115,121,109,32,33,61,32,110,117,108,108,13,
+10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,110,111,100,101,46,116,97,105,108,32,61,32,111,115,121,
+109,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,118,97,114,32,111,116,97,105,108,32,61,32,105,110,118,
+111,107,101,40,110,111,100,101,50,46,102,117,110,50,44,114,101,103,101,120,44,110,111,100,101,50,44,111,115,121,109,
+41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,105,102,32,111,116,97,105,108,32,33,61,32,110,117,108,
+108,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,111,116,97,105,
+108,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,105,102,32,33,105,115,95,99,104,97,114,95,105,110,95,
+115,101,116,40,105,110,116,40,42,111,115,121,109,41,44,110,111,100,101,46,99,115,101,116,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,117,108,108,
+13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,111,115,121,109,43,43,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,101,108,115,101,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,119,104,105,108,101,32,111,115,121,109,32,33,61,32,110,117,108,108,13,
+10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,111,102,115,32,61,32,111,115,121,109,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,105,102,32,33,105,115,95,99,104,97,114,95,105,110,95,
+115,101,116,40,105,110,116,40,42,111,115,121,109,41,44,110,111,100,101,46,99,115,101,116,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,98,114,101,97,107,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,111,115,121,109,43,43,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,110,111,100,101,46,116,97,105,108,32,61,32,111,102,115,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,111,102,115,13,10,
+13,10,
+91,117,110,115,97,102,101,95,100,101,114,101,102,93,13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,114,101,95,109,97,116,99,104,50,95,115,116,97,114,32,40,32,118,97,
+114,32,114,101,103,101,120,58,82,101,103,101,120,59,32,118,97,114,32,110,111,100,101,58,82,101,78,111,100,101,63,
+59,32,115,116,114,58,117,105,110,116,56,63,32,41,32,58,32,117,105,110,116,56,63,13,10,
+32,32,32,32,105,102,32,108,111,103,95,109,97,116,99,104,95,101,110,97,98,108,101,100,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,109,97,116,99,104,50,32,112,108,117,115,32,123,115,116,114,
+125,92,110,34,41,13,10,
+32,32,32,32,118,97,114,32,111,102,115,32,61,32,115,116,114,13,10,
+32,32,32,32,118,97,114,32,110,111,100,101,50,32,61,32,110,111,100,101,46,110,101,120,116,13,10,
+32,32,32,32,118,97,114,32,110,115,117,98,32,61,32,110,111,100,101,46,115,117,98,101,120,112,114,13,10,
+32,32,32,32,105,102,32,110,111,100,101,50,33,61,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,119,104,105,108,101,32,111,102,115,32,33,61,32,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,110,111,100,101,46,116,97,105,108,32,61,32,111,102,115,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,108,101,116,32,111,97,110,121,32,61,32,105,110,118,111,107,101,40,110,
+111,100,101,50,46,102,117,110,50,44,114,101,103,101,120,44,110,111,100,101,50,44,111,102,115,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,105,102,32,111,97,110,121,32,33,61,32,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,111,97,110,121,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,111,102,115,32,61,32,105,110,118,111,107,101,40,110,115,117,98,46,102,
+117,110,50,44,114,101,103,101,120,44,110,115,117,98,44,111,102,115,41,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,117,108,108,13,10,
+32,32,32,32,101,108,115,101,13,10,
+32,32,32,32,32,32,32,32,118,97,114,32,111,115,121,109,32,61,32,111,102,115,13,10,
+32,32,32,32,32,32,32,32,119,104,105,108,101,32,111,115,121,109,32,33,61,32,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,111,102,115,32,61,32,111,115,121,109,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,111,115,121,109,32,61,32,105,110,118,111,107,101,40,110,115,117,98,46,
+102,117,110,50,44,114,101,103,101,120,44,110,115,117,98,44,111,102,115,41,13,10,
+32,32,32,32,32,32,32,32,110,111,100,101,46,116,97,105,108,32,61,32,111,102,115,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,111,102,115,13,10,
+13,10,
+91,117,110,115,97,102,101,95,100,101,114,101,102,93,13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,114,101,95,109,97,116,99,104,50,95,103,114,111,117,112,32,40,32,118,
+97,114,32,114,101,103,101,120,58,82,101,103,101,120,59,32,118,97,114,32,110,111,100,101,58,82,101,78,111,100,101,
+63,59,32,115,116,114,58,117,105,110,116,56,63,32,41,32,58,32,117,105,110,116,56,63,13,10,
+32,32,32,32,105,102,32,108,111,103,95,109,97,116,99,104,95,101,110,97,98,108,101,100,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,109,97,116,99,104,50,32,103,114,111,117,112,32,123,115,116,
+114,125,92,110,34,41,13,10,
+32,32,32,32,118,97,114,32,110,115,117,98,32,61,32,110,111,100,101,46,115,117,98,101,120,112,114,13,10,
+32,32,32,32,108,101,116,32,111,115,117,98,32,61,32,105,110,118,111,107,101,40,110,115,117,98,46,102,117,110,50,
+44,114,101,103,101,120,44,110,115,117,98,44,115,116,114,41,13,10,
+32,32,32,32,105,102,32,111,115,117,98,61,61,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,110,117,108,108,13,10,
+32,32,32,32,114,101,103,101,120,46,103,114,111,117,112,115,91,110,111,100,101,46,105,110,100,101,120,93,46,95,48,
+32,61,32,114,97,110,103,101,40,105,110,116,40,115,116,114,45,114,101,103,101,120,46,109,97,116,99,104,41,44,105,
+110,116,40,110,111,100,101,46,115,117,98,101,120,112,114,46,116,97,105,108,45,114,101,103,101,120,46,109,97,116,99,
+104,41,41,13,10,
+32,32,32,32,114,101,116,117,114,110,32,111,115,117,98,13,10,
+13,10,
+47,42,13,10,
+32,32,32,32,101,97,114,108,121,32,111,117,116,13,10,
+42,47,13,10,
+13,10,
+100,101,102,32,114,101,95,101,97,114,108,121,95,111,117,116,32,40,32,118,97,114,32,99,115,101,116,58,67,104,97,
+114,83,101,116,59,32,110,111,100,101,58,82,101,78,111,100,101,63,32,41,32,58,32,98,111,111,108,13,10,
+32,32,32,32,105,102,32,110,111,100,101,46,111,112,61,61,82,101,79,112,32,67,104,97,114,13,10,
+32,32,32,32,32,32,32,32,115,101,116,95,111,114,95,99,104,97,114,40,99,115,101,116,44,99,104,97,114,97,99,
+116,101,114,95,97,116,40,110,111,100,101,46,116,101,120,116,44,48,41,41,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,102,97,108,115,101,13,10,
+32,32,32,32,101,108,105,102,32,110,111,100,101,46,111,112,61,61,82,101,79,112,32,83,101,116,13,10,
+32,32,32,32,32,32,32,32,115,101,116,95,111,114,95,115,101,116,40,99,115,101,116,44,110,111,100,101,46,99,115,
+101,116,41,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,102,97,108,115,101,13,10,
+32,32,32,32,101,108,105,102,32,110,111,100,101,46,111,112,61,61,82,101,79,112,32,65,110,121,13,10,
+32,32,32,32,32,32,32,32,102,111,114,32,120,32,105,110,32,99,115,101,116,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,120,32,61,32,48,120,102,102,102,102,102,102,102,102,117,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,102,97,108,115,101,13,10,
+32,32,32,32,101,108,105,102,32,110,111,100,101,46,111,112,61,61,82,101,79,112,32,69,111,115,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,102,97,108,115,101,13,10,
+32,32,32,32,101,108,105,102,32,110,111,100,101,46,111,112,61,61,82,101,79,112,32,71,114,111,117,112,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,114,101,95,101,97,114,108,121,95,111,117,116,40,99,115,101,
+116,44,110,111,100,101,46,115,117,98,101,120,112,114,41,13,10,
+32,32,32,32,101,108,105,102,32,110,111,100,101,46,111,112,61,61,82,101,79,112,32,80,108,117,115,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,114,101,95,101,97,114,108,121,95,111,117,116,40,99,115,101,
+116,44,110,111,100,101,46,115,117,98,101,120,112,114,41,13,10,
+32,32,32,32,101,108,105,102,32,110,111,100,101,46,111,112,61,61,82,101,79,112,32,83,116,97,114,13,10,
+32,32,32,32,32,32,32,32,114,101,95,101,97,114,108,121,95,111,117,116,40,99,115,101,116,44,110,111,100,101,46,
+115,117,98,101,120,112,114,41,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,116,114,117,101,13,10,
+32,32,32,32,101,108,105,102,32,110,111,100,101,46,111,112,61,61,82,101,79,112,32,81,117,101,115,116,105,111,110,
+13,10,
+32,32,32,32,32,32,32,32,114,101,95,101,97,114,108,121,95,111,117,116,40,99,115,101,116,44,110,111,100,101,46,
+115,117,98,101,120,112,114,41,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,116,114,117,101,13,10,
+32,32,32,32,101,108,105,102,32,110,111,100,101,46,111,112,61,61,82,101,79,112,32,67,111,110,99,97,116,13,10,
+32,32,32,32,32,32,32,32,108,101,116,32,108,101,102,116,32,61,32,114,101,95,101,97,114,108,121,95,111,117,116,
+40,99,115,101,116,44,110,111,100,101,46,108,101,102,116,41,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,108,101,102,116,32,63,32,114,101,95,101,97,114,108,121,95,
+111,117,116,40,99,115,101,116,44,110,111,100,101,46,114,105,103,104,116,41,32,58,32,102,97,108,115,101,13,10,
+32,32,32,32,101,108,105,102,32,110,111,100,101,46,111,112,61,61,82,101,79,112,32,85,110,105,111,110,13,10,
+32,32,32,32,32,32,32,32,118,97,114,32,97,110,121,32,61,32,102,97,108,115,101,13,10,
+32,32,32,32,32,32,32,32,102,111,114,32,115,117,98,32,105,110,32,110,111,100,101,46,97,108,108,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,97,110,121,32,61,32,114,101,95,101,97,114,108,121,95,111,117,116,40,
+99,115,101,116,44,115,117,98,41,32,124,124,32,97,110,121,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,97,110,121,13,10,
+32,32,32,32,101,108,115,101,13,10,
+32,32,32,32,32,32,32,32,112,97,110,105,99,40,34,117,110,115,117,112,112,111,114,116,101,100,32,111,112,101,114,
+97,116,105,111,110,34,41,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,102,97,108,115,101,13,10,
+13,10,
+47,42,13,10,
+32,32,32,32,116,111,112,32,108,101,118,101,108,32,65,80,73,13,10,
+42,47,13,10,
+13,10,
+100,101,102,32,105,115,95,118,97,108,105,100,40,118,97,114,32,114,101,58,82,101,103,101,120,41,13,10,
+32,32,32,32,114,101,116,117,114,110,32,114,101,46,114,111,111,116,32,33,61,32,110,117,108,108,13,10,
+13,10,
+100,101,102,32,114,101,103,101,120,95,99,111,109,112,105,108,101,40,32,118,97,114,32,114,101,58,82,101,103,101,120,
+59,32,101,120,112,114,58,115,116,114,105,110,103,32,41,32,58,32,98,111,111,108,13,10,
+32,32,32,32,114,101,46,114,111,111,116,32,61,32,114,101,95,112,97,114,115,101,40,101,120,112,114,41,13,10,
+32,32,32,32,105,102,32,114,101,46,114,111,111,116,32,33,61,32,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,114,101,95,97,115,115,105,103,110,95,110,101,120,116,40,114,101,41,13,10,
+32,32,32,32,32,32,32,32,114,101,95,97,115,115,105,103,110,95,103,114,111,117,112,115,40,114,101,41,13,10,
+32,32,32,32,32,32,32,32,114,101,95,97,115,115,105,103,110,95,109,97,116,99,104,95,102,117,110,99,116,105,111,
+110,115,40,114,101,41,13,10,
+32,32,32,32,32,32,32,32,114,101,95,101,97,114,108,121,95,111,117,116,40,114,101,46,101,97,114,108,121,79,117,
+116,44,32,114,101,46,114,111,111,116,41,13,10,
+32,32,32,32,32,32,32,32,114,101,46,99,97,110,69,97,114,108,121,79,117,116,32,61,32,33,105,115,95,115,101,
+116,95,101,109,112,116,121,40,114,101,46,101,97,114,108,121,79,117,116,41,13,10,
+32,32,32,32,114,101,116,117,114,110,32,114,101,46,114,111,111,116,32,33,61,32,110,117,108,108,13,10,
+13,10,
+100,101,102,32,114,101,103,101,120,95,99,111,109,112,105,108,101,32,40,32,101,120,112,114,32,58,32,115,116,114,105,
+110,103,32,41,13,10,
+32,32,32,32,118,97,114,32,114,101,58,82,101,103,101,120,13,10,
+32,32,32,32,105,102,32,33,114,101,103,101,120,95,99,111,109,112,105,108,101,40,114,101,44,101,120,112,114,41,13,
+10,
+32,32,32,32,32,32,32,32,112,97,110,105,99,40,34,114,101,103,117,108,97,114,32,101,120,112,114,101,115,115,105,
+111,110,32,123,101,120,112,114,125,32,100,105,100,32,110,111,116,32,99,111,109,112,105,108,101,34,41,13,10,
+32,32,32,32,114,101,116,117,114,110,32,60,45,32,114,101,13,10,
+13,10,
+100,101,102,32,114,101,103,101,120,95,99,111,109,112,105,108,101,32,40,32,118,97,114,32,114,101,58,82,101,103,101,
+120,32,41,13,10,
+32,32,32,32,105,102,32,114,101,46,114,111,111,116,32,33,61,32,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,114,101,95,97,115,115,105,103,110,95,110,101,120,116,40,114,101,41,13,10,
+32,32,32,32,32,32,32,32,114,101,95,97,115,115,105,103,110,95,109,97,116,99,104,95,102,117,110,99,116,105,111,
+110,115,40,114,101,41,13,10,
+32,32,32,32,114,101,116,117,114,110,32,60,45,32,114,101,13,10,
+13,10,
+100,101,102,32,114,101,103,101,120,95,109,97,116,99,104,32,40,32,118,97,114,32,114,101,103,101,120,58,82,101,103,
+101,120,59,32,115,116,114,58,115,116,114,105,110,103,59,32,111,102,102,115,101,116,58,105,110,116,61,48,32,41,32,
+58,32,105,110,116,13,10,
+32,32,32,32,105,102,32,101,109,112,116,121,40,115,116,114,41,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,45,49,13,10,
+32,32,32,32,105,102,32,108,111,103,95,109,97,116,99,104,95,101,110,97,98,108,101,100,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,109,97,116,99,104,105,110,103,32,119,105,116,104,32,96,123,
+115,116,114,125,96,32,97,116,32,123,111,102,102,115,101,116,125,92,110,34,41,13,10,
+32,32,32,32,117,110,115,97,102,101,13,10,
+32,32,32,32,32,32,32,32,114,101,103,101,120,46,109,97,116,99,104,32,61,32,114,101,105,110,116,101,114,112,114,
+101,116,60,117,105,110,116,56,63,62,32,115,116,114,13,10,
+32,32,32,32,32,32,32,32,108,101,116,32,109,112,116,114,32,61,32,105,110,118,111,107,101,40,114,101,103,101,120,
+46,114,111,111,116,46,102,117,110,50,44,114,101,103,101,120,44,114,101,103,101,120,46,114,111,111,116,44,114,101,103,
+101,120,46,109,97,116,99,104,41,13,10,
+32,32,32,32,32,32,32,32,105,102,32,109,112,116,114,32,61,61,32,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,45,49,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,32,105,110,116,40,109,112,116,114,45,114,101,103,101,120,46,109,
+97,116,99,104,41,13,10,
+13,10,
+100,101,102,32,114,101,103,101,120,95,103,114,111,117,112,32,40,32,114,101,103,101,120,58,82,101,103,101,120,59,32,
+105,110,100,101,120,58,105,110,116,59,32,109,97,116,99,104,58,115,116,114,105,110,103,32,41,13,10,
+32,32,32,32,108,101,116,32,115,117,98,95,114,97,110,103,101,32,61,32,114,101,103,101,120,46,103,114,111,117,112,
+115,91,105,110,100,101,120,93,46,95,48,13,10,
+32,32,32,32,114,101,116,117,114,110,32,115,108,105,99,101,40,109,97,116,99,104,44,32,115,117,98,95,114,97,110,
+103,101,46,120,44,32,115,117,98,95,114,97,110,103,101,46,121,41,13,10,
+13,10,
+91,117,110,115,97,102,101,95,100,101,114,101,102,93,13,10,
+100,101,102,32,114,101,103,101,120,95,102,111,114,101,97,99,104,32,40,32,118,97,114,32,114,101,103,101,120,58,82,
+101,103,101,120,59,32,115,116,114,58,115,116,114,105,110,103,59,32,98,108,107,32,58,32,98,108,111,99,107,60,40,
+97,116,58,114,97,110,103,101,41,58,98,111,111,108,62,32,41,13,10,
+32,32,32,32,105,102,32,101,109,112,116,121,40,115,116,114,41,13,10,
+32,32,32,32,32,32,32,32,114,101,116,117,114,110,13,10,
+32,32,32,32,117,110,115,97,102,101,13,10,
+32,32,32,32,32,32,32,32,114,101,103,101,120,46,109,97,116,99,104,32,61,32,114,101,105,110,116,101,114,112,114,
+101,116,60,117,105,110,116,56,63,62,32,115,116,114,13,10,
+32,32,32,32,32,32,32,32,118,97,114,32,114,111,111,116,32,61,32,114,101,103,101,120,46,114,111,111,116,13,10,
+32,32,32,32,32,32,32,32,118,97,114,32,112,115,116,114,32,61,32,114,101,105,110,116,101,114,112,114,101,116,60,
+117,105,110,116,56,63,62,32,115,116,114,13,10,
+32,32,32,32,32,32,32,32,118,97,114,32,99,115,116,114,32,61,32,112,115,116,114,13,10,
+32,32,32,32,32,32,32,32,105,102,32,114,101,103,101,120,46,99,97,110,69,97,114,108,121,79,117,116,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,47,47,32,108,101,116,115,32,116,114,121,32,105,102,32,105,116,32,104,
+101,108,112,115,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,119,104,105,108,101,32,116,114,117,101,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,108,101,116,32,67,104,32,61,32,105,110,116,40,42,99,
+115,116,114,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,105,102,32,67,104,61,61,48,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,98,114,101,97,107,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,105,102,32,105,115,95,99,104,97,114,95,105,110,95,115,
+101,116,40,67,104,44,114,101,103,101,120,46,101,97,114,108,121,79,117,116,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,108,101,116,32,111,109,32,61,32,105,110,
+118,111,107,101,40,114,111,111,116,46,102,117,110,50,44,114,101,103,101,120,44,114,111,111,116,44,99,115,116,114,41,
+13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,105,102,32,111,109,32,33,61,32,110,117,
+108,108,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,105,102,32,33,105,110,118,
+111,107,101,40,98,108,107,44,114,97,110,103,101,40,105,110,116,40,99,115,116,114,45,112,115,116,114,41,44,105,110,
+116,40,111,109,45,112,115,116,114,41,41,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,98,114,101,
+97,107,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,99,115,116,114,32,61,32,
+111,109,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,101,108,115,101,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,99,115,116,114,43,43,13,
+10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,101,108,115,101,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,99,115,116,114,43,43,13,10,
+32,32,32,32,32,32,32,32,101,108,115,101,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,119,104,105,108,101,32,105,110,116,40,42,99,115,116,114,41,32,33,61,
+32,48,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,108,101,116,32,111,109,32,61,32,105,110,118,111,107,101,
+40,114,111,111,116,46,102,117,110,50,44,114,101,103,101,120,44,114,111,111,116,44,99,115,116,114,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,105,102,32,111,109,32,33,61,32,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,105,102,32,33,105,110,118,111,107,101,40,
+98,108,107,44,114,97,110,103,101,40,105,110,116,40,99,115,116,114,45,112,115,116,114,41,44,105,110,116,40,111,109,
+45,112,115,116,114,41,41,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,98,114,101,97,107,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,99,115,116,114,32,61,32,111,109,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,101,108,115,101,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,99,115,116,114,32,43,43,13,10,
+13,10,
+47,42,13,10,
+32,32,32,32,112,114,105,110,116,101,114,13,10,
+42,47,13,10,
+13,10,
+100,101,102,32,114,101,103,101,120,95,100,101,98,117,103,32,40,32,114,101,103,101,120,58,82,101,103,101,120,32,41,
+13,10,
+32,32,32,32,100,101,98,117,103,95,114,101,40,114,101,103,101,120,46,114,111,111,116,44,49,41,13,10,
+32,32,32,32,112,114,105,110,116,40,34,92,110,34,41,13,10,
+32,32,32,32,105,102,32,114,101,103,101,120,46,99,97,110,69,97,114,108,121,79,117,116,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,101,97,114,108,121,32,111,117,116,58,32,34,41,13,10,
+32,32,32,32,32,32,32,32,100,101,98,117,103,95,115,101,116,40,114,101,103,101,120,46,101,97,114,108,121,79,117,
+116,41,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,92,110,34,41,13,10,
+32,32,32,32,105,102,32,108,101,110,103,116,104,40,114,101,103,101,120,46,103,114,111,117,112,115,41,32,33,61,32,
+48,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,103,114,111,117,112,115,58,34,41,13,10,
+32,32,32,32,32,32,32,32,102,111,114,32,103,32,105,110,32,114,101,103,101,120,46,103,114,111,117,112,115,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,92,116,123,103,46,95,49,125,92,110,34,41,
+13,10,
+13,10,
+100,101,102,32,100,101,98,117,103,95,115,101,116,40,99,115,101,116,58,67,104,97,114,83,101,116,41,13,10,
+32,32,32,32,102,111,114,32,120,32,105,110,32,114,97,110,103,101,40,50,53,54,41,13,10,
+32,32,32,32,32,32,32,32,105,102,32,40,99,115,101,116,91,120,62,62,53,93,32,38,32,117,105,110,116,40,49,
+60,60,40,120,32,38,32,51,49,41,41,41,32,33,61,32,48,117,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,105,102,32,120,62,61,51,50,32,38,38,32,120,60,61,49,50,55,13,
+10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,123,116,111,95,99,104,97,114,
+40,120,41,125,34,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,101,108,115,101,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,92,92,123,120,125,34,41,13,
+10,
+13,10,
+100,101,102,32,112,114,105,118,97,116,101,32,100,101,98,117,103,95,114,101,32,40,32,110,111,100,101,58,32,82,101,
+78,111,100,101,63,59,32,116,97,98,58,105,110,116,32,41,13,10,
+32,32,32,32,112,114,105,110,116,40,34,40,34,41,13,10,
+32,32,32,32,105,102,32,110,111,100,101,32,33,61,32,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,35,123,110,111,100,101,46,105,100,125,34,41,13,10,
+32,32,32,32,32,32,32,32,105,102,32,110,111,100,101,46,110,101,120,116,33,61,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,45,62,123,110,111,100,101,46,110,101,120,116,
+46,105,100,125,34,41,13,10,
+32,32,32,32,32,32,32,32,101,108,115,101,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,45,62,33,34,41,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,32,34,41,13,10,
+32,32,32,32,105,102,32,110,111,100,101,61,61,110,117,108,108,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,110,117,108,108,41,34,41,13,10,
+32,32,32,32,101,108,105,102,32,110,111,100,101,46,111,112,61,61,82,101,79,112,32,67,104,97,114,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,67,104,97,114,32,96,123,110,111,100,101,46,116,101,120,116,
+125,96,41,34,41,13,10,
+32,32,32,32,101,108,105,102,32,110,111,100,101,46,111,112,61,61,82,101,79,112,32,83,101,116,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,83,101,116,32,34,41,13,10,
+32,32,32,32,32,32,32,32,100,101,98,117,103,95,115,101,116,40,110,111,100,101,46,99,115,101,116,41,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,41,34,41,13,10,
+32,32,32,32,101,108,105,102,32,110,111,100,101,46,111,112,61,61,82,101,79,112,32,65,110,121,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,65,110,121,41,34,41,13,10,
+32,32,32,32,101,108,105,102,32,110,111,100,101,46,111,112,61,61,82,101,79,112,32,69,111,115,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,69,111,115,41,34,41,13,10,
+32,32,32,32,101,108,105,102,32,110,111,100,101,46,111,112,61,61,82,101,79,112,32,71,114,111,117,112,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,71,114,111,117,112,32,34,41,13,10,
+32,32,32,32,32,32,32,32,100,101,98,117,103,95,114,101,40,110,111,100,101,46,115,117,98,101,120,112,114,44,116,
+97,98,43,49,41,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,41,34,41,13,10,
+32,32,32,32,101,108,105,102,32,110,111,100,101,46,111,112,61,61,82,101,79,112,32,80,108,117,115,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,80,108,117,115,32,34,41,13,10,
+32,32,32,32,32,32,32,32,100,101,98,117,103,95,114,101,40,110,111,100,101,46,115,117,98,101,120,112,114,44,116,
+97,98,41,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,41,34,41,13,10,
+32,32,32,32,101,108,105,102,32,110,111,100,101,46,111,112,61,61,82,101,79,112,32,83,116,97,114,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,83,116,97,114,32,34,41,13,10,
+32,32,32,32,32,32,32,32,100,101,98,117,103,95,114,101,40,110,111,100,101,46,115,117,98,101,120,112,114,44,116,
+97,98,41,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,41,34,41,13,10,
+32,32,32,32,101,108,105,102,32,110,111,100,101,46,111,112,61,61,82,101,79,112,32,81,117,101,115,116,105,111,110,
+13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,81,117,101,115,116,105,111,110,32,34,41,13,10,
+32,32,32,32,32,32,32,32,100,101,98,117,103,95,114,101,40,110,111,100,101,46,115,117,98,101,120,112,114,44,116,
+97,98,41,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,41,34,41,13,10,
+32,32,32,32,101,108,105,102,32,110,111,100,101,46,111,112,61,61,82,101,79,112,32,67,111,110,99,97,116,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,67,111,110,116,97,99,116,34,41,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,92,110,123,114,101,112,101,97,116,40,34,92,116,34,44,116,
+97,98,41,125,34,41,13,10,
+32,32,32,32,32,32,32,32,100,101,98,117,103,95,114,101,40,110,111,100,101,46,108,101,102,116,44,116,97,98,43,
+49,41,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,92,110,123,114,101,112,101,97,116,40,34,92,116,34,44,116,
+97,98,41,125,34,41,13,10,
+32,32,32,32,32,32,32,32,100,101,98,117,103,95,114,101,40,110,111,100,101,46,114,105,103,104,116,44,116,97,98,
+43,49,41,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,92,110,123,114,101,112,101,97,116,40,34,92,116,34,44,116,
+97,98,45,49,41,125,41,34,41,13,10,
+32,32,32,32,101,108,105,102,32,110,111,100,101,46,111,112,61,61,82,101,79,112,32,85,110,105,111,110,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,85,110,105,111,110,92,110,34,41,13,10,
+32,32,32,32,32,32,32,32,102,111,114,32,115,117,98,32,105,110,32,110,111,100,101,46,97,108,108,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,123,114,101,112,101,97,116,40,34,92,116,34,
+44,116,97,98,41,125,34,41,13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,100,101,98,117,103,95,114,101,40,115,117,98,44,116,97,98,43,49,41,
+13,10,
+32,32,32,32,32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,92,110,34,41,13,10,
+32,32,32,32,32,32,32,32,112,114,105,110,116,40,34,123,114,101,112,101,97,116,40,34,92,116,34,44,116,97,98,
+45,49,41,125,41,34,41,13,10,
+32,32,32,32,101,108,115,101,13,10,
+32,32,32,32,32,32,32,32,112,97,110,105,99,40,34,117,110,115,117,112,112,111,114,116,101,100,32,111,112,34,41,
+13,10,
+0

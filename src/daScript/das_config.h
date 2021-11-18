@@ -33,7 +33,7 @@ namespace fs { bool is_path_string_valid(const char * path); }
 #endif
 
 #ifndef DAS_FUSION
-#  define DAS_FUSION  0
+#  define DAS_FUSION  1
 #endif
 
 #ifndef DAS_DEBUGGER
@@ -54,6 +54,16 @@ namespace fs { bool is_path_string_valid(const char * path); }
 
 #ifndef DAS_FATAL_ERROR
 #  define DAS_FATAL_ERROR  (void)print_error
+#endif
+
+#ifndef DAS_BIND_EXTERNAL
+  #if defined(_WIN32) && defined(_WIN64)
+    #define DAS_BIND_EXTERNAL 1
+  #elif defined(__APPLE__)
+    #define DAS_BIND_EXTERNAL 1
+  #else
+    #define DAS_BIND_EXTERNAL 0
+  #endif
 #endif
 
 

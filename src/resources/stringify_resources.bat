@@ -56,12 +56,12 @@ call python stringify.py --array JetBrainsMonoNL-Medium.ttf font.JetBrainsMonoNL
 exit/b
 
 :add_external_daslib_file
-call python stringify.py ../../3rdParty/daScript/daslib/%1 daslib_str/%1.inl
+call python stringify.py --array ../../3rdParty/daScript/daslib/%1 daslib_str/%1.inl
 set name=%1
 set identifier=%name:.=_%
-echo static const char %identifier%[] =>> %init_file%
+echo static const char %identifier%[] = {>> %init_file%
 echo #include "resources/daslib_str/%name%.inl">> %init_file%
-echo ;>> %init_file%
+echo };>> %init_file%
 echo daslib_inc_files[string("%name%")] = new das::TextFileInfo(%identifier%, sizeof(%identifier%) - 1, false);>> %init_file%
 echo daslib_inc_files[string("%name%")]-^>name = "daslib/%name%";>> %init_file%
 echo.>> %init_file%
@@ -69,12 +69,12 @@ exit/b
 
 
 :add_internal_daslib_file
-call python stringify.py scripts/%1 daslib_str/%1.inl
+call python stringify.py --array scripts/%1 daslib_str/%1.inl
 set name=%1
 set identifier=%name:.=_%
-echo static const char %identifier%[] =>> %init_file%
+echo static const char %identifier%[] = {>> %init_file%
 echo #include "resources/daslib_str/%name%.inl">> %init_file%
-echo ;>> %init_file%
+echo };>> %init_file%
 echo daslib_inc_files[string("%name%")] = new das::TextFileInfo(%identifier%, sizeof(%identifier%) - 1, false);>> %init_file%
 echo daslib_inc_files[string("%name%")]-^>name = "_dasbox_/daslib/%name%";>> %init_file%
 echo.>> %init_file%

@@ -1314,6 +1314,7 @@ void hide_console()
 
 void run_das_for_ui_with_try_except()
 {
+#ifdef _WIN32
   __try
   {
     run_das_for_ui();
@@ -1326,7 +1327,6 @@ void run_das_for_ui_with_try_except()
       exit(exit_code_on_error);
     }
 
-#ifdef _WIN32
     if (!log_to_console)
       logger.printAllLog();
     ShowWindow(::GetConsoleWindow(), SW_SHOW);
@@ -1334,8 +1334,11 @@ void run_das_for_ui_with_try_except()
     printf("\n\nNATIVE EXCEPTION code = 0x%X, at = \"%s\"\nPress any key to exit.\n", exception_code(), exception_pos);
     system("@pause > nul");
     exit(exit_code_on_error);
-#endif
   }
+#else
+  log_to_console = true;
+  run_das_for_ui();
+#endif
 }
 
 

@@ -10,3 +10,6 @@
 [submodule "3rdParty/minfft"]
 	path = 3rdParty/minfft
 	url = https://github.com/aimukhin/minfft
+[submodule "samples/tests/dastest"]
+	path = samples/tests/dastest
+	url = git@github.com:profelis/das-test.git

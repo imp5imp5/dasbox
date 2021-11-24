@@ -8,6 +8,7 @@
 #include <set>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 
 #include <string>
 #include <memory>
@@ -22,6 +23,9 @@
 #include <limits.h>
 #include <setjmp.h>
 
+#include <mutex>
+
+namespace das {using namespace std;}
 
 void print_error(const char * format, ...);
 namespace fs { bool is_path_string_valid(const char * path); }

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <string.h>
+#include <fs8.h>
 
 #ifdef _WIN32
 #define NOMINMAX
@@ -28,13 +29,19 @@ using namespace std;
 namespace fs
 {
 
+static uint32_t resources_data[] = {
+  #include "resources/resources.inc"
+};
+
+Fs8FileSystem resources_fs;
+
 // TODO: free at 'finalize'
-static unordered_map<std::string, das::TextFileInfo *> daslib_inc_files;
+//static unordered_map<std::string, das::TextFileInfo *> daslib_inc_files;
 
 
 void initialize()
 {
-#include "resources/daslib_str/daslib_init.cpp.inl"
+  resources_fs.initalizeFromMemory(resources_data, sizeof(resources_data));
 }
 
 uint64_t get_file_size(const char * file_name)
@@ -311,16 +318,31 @@ das::FileInfo * DasboxFsFileAccess::getNewFileInfo(const das::string & fname)
   FILE * f = fopen(fname.c_str(), "rb");
   if (!f)
   {
-    const char * ptr = fname.c_str();
+    string key = fname;
     if (!strncmp(fname.c_str(), "daslib/", 7) || strstr(fname.c_str(), "/daslib/") || strstr(fname.c_str(), "\\daslib/"))
-      ptr = std::max(strrchr(ptr, '/'), strrchr(ptr, '\\')) + 1;
+    {
+      if (const char * p = strrchr(fname.c_str(), '/'))
+        key = string("daslib/") + (p + 1);
+    }
 
-    std::string key(ptr);
-    auto it = daslib_inc_files.find(key);
-    if (it != daslib_inc_files.end())
-      return it->second;
+    if (!resources_fs.isFileExists(key.c_str()))
+    {
+      print_error("File '%s' not found", fname.c_str());
+      return nullptr;
+    }
+    else
+    {
+      int64_t len = resources_fs.getFileSize(key.c_str());
+      char * source = (char *)das_aligned_alloc16(len);
+      if (!resources_fs.getFileBytes(key.c_str(), source, len))
+      {
+        das_aligned_free16(source);
+        return nullptr;
+      }
 
-    print_error("Script file '%s' not found", fname.c_str());
+      auto info = das::make_unique<das::TextFileInfo>(source, len, true);
+      return setFileInfo(fname, std::move(info));
+    }
     return nullptr;
   }
 
@@ -328,7 +350,7 @@ das::FileInfo * DasboxFsFileAccess::getNewFileInfo(const das::string & fname)
   const uint32_t fileLength = uint32_t(ftell(f));
   fseek(f, 0, SEEK_SET);
 
-  char * source = (char *)das_aligned_alloc16(fileLength + 2);
+  char * source = (char *)das_aligned_alloc16(fileLength + 1);
   if (fread((void*)source, 1, fileLength, f) != fileLength)
   {
     fclose(f);
@@ -340,7 +362,6 @@ das::FileInfo * DasboxFsFileAccess::getNewFileInfo(const das::string & fname)
   fclose(f);
 
   source[fileLength] = 0;
-  source[fileLength + 1] = 0;
   //check_source_for_correct_debug_position(fname, source);
   check_source_for_special_markers(fname, source);
 
@@ -443,7 +464,7 @@ bool is_file_exists(const char * file_name)
   if (!file_name)
     return false;
 
-  if (!strcmp(file_name, "daslib/live.das"))  // TODO: FIX ME !!!
+  if (resources_fs.isFileExists(file_name))
     return true;
 
   struct stat buffer;

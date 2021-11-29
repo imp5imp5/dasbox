@@ -1669,16 +1669,6 @@ void fill_convex_polygon8(const PointsType_8 & points, uint32_t color)
 }
 
 
-static const uint8_t font_mono_data[] =
-{
-#include "resources/font.JetBrainsMonoNL-Medium.ttf.inl"
-};
-
-static const uint8_t font_sans_data[] =
-{
-#include "resources/font.OpenSans-Regular.ttf.inl"
-};
-
 namespace graphics
 {
 
@@ -1715,13 +1705,22 @@ void print_debug_infos(int from_frame)
 
 void initialize()
 {
-  font_mono = new sf::Font;
-  if (!font_mono->loadFromMemory((void *)font_mono_data, sizeof(font_mono_data)))
-    print_error("Cannot load default font (mono)\n");
+  static vector<char> sans_data;
+  static vector<char> mono_data;
 
-  font_sans = new sf::Font;
-  if (!font_sans->loadFromMemory((void *)font_sans_data, sizeof(font_sans_data)))
-    print_error("Cannot load default font (sans)\n");
+  if (fs::resources_fs.getFileBytes("fonts/JetBrainsMonoNL-Medium.ttf", mono_data))  
+  {
+    font_mono = new sf::Font;
+    if (!font_mono->loadFromMemory((void *)&mono_data[0], mono_data.size()))
+      print_error("Cannot load default font (mono)\n");
+  }
+
+  if (fs::resources_fs.getFileBytes("fonts/OpenSans-Regular.ttf", sans_data))
+  {
+    font_sans = new sf::Font;
+    if (!font_sans->loadFromMemory((void *)&sans_data[0], sans_data.size()))
+      print_error("Cannot load default font (sans)\n");
+  }
 
   saved_font = nullptr;
   set_font_name(nullptr);

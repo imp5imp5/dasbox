@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <daScript/daScript.h>
 #include <stdio.h>
+#include <fs8.h>
 #include "logger.h"
 #include "globals.h"
 
@@ -27,7 +28,7 @@ uint64_t get_file_size(const char * file_name);
 std::string get_user_data_dir();
 das::string find_main_das_file_in_directory(const char * path);
 
-
+extern Fs8FileSystem resources_fs;
 
 class DasboxFsFileAccess final : public das::ModuleFileAccess
 {

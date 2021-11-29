@@ -1,0 +1,1 @@
+fs8pack --hex --list:pack_files.txt . resources.inc

@@ -15,23 +15,28 @@ endif()
 add_definitions(-DSFML_STATIC)
 add_definitions(-DMINFFT_SINGLE)
 
+
 file(GLOB SRC
   *.cpp
   *.h
   ../3rdParty/minfft/minfft.c
+  ../3rdParty/fs8/library/fs8.cpp
 )
 
 include_directories(
   .
+  ../3rdParty/fs8/library
   ../3rdParty/minfft
   ../3rdParty/miniaudio
   ../3rdParty/SFML/include
   ../3rdParty/daScript/include
+  ../3rdParty/zstd/lib
 )
 
 link_directories(
   ../3rdParty/daScript/build
   ../3rdParty/SFML/build/lib
+  ../3rdParty/zstd/build/cmake/build/lib
 )
 
 if(MSVC)
@@ -42,7 +47,7 @@ endif()
 
 if(WIN32)
   add_executable(dasbox ${SRC})
-
+  target_compile_features(dasbox PRIVATE cxx_std_17)
   set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT dasbox)
   set(CMAKE_FIND_LIBRARY_SUFFIXES ".lib")
   target_link_libraries(
@@ -54,6 +59,7 @@ if(WIN32)
     libUriParser
     libDaScript
     freetype
+    zstd_static
     optimized sfml-main
     optimized sfml-graphics-s
     optimized sfml-network-s
@@ -69,6 +75,7 @@ endif()
 
 if(UNIX)
   add_executable(dasbox ${SRC})
+  target_compile_features(dasbox PRIVATE cxx_std_17)
   set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
   set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fno-rtti -fno-exceptions -fomit-frame-pointer -fno-stack-protector -s -DDAS_FUSION=2 -DDAS_DEBUGGER=1 -DNDEBUG=1")
   set(CMAKE_CXX_FLAGS_DEBUG "-O0 -fno-rtti -fno-exceptions -fomit-frame-pointer -fno-stack-protector")
@@ -85,6 +92,7 @@ if(UNIX)
     debug sfml-graphics-s-d
     debug sfml-window-s-d
     debug sfml-system-s-d
+    zstd_static
     X11
     udev
     pthread

@@ -575,7 +575,8 @@ def draw()
         for s, i in menuItems[menuIndex].description, range(99999)
             text_out(700, 324 + i * DESCRIPTION_LINE_HEIGHT, s, make_color(1.0, 0.7 * itemAlpha))
 
-    menuItems[menuIndex].image |> draw_image(700, 27, make_color(1.0, itemAlpha))
+    if (menuItems[menuIndex].image.width > 1)
+        menuItems[menuIndex].image |> draw_image(700, 27, make_color(1.0, itemAlpha))
 
     if (fadeout > 0.0)
         fill_rect(0, 0, get_screen_width(), get_screen_height(), make_color(0.0, fadeout))

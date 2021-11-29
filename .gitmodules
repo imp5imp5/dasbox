@@ -13,3 +13,9 @@
 [submodule "samples/tests/dastest"]
 	path = samples/tests/dastest
 	url = git@github.com:profelis/das-test.git
+[submodule "3rdParty/fs8"]
+	path = 3rdParty/fs8
+	url = git@github.com:imp5imp5/fs8.git
+[submodule "3rdParty/zstd"]
+	path = 3rdParty/zstd
+	url = git@github.com:imp5imp5/zstd.git

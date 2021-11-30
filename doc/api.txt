@@ -97,7 +97,6 @@ class Image
 
 class ImageHandle
 
-  // (WORK IN PROGRESS)
   //
   // This lightweight class can be used to conveniently transfer images to various functions,
   // or store links to pictures in tables.
@@ -376,7 +375,6 @@ class PcmSound
 
 class SoundHandle
 
-  // (WORK IN PROGRESS)
   //
   // This lightweight class can be used to conveniently transfer sounds to various functions,
   // or store links to sounds in tables.

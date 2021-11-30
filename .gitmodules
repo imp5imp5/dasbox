@@ -1,15 +1,15 @@
 [submodule "3rdParty/daScript"]
 	path = 3rdParty/daScript
-	url = https://github.com/imp5imp5/daScript-1
+	url = git@github.com:imp5imp5/daScript-1.git
 [submodule "3rdParty/miniaudio"]
 	path = 3rdParty/miniaudio
-	url = https://github.com/mackron/miniaudio
+	url = git@github.com:mackron/miniaudio.git
 [submodule "3rdParty/SFML"]
 	path = 3rdParty/SFML
-	url = https://github.com/imp5imp5/SFML
+	url = git@github.com:imp5imp5/SFML.git
 [submodule "3rdParty/minfft"]
 	path = 3rdParty/minfft
-	url = https://github.com/aimukhin/minfft
+	url = git@github.com:aimukhin/minfft.git
 [submodule "samples/tests/dastest"]
 	path = samples/tests/dastest
 	url = git@github.com:profelis/das-test.git

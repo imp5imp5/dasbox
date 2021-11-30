@@ -55,7 +55,6 @@ if(WIN32)
     legacy_stdio_definitions
     winmm
     Opengl32
-    libDasModuleUriparser
     libUriParser
     libDaScript
     freetype
@@ -81,7 +80,6 @@ if(UNIX)
   set(CMAKE_CXX_FLAGS_DEBUG "-O0 -fno-rtti -fno-exceptions -fomit-frame-pointer -fno-stack-protector")
   target_link_libraries(
     dasbox
-    libDasModuleUriparser
     libUriParser
     libDaScript
     optimized sfml-network-s

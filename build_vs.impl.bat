@@ -90,7 +90,7 @@ mkdir build
 pushd build
 cmake -G %CMAKE_GEN_TARGET% -DDAS_BUILD_TOOLS:BOOL=NO -DDAS_BUILD_TEST:BOOL=NO -DDAS_BUILD_PROFILE:BOOL=NO -DDAS_BUILD_TUTORIAL:BOOL=NO -DDAS_CONFIG_INCLUDE_DIR:STRING="%CD%/src" ..
 msbuild libDaScript.vcxproj /p:Configuration=%CONFIGURATION%
-msbuild libDasModuleUriparser.vcxproj /p:Configuration=%CONFIGURATION%
+rem msbuild libDasModuleUriparser.vcxproj /p:Configuration=%CONFIGURATION%
 msbuild libUriParser.vcxproj /p:Configuration=%CONFIGURATION%
 popd
 popd

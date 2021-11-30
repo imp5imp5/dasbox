@@ -1248,7 +1248,11 @@ void run_das_for_ui()
     {
       profiler.update();
 
-      if (input::get_key_down(sf::Keyboard::F1) && (input::get_key(sf::Keyboard::LAlt) || input::get_key(sf::Keyboard::RAlt)))
+      bool altPressed = (input::get_key(sf::Keyboard::LAlt) || input::get_key(sf::Keyboard::RAlt));
+      bool ctrlPressed = (input::get_key(sf::Keyboard::LControl) || input::get_key(sf::Keyboard::LControl));
+
+      if ((input::get_key_down(sf::Keyboard::F1) && altPressed) ||
+          (input::get_key_down(sf::Keyboard::P) && altPressed && ctrlPressed))
       {
         logger.setTopErrorLine();
         profiler.print();

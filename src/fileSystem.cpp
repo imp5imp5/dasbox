@@ -325,7 +325,7 @@ das::FileInfo * DasboxFsFileAccess::getNewFileInfo(const das::string & fname)
         key = string("daslib/") + (p + 1);
     }
 
-    if (!resources_fs.isFileExists(key.c_str()))
+    if (!resources_fs.fileExists(key.c_str()))
     {
       print_error("File '%s' not found", fname.c_str());
       return nullptr;
@@ -464,7 +464,7 @@ bool is_file_exists(const char * file_name)
   if (!file_name)
     return false;
 
-  if (resources_fs.isFileExists(file_name))
+  if (resources_fs.fileExists(file_name))
     return true;
 
   struct stat buffer;

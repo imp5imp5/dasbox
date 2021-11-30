@@ -208,7 +208,7 @@ static void check_source_for_special_markers(const das::string & fname, char * s
   bool tag = false;
   bool options = false;
   int tagDepth = 0;
-  
+
   for (char * p = s; *p; p++)
   {
     if (*p == '/' && p[1] == '/')

@@ -80,8 +80,8 @@ if(UNIX)
   set(CMAKE_CXX_FLAGS_DEBUG "-O0 -fno-rtti -fno-exceptions -fomit-frame-pointer -fno-stack-protector")
   target_link_libraries(
     dasbox
-    libUriParser
     libDaScript
+    libUriParser
     optimized sfml-network-s
     optimized sfml-graphics-s
     optimized sfml-window-s
@@ -90,7 +90,7 @@ if(UNIX)
     debug sfml-graphics-s-d
     debug sfml-window-s-d
     debug sfml-system-s-d
-    zstd_static
+    libzstd.a
     X11
     udev
     pthread

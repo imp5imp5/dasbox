@@ -57,7 +57,8 @@ namespace fs { bool is_path_string_valid(const char * path); }
 #endif
 
 #ifndef DAS_FATAL_ERROR
-#  define DAS_FATAL_ERROR  (void)print_error
+                           // shutup MSVC compiler
+#  define DAS_FATAL_ERROR  false ? void(0) : print_error
 #endif
 
 #ifndef DAS_BIND_EXTERNAL

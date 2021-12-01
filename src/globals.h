@@ -1,6 +1,8 @@
 #pragma once
 
-#define DASBOX_VERSION "0.1.65"
+#define DASBOX_VERSION "0.1.66"
+
+#include <string>
 
 namespace sf
 {
@@ -33,6 +35,8 @@ extern bool window_is_active;
 extern int exit_code_on_error;
 extern bool exit_on_error;
 extern const char * exception_pos;
+extern std::string scheduled_screenshot_file_name;
+
 
 void print_error(const char * format, ...);
 void print_exception(const char * format, ...);

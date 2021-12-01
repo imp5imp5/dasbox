@@ -233,3 +233,5 @@ def draw()
     text_out(700, y, "get_screen_height() = {get_screen_height()}", 0xF0F0F0)
     y += 50
 
+    if get_key_down(VK_S)
+        schedule_screenshot("screenshot.png")

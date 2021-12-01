@@ -37,6 +37,7 @@ string root_dir = "";
 string main_das_file_name = "";
 string return_to_file_name = "";
 string return_to_root = "";
+string scheduled_screenshot_file_name = "";
 int exit_code_on_error = 1;
 bool exit_on_error = false;
 bool return_to_trust_mode = false;
@@ -1033,6 +1034,25 @@ void run_das_for_plugin(const string & file_name, const string & main_func_name)
 }
 
 
+void take_window_screenshot(const string & file_name)
+{
+  if (!g_window)
+    return;
+
+  if (!fs::is_path_string_valid(file_name.c_str()))
+  {
+    print_error("Cannot write to '%s'. Absolute paths or access to the parent directory is prohibited.", file_name);
+    return;
+  }
+
+  sf::Texture texture;
+  texture.create(g_window->getSize().x, g_window->getSize().y);
+  texture.update(*g_window);
+
+  texture.copyToImage().saveToFile(file_name);
+}
+
+
 void win32_check_for_active_hack()
 {
 #ifdef _WIN32
@@ -1226,6 +1246,13 @@ void run_das_for_ui()
         render_texture->display();
         g_window->draw(*render_texture_sprite, sf::BlendNone);
       }
+
+      if (screen_mode == SM_USER_APPLICATION)
+        if (!scheduled_screenshot_file_name.empty())
+        {
+          take_window_screenshot(scheduled_screenshot_file_name);
+          scheduled_screenshot_file_name.clear();
+        }
     }
 
     if (screen_mode == SM_USER_APPLICATION)
@@ -1267,7 +1294,11 @@ void run_das_for_ui()
     fs::update_local_storage(dt);
 
     if (is_quit_scheduled && !return_to_file_name.empty())
+    {
+      g_window->clear();
+      g_window->display();
       return_to_previous_script();
+    }
 
     if (exec_script_scheduled)
       exec_script_impl();

@@ -304,6 +304,11 @@ void randomize_seed(int4 & seed)
   x += seed.w;
 }
 
+void schedule_screenshot(const char * file_name)
+{
+  scheduled_screenshot_file_name = file_name;
+}
+
 static char utils_das[] =
 #include "utils.das.inl"
 ;
@@ -699,6 +704,9 @@ public:
     addExtern<DAS_BIND_FUN(input::show_cursor)>
       (*this, lib, "show_mouse_cursor", SideEffects::modifyExternal, "input::show_cursor");
 
+    addExtern<DAS_BIND_FUN(schedule_screenshot)>
+      (*this, lib, "schedule_screenshot", SideEffects::modifyExternal, "schedule_screenshot")
+      ->args({"file_name"});
 
     compileBuiltinModule("utils.das", (unsigned char *)utils_das, sizeof(utils_das));
 

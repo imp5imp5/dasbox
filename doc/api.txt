@@ -460,6 +460,7 @@ class SoundHandle
 
   schedule_pause()          // pause after act() and go to 'Log Screen'
   schedule_quit_game()
+  schedule_screenshot(file_name)  // take screenshot after draw()
 
   is_window_active()
 

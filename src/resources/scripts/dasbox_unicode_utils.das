@@ -1,4 +1,3 @@
-R"X(
 options indenting = 4
 
 def convert_utf8_code_to_chars(ch: uint): array<uint8>
@@ -52,6 +51,3 @@ def convert_utf8_code_to_chars(ch: uint): array<uint8>
 def is_first_byte_of_utf8_char(c: uint8): bool
     let x = uint(c)
     return (x > 0u) && (x < 128u || (x & 0xC0) == 0xC0)
-
-
-)X"

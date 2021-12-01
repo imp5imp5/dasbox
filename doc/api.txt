@@ -172,10 +172,14 @@ class Mesh      // 2D
   make_color32(r, g, b: uint): uint
   make_color32(r, g, b, a: uint): uint
 
+  color_to_float4(c: uint): float4
+  color_to_float3(c: uint): float3
+
   premultiply_color(c: uint): uint
   desaturate_color(c: uint): uint
   multiply_colors(c1, c2: uint): uint
   add_colors(c1, c2: uint): uint
+  lerp_colors(a, b: uint; t: float): uint
 
 
 --------------------------------------------------------------------------

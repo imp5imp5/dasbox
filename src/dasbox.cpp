@@ -493,7 +493,7 @@ DasFile * load_module(const string & file_name, DasFile ** das_file, bool hard_r
 
 
   CodeOfPolicies policies;
-  policies.ignore_shared_modules = true;
+  policies.ignore_shared_modules = hard_reload;
 
   (*das_file)->program = compileDaScript(file_name, (*das_file)->fAccess, logger, (*das_file)->dummyLibGroup, false, policies);
   ProgramPtr program = (*das_file)->program;

@@ -7,14 +7,14 @@ def create_image(width, height: int; pixels: string; palette: table<int; uint>&)
     var p <- [{for c in pixels; palette?[c] ?? 0u}]
     return <- create_image(width, height, p)
 
-def color_to_float4(uint c): float4
+def color_to_float4(c: uint): float4
     let b = c & 0xFF
     let g = (c >> 8u) & 0xFF
     let r = (c >> 16u) & 0xFF
     let a = (c >> 24u) & 0xFF
     return float4(r, g, b, a)
 
-def color_to_float3(uint c): float3
+def color_to_float3(c: uint): float3
     let b = c & 0xFF
     let g = (c >> 8u) & 0xFF
     let r = (c >> 16u) & 0xFF

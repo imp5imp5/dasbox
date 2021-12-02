@@ -755,6 +755,8 @@ void process_args(int argc, char **argv)
       {
         plugin_main_function = argv[i + 1];
         run_for_plugin = true;
+        trust_mode = true;
+        i++;
       }
 
       if (arg == "--dasbox-console" || arg == "--")
@@ -1382,7 +1384,7 @@ int main(int argc, char **argv)
   sf::err().rdbuf(logger.cerrStream.rdbuf());
 
   process_args(argc, argv);
-  if (!log_to_console)
+  if (!log_to_console && !run_for_plugin)
     hide_console();
 
   locale utf8Locale("en_US.UTF-8");
@@ -1448,12 +1450,6 @@ int main(int argc, char **argv)
   NEED_MODULE(ModuleDasbox);
   NEED_MODULE(ModuleSound);
 
-  das_live_file = new DasFile();
-  DasFile * oldFile = load_module("daslib/live.das", &das_live_file, false);
-  find_dasbox_live_api_fnctions();
-  delete oldFile;
-
-
   if (run_for_plugin && trust_mode)
   {
     run_das_for_plugin(fs::combine_path(root_dir, main_das_file_name), plugin_main_function);
@@ -1461,6 +1457,11 @@ int main(int argc, char **argv)
   }
   else
   {
+    das_live_file = new DasFile();
+    DasFile * oldFile = load_module("daslib/live.das", &das_live_file, false);
+    find_dasbox_live_api_fnctions();
+    delete oldFile;
+
     run_das_for_ui_with_try_except();
   }
 

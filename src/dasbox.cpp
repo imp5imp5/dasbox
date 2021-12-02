@@ -42,7 +42,7 @@ int exit_code_on_error = 1;
 bool exit_on_error = false;
 bool return_to_trust_mode = false;
 const char * initial_dir = ".";
-bool has_errors = false;
+bool has_fatal_errors = false;
 bool recreate_window = false;
 bool inside_initialization = false;
 bool inside_draw_fn = true;
@@ -428,7 +428,7 @@ static void find_function(SimFunction ** fn, const char * fn_name, bool required
 
 void exec_function(SimFunction * fn, vec4f * args)
 {
-  if (!das_file->ctx || !fn)
+  if (!das_file->ctx || !fn || has_fatal_errors)
     return;
 
   EXCEPTION_POS(fn->mangledName);
@@ -443,7 +443,13 @@ void exec_function(SimFunction * fn, vec4f * args)
       s += "\n";
       s += das_file->ctx->getStackWalk(nullptr, true, true);
       print_exception("%s", s.c_str());
+      has_fatal_errors = true;
     }
+  }
+  else
+  {
+    print_error("Failed to execute function '%s'", fn->name);
+    has_fatal_errors = true;
   }
 
   EXCEPTION_POS("unknown");
@@ -528,6 +534,7 @@ DasFile * load_module(const string & file_name, DasFile ** das_file, bool hard_r
     (*das_file)->ctx = make_smart<PlaygroundContext>(program->getContextStackSize());
     if (!program->simulate(*(*das_file)->ctx, logger))
     {
+      has_fatal_errors = true;
       string s;
       s += "Failed to simulate '";
       s += file_name;
@@ -540,6 +547,8 @@ DasFile * load_module(const string & file_name, DasFile ** das_file, bool hard_r
         s += "\n";
       }
 
+      s += (*das_file)->ctx->getStackWalk(nullptr, true, true);
+
       print_error("%s\n", s.c_str());
       delete oldFile;
       return nullptr;
@@ -548,6 +557,7 @@ DasFile * load_module(const string & file_name, DasFile ** das_file, bool hard_r
   else
   {
     print_exception("Failed to simulate");
+    has_fatal_errors = true;
     delete oldFile;
     return nullptr;
   }
@@ -576,13 +586,14 @@ void set_application_screen();
 
 void initialize_das_file(bool hard_reload)
 {
-  if (das_file->ctx.get())
+  if (das_file && das_file->ctx.get())
   {
     inside_initialization = true;
     if (input::is_relative_mouse_mode())
       input::set_relative_mouse_mode(false);
     prepare_delayed_variables();
-    set_new_live_context(das_file->ctx.get(), hard_reload);
+    if (!has_fatal_errors)
+      set_new_live_context(das_file->ctx.get(), hard_reload);
     find_dasbox_api_functions(hard_reload);
     inside_initialization = false;
     check_delayed_variables();
@@ -594,6 +605,15 @@ void initialize_das_file(bool hard_reload)
 
 void das_file_manual_reload(bool hard_reload)
 {
+  if (has_fatal_errors)
+  {
+    hard_reload = true;
+    if (das_file->ctx.get())
+      das_file->ctx->shutdown = true;
+    delete das_file;
+    das_file = nullptr;
+  }
+
   sound::stop_all_sounds();
   builtin_sleep(50);
   graphics::delete_allocated_images();
@@ -612,6 +632,9 @@ void das_file_manual_reload(bool hard_reload)
   reset_time_after_start();
   is_first_frame = true;
   fs::flush_local_storage();
+
+  has_fatal_errors = false;
+
   fs::initialize_local_storage(main_das_file_name.c_str());
   DasFile * oldFile = load_module(main_das_file_name, &das_file, hard_reload);
   initialize_das_file(hard_reload);
@@ -680,7 +703,7 @@ void update_switch_screens()
       /*|| (input::get_key_down(sf::Keyboard::Escape) && screen_mode == SM_LOG*)*/
      )
   {
-    if (screen_mode == SM_LOG)
+    if (screen_mode == SM_LOG && !has_fatal_errors)
     {
       on_return_from_log_screen();
       set_application_screen();
@@ -1313,7 +1336,7 @@ void run_das_for_ui()
 
     check_window_pos_changed();
 
-    if (das_file && das_file->ctx)
+    if (das_file && das_file->ctx && !has_fatal_errors)
     {
       exec_function(fn_before_gc, nullptr);
       EXCEPTION_POS("ctx->collectHeap");

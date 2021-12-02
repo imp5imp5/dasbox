@@ -23,7 +23,7 @@ extern sf::RenderTarget * g_render_target;
 extern sf::RenderWindow * g_window;
 extern int screen_width;
 extern int screen_height;
-extern bool has_errors;
+extern bool has_fatal_errors;
 extern bool trust_mode;
 extern bool is_in_debug_mode;
 extern bool program_has_unsafe_operations;

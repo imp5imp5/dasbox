@@ -77,7 +77,6 @@ void print_error(const char * format, ...)
     logger << buf;
     logger << "\n";
     logger.setState(LOGGER_NORMAL);
-    has_errors = true;
   }
 
   if (exit_on_error)
@@ -492,7 +491,10 @@ void draw_log_screen()
   fill_rect_i(0, 0, screen_width, screen_height, 0xFF202020);
   fill_rect_i(0, 0, screen_width, FONT_HEIGHT * 3, 0xFFE0E0E0);
 
-  text_out_i(SAFE_AREA, SAFE_AREA, "Press \"Tab\" to switch back to application", 0);
+  if (has_fatal_errors)
+    text_out_i(SAFE_AREA, SAFE_AREA, "Press \"F5\" or change and save source file to reload", 0);
+  else
+    text_out_i(SAFE_AREA, SAFE_AREA, "Press \"Tab\" to switch back to application", 0);
   text_out_i(SAFE_AREA, SAFE_AREA + FONT_HEIGHT, "Up, Down, [Ctrl+] PgUp, [Ctrl+] PgDown - scroll", 0);
 
   if (logger.logStrings.size() >= LOG_LINES_PER_SCREEN)

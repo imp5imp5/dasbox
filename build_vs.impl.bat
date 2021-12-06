@@ -63,58 +63,11 @@ for /f %%x in ('wmic path win32_localtime get /format:list ^| findstr "="') do s
 echo #pragma once> src\buildDate.h
 echo #define DASBOX_BUILD_DATE "%Day%.%Month%.%Year%">> src\buildDate.h
 
-rem ============ daScript ==============
-pushd 3rdParty\zstd\build\cmake
-rd /S /Q build
-mkdir build
-pushd build
-cmake -G %CMAKE_GEN_TARGET% ^
-    -DCMAKE_INSTALL_PREFIX=bin ^
-    -DCMAKE_INSTALL_LIBDIR=bin_lib ^
-    -DZSTD_BUILD_PROGRAMS:BOOL=OFF ^
-    -DZSTD_BUILD_SHARED:BOOL=OFF ^
-    -DZSTD_MULTITHREAD_SUPPORT:BOOL=ON ^
-    -DZSTD_USE_STATIC_RUNTIME:BOOL=ON ^
-    ..
-
-pushd lib
-msbuild libzstd_static.vcxproj /p:Configuration=%CONFIGURATION%
-popd
-popd
-popd
-
-rem ============ daScript ==============
-pushd 3rdParty\daScript
-rd /S /Q build
-mkdir build
-pushd build
-cmake -G %CMAKE_GEN_TARGET% -DDAS_BUILD_TOOLS:BOOL=NO -DDAS_BUILD_TEST:BOOL=NO -DDAS_BUILD_PROFILE:BOOL=NO -DDAS_BUILD_TUTORIAL:BOOL=NO -DDAS_CONFIG_INCLUDE_DIR:STRING="%CD%/src" ..
-msbuild libDaScript.vcxproj /p:Configuration=%CONFIGURATION%
-rem msbuild libDasModuleUriparser.vcxproj /p:Configuration=%CONFIGURATION%
-msbuild libUriParser.vcxproj /p:Configuration=%CONFIGURATION%
-popd
-popd
-
-rem ============ SFML ==================
-pushd 3rdParty\SFML
-rd /S /Q build
-mkdir build
-pushd build
-cmake -G %CMAKE_GEN_TARGET% -DSFML_BUILD_EXAMPLES=FALSE -DBUILD_SHARED_LIBS:BOOL=FALSE -DSFML_USE_STATIC_STD_LIBS:BOOL=TRUE ..
-msbuild ALL_BUILD.vcxproj /p:Configuration=%CONFIGURATION%
-popd
-popd
 
 rem ============ dasbox ================
 rd /S /Q cmake_tmp
-mkdir cmake_tmp
-pushd cmake_tmp
-cmake -G %CMAKE_GEN_TARGET% -DDASBOX_USE_STATIC_STD_LIBS:BOOL=TRUE ../src
+mkdir build
+pushd build
+cmake -G %CMAKE_GEN_TARGET% -DDASBOX_USE_STATIC_STD_LIBS:BOOL=TRUE ..
 msbuild dasbox.vcxproj /p:Configuration=%CONFIGURATION%
 popd
-
-rem ============ copy ==================
-mkdir bin
-copy cmake_tmp\%CONFIGURATION%\dasbox.exe bin
-
-

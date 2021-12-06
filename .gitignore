@@ -9,7 +9,9 @@ install_manifest.txt
 compile_commands.json
 CTestTestfile.cmake
 _deps
+.vscode
 dasbox.exe
 bin
 dasbox
 cmake_tmp
+build

@@ -78,7 +78,6 @@ include_directories(
 link_directories(
   3rdParty/daScript/build
   3rdParty/SFML/build/lib
-  3rdParty/zstd/build/cmake/build/lib
 )
 
 if(MSVC)
@@ -99,18 +98,13 @@ if(WIN32)
     Opengl32
     libUriParser
     libDaScript
+    libzstd_static
     freetype
-    zstd_static
-    optimized sfml-main
-    optimized sfml-graphics-s
-    optimized sfml-network-s
-    optimized sfml-system-s
-    optimized sfml-window-s
-    debug sfml-main-d
-    debug sfml-graphics-s-d
-    debug sfml-network-s-d
-    debug sfml-system-s-d
-    debug sfml-window-s-d
+    sfml-main
+    sfml-graphics
+    sfml-network
+    sfml-system
+    sfml-window
   )
 
 endif()
@@ -125,15 +119,12 @@ if(UNIX)
     dasbox
     libDaScript
     libUriParser
-    optimized sfml-network-s
-    optimized sfml-graphics-s
-    optimized sfml-window-s
-    optimized sfml-system-s
-    debug sfml-network-s-d
-    debug sfml-graphics-s-d
-    debug sfml-window-s-d
-    debug sfml-system-s-d
-    libzstd.a
+    libzstd_static
+    sfml-main
+    sfml-graphics
+    sfml-network
+    sfml-system
+    sfml-window
     X11
     udev
     pthread
@@ -144,6 +135,15 @@ if(UNIX)
     Xcursor
   )
 endif()
+
+add_dependencies(dasbox
+  libzstd_static
+  sfml-main
+  sfml-graphics
+  sfml-network
+  sfml-system
+  sfml-window
+)
 
 
 set_target_properties(dasbox PROPERTIES

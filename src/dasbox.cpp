@@ -283,10 +283,54 @@ void check_delayed_variables()
 }
 //-------------------------------------------------------------------------------------
 
+const char * dasbox_debug_agent_category = "dasbox_debug_angent";
+
+class DasboxDebugAgent final : public das::DebugAgent
+{
+public:
+  virtual void onCreateContext (Context *) {}
+  virtual void onDestroyContext (Context *) {}
+  virtual bool onLog (int level, const char * text)
+  {
+    switch (level)
+    {
+      case LogLevel::verbose:
+      case LogLevel::say:
+        print_text("%s", text);
+        break;
+
+      case LogLevel::warning:
+        print_text("WARNING: %s", text);
+        break;
+
+      default:  // case LogLevel::error:
+        print_error("%s", text);
+        break;
+    }
+    return true;
+  }
+};
+
+static smart_ptr<DasboxDebugAgent> dasbox_debug_agent = make_smart<DasboxDebugAgent>();
+
+
+static void setup_debug_agent(Context * ctx)
+{
+  if (ctx && !hasDebugAgentContext(dasbox_debug_agent_category, nullptr, ctx))
+    installDebugAgent(dasbox_debug_agent, dasbox_debug_agent_category, nullptr, ctx);
+}
+
 struct PlaygroundContext final : das::Context
 {
-  PlaygroundContext(uint32_t stackSize) : das::Context(stackSize) {}
-  PlaygroundContext(Context & ctx, uint32_t category) : das::Context(ctx, category) {}
+  PlaygroundContext(uint32_t stackSize) : das::Context(stackSize)
+  {
+    setup_debug_agent(this);
+  }
+
+  PlaygroundContext(Context & ctx, uint32_t category) : das::Context(ctx, category)
+  {
+    setup_debug_agent(this);
+  }
 
   void to_out(const char * message)
   {
@@ -351,7 +395,6 @@ int get_heap_memory_usage()
 {
   return int(das_file->ctx->heap->bytesAllocated());
 }
-
 
 static void find_live_function(SimFunction ** fn, const char * fn_name)
 {

@@ -102,26 +102,32 @@ def act_test_make_color32(t: T?)
 def construct_color_int(red, green, blue, alpha = 255)
     return uint(alpha) << 24u | uint(red) << 16U | uint(green) << 8U | uint(blue)
 
+def approxEqual(a; b; msg = ""; max_diff = 1e-5f; max_rel_diff = FLT_EPSILON): bool
+    let diff = abs(a - b)
+    if diff < max_diff
+        return true
+    return diff < (max(abs(a), abs(b)) * max_rel_diff)
+        
 [test]
 def act_test_normalize_angle(t: T?)
     t |> run("-PI:PI") <| @@ ( t : T? )
         for a in range(-99, 100)
             let angle = float(a) * PI / 100.0
-            t |> approxEqual(angle, normalize_angle(angle))
+            t |> success(approxEqual(angle, normalize_angle(angle)))
 
     t |> run("-3PI:-PI") <| @@ ( t : T? )
         for a in range(-99, 100)
             let angle = float(a) * PI / 100.0
-            t |> approxEqual(angle, normalize_angle(angle - 2.0 * PI))
+            t |> success(approxEqual(angle, normalize_angle(angle - 2.0 * PI)))
     
     t |> run("PI:3PI") <| @@ ( t : T? )
         for a in range(-99, 100)
             let angle = float(a) * PI / 100.0 
-            t |> approxEqual(angle, normalize_angle(angle + 2.0 * PI))
+            t |> success(approxEqual(angle, normalize_angle(angle + 2.0 * PI)))
     
     t |> run("2 PI N") <| @@ ( t : T? )
         for N in range(-10, 11)
-            t |> approxEqual(0.0, normalize_angle(2.0 * PI * float(N)))
+            t |> success(approxEqual(0.0, normalize_angle(2.0 * PI * float(N))))
     
 
 [test]

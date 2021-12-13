@@ -41,16 +41,16 @@ def draw()
 
 
 [test]
-def init_test1_resolution(t: T?)
-    var heights = [[auto 720; 1080; 300]]
-    var widths = [[auto 1280; 1920; 400]]
-    var tests = [[auto "HD"; "full HD"; "400x300"]]
+def init_test_resolution(t: T?)
+    let heights = [[auto 720; 1080; 300]]
+    let widths = [[auto 1280; 1920; 400]]
+    let testNames = [[auto "HD"; "full HD"; "400x300"]]
 
-    for my_height, my_width, my_test in heights, widths, tests
-        t |> run(my_test) <| @ ( t : T? )
-            set_resolution(my_width, my_height)
-            t |> equal(get_screen_height(), my_height)
-            t |> equal(get_screen_width(), my_width)
+    for h, w, testName in heights, widths, testNames
+        t |> run(testName) <| @ ( t : T? )
+            set_resolution(w, h)
+            t |> equal(h , get_screen_height())
+            t |> equal(w, get_screen_width())
 
    
     t |> run("800x800") <| @ ( t : T? )
@@ -60,96 +60,83 @@ def init_test1_resolution(t: T?)
     
 
 [test]
-def init_test2_font(t: T?)
-    var font_names = [[auto "mono"; "sans"; "Montserrat-Regular"; "Aqum"; "Shadower"]]
-    for font_name in font_names
-        var font := font_name
+def init_test_font_type(t: T?)
+    for fontName in [[auto "mono"; "sans"; "Montserrat-Regular"; "Aqum"; "Shadower"]]
+        var font = fontName
         if font != "mono" && font != "sans"
             font = "custom_fonts/{font}.ttf"
-        t |> run("{font_name} font type") <| @ ( t : T? )
-            set_font_name(font)
-            t |> equal(get_current_font_name(), font)
 
-    
-    for size in range(10, 21)
-        t |> run("{size} font size") <| @ ( t : T? )
-            set_font_size(size)
-            t |> equal(get_current_font_size(), size)
+        set_font_name(font)
+        t |> equal(font, get_current_font_name())
 
 
 [test]
-def init_test3_make_color32(t: T?)
+def act_test_make_color32(t: T?)
     t |> run("rgba_int") <| @ ( t : T? )
         for color in range(255)
-            t |> equal(make_color32(color, 0, 0, 0), construct_color_int(color, 0, 0, 0))
-            t |> equal(make_color32(0, color, 0, 0), construct_color_int(0, color, 0, 0))
-            t |> equal(make_color32(0, 0, color, 0), construct_color_int(0, 0, color, 0))
-            t |> equal(make_color32(0, 0, 0, color), construct_color_int(0, 0, 0, color))
+            t |> equal(construct_color_int(color, 0, 0, 0), make_color32(color, 0, 0, 0))
+            t |> equal(construct_color_int(0, color, 0, 0), make_color32(0, color, 0, 0))
+            t |> equal(construct_color_int(0, 0, color, 0), make_color32(0, 0, color, 0))
+            t |> equal(construct_color_int(0, 0, 0, color), make_color32(0, 0, 0, color))
 
     t |> run("rgb_int") <| @ ( t : T? )
         for color in range(255)
-            t |> equal(make_color32(color, 0, 0), construct_color_int(color, 0, 0))
-            t |> equal(make_color32(0, color, 0), construct_color_int(0, color, 0))
-            t |> equal(make_color32(0, 0, color), construct_color_int(0, 0, color))
+            t |> equal(construct_color_int(color, 0, 0), make_color32(color, 0, 0))
+            t |> equal(construct_color_int(0, color, 0), make_color32(0, color, 0))
+            t |> equal(construct_color_int(0, 0, color), make_color32(0, 0, color))
     
     t |> run("rgba_uint") <| @ ( t : T? )
         for color in range(255)
-            t |> equal(make_color32(uint(color), 0U, 0U, 0U), construct_color_int(color, 0, 0, 0))
-            t |> equal(make_color32(0U, uint(color), 0U, 0U), construct_color_int(0, color, 0, 0))
-            t |> equal(make_color32(0U, 0U, uint(color), 0U), construct_color_int(0, 0, color, 0))
-            t |> equal(make_color32(0U, 0U, 0U, uint(color)), construct_color_int(0, 0, 0, color))
+            t |> equal(construct_color_int(color, 0, 0, 0), make_color32(uint(color), 0U, 0U, 0U))
+            t |> equal(construct_color_int(0, color, 0, 0), make_color32(0U, uint(color), 0U, 0U))
+            t |> equal(construct_color_int(0, 0, color, 0), make_color32(0U, 0U, uint(color), 0U))
+            t |> equal(construct_color_int(0, 0, 0, color), make_color32(0U, 0U, 0U, uint(color)))
 
     t |> run("rgb_uint") <| @ ( t : T? )
         for color in range(255)
-            t |> equal(make_color32(uint(color), 0U, 0U), construct_color_int(color, 0, 0))
-            t |> equal(make_color32(0U, uint(color), 0U), construct_color_int(0, color, 0))
-            t |> equal(make_color32(0U, 0U, uint(color)), construct_color_int(0, 0, color))
+            t |> equal(construct_color_int(color, 0, 0), make_color32(uint(color), 0U, 0U))
+            t |> equal(construct_color_int(0, color, 0), make_color32(0U, uint(color), 0U))
+            t |> equal(construct_color_int(0, 0, color), make_color32(0U, 0U, uint(color)))
 
 
 def construct_color_int(red, green, blue, alpha = 255)
-    var res = 0U
-    res += uint(blue)
-    res += uint(green) * uint(pow(16.0, 2.0))
-    res += uint(red) * uint(pow(16.0, 4.0))
-    res += uint(alpha) * uint(pow(16.0, 6.0))
-    return res
+    return uint(alpha) << 24u | uint(red) << 16U | uint(green) << 8U | uint(blue)
 
 [test]
-def draw_test2_pixel(t: T?)
-    var my_height = 10
-    var my_width = 20
-    var img <- create_image(my_width, my_height)
+def act_test_normalize_angle(t: T?)
+    t |> run("-PI:PI") <| @@ ( t : T? )
+        for a in range(-99, 100)
+            let angle = float(a) * PI / 100.0
+            t |> approxEqual(angle, normalize_angle(angle))
 
-    for i in range(my_width)
-        for j in range(my_height)
-            let my_color = make_color(float(i) / float(my_width), float(j) / float(my_height))
-            img |> set_pixel(i, j) <| my_color
-            t |> equal(my_color, img |> get_pixel(i, j))
+    t |> run("-3PI:-PI") <| @@ ( t : T? )
+        for a in range(-99, 100)
+            let angle = float(a) * PI / 100.0
+            t |> approxEqual(angle, normalize_angle(angle - 2.0 * PI))
+    
+    t |> run("PI:3PI") <| @@ ( t : T? )
+        for a in range(-99, 100)
+            let angle = float(a) * PI / 100.0 
+            t |> approxEqual(angle, normalize_angle(angle + 2.0 * PI))
+    
+    t |> run("2 PI N") <| @@ ( t : T? )
+        for N in range(-10, 11)
+            t |> approxEqual(0.0, normalize_angle(2.0 * PI * float(N)))
+    
+
+[test]
+def draw_test_img_pixel(t: T?)
+    let h = 10
+    let w = 20
+    var img <- create_image(w, h)
+
+    for i in range(w)
+        for j in range(h)
+            let color = make_color(float(i) / float(w), float(j) / float(h))
+            img |> set_pixel(i, j) <| color
+            t |> equal(color, img |> get_pixel(i, j))
     
     delete img
-    
-    
-
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
 
 // options debugger
 // require daslib/debug

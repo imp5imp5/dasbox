@@ -273,24 +273,23 @@ const char * get_dasbox_exe_path()
 
 void dasbox_log(int level, const char * message)
 {
+  if (level < das::getVerbosityLogLevel() && level < LogLevel::critical)
+    return;
+
   if (!message)
     message = "";
 
-  switch (level)
-  {
-    case LogLevel::verbose:
-      print_text("%s", message);
-      break;
-    case LogLevel::say:
-      print_note("%s", message);
-      break;
-    case LogLevel::warning:
-      print_warning("%s", message);
-      break;
-    default: //case LogLevel::error:
-      print_error("%s", message);
-      break;
-  }
+  if (level >= LogLevel::critical)
+    print_exception("%s", message);
+  else if (level >= LogLevel::error)
+    print_error("%s", message);
+  else if (level >= LogLevel::warning)
+    print_warning("%s", message);
+  else if (level >= LogLevel::info)
+    print_note("%s", message);
+  else
+    print_text("%s", message);
+
 }
 
 const char * builtin_find_main_das_file_in_directory(const char * path, Context * context, LineInfoArg * at)

@@ -43,6 +43,7 @@ void print_exception(const char * format, ...);
 void print_note(const char * format, ...);
 void print_warning(const char * format, ...);
 void print_text(const char * format, ...);
+void dasbox_log(int level, const char * message);
 void reinterpret_error_as_note(bool is_note);
 void os_debug_break();
 void fetch_cerr();

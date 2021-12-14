@@ -36,8 +36,8 @@ def print_error(text: string#)
 
 
 [export]
-def print_note(text: string#)
-    dasbox_log(LOG_SAY, text)
+def print_info(text: string#)
+    dasbox_log(LOG_INFO, text)
 
 
 [export]

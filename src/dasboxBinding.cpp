@@ -271,6 +271,28 @@ const char * get_dasbox_exe_path()
 #endif
 }
 
+void dasbox_log(int level, const char * message)
+{
+  if (!message)
+    message = "";
+
+  switch (level)
+  {
+    case LogLevel::verbose:
+      print_text("%s", message);
+      break;
+    case LogLevel::say:
+      print_note("%s", message);
+      break;
+    case LogLevel::warning:
+      print_warning("%s", message);
+      break;
+    default: //case LogLevel::error:
+      print_error("%s", message);
+      break;
+  }
+}
+
 const char * builtin_find_main_das_file_in_directory(const char * path, Context * context, LineInfoArg * at)
 {
   string fn = fs::find_main_das_file_in_directory(path);
@@ -673,6 +695,9 @@ public:
     addExtern<DAS_BIND_FUN(dasbox_execute)>(*this, lib, "dasbox_execute",
       SideEffects::modifyExternal, "dasbox_execute")
       ->arg("file_name");
+
+    addExtern<DAS_BIND_FUN(dasbox_log)>
+      (*this, lib, "dasbox_log", SideEffects::modifyExternal, "dasbox_log");
 
     addExtern<DAS_BIND_FUN(get_dasbox_version)>
       (*this, lib, "get_dasbox_version", SideEffects::accessExternal, "get_dasbox_version");

@@ -115,6 +115,22 @@ void print_note(const char * format, ...)
   logger.setState(LOGGER_NORMAL);
 }
 
+void print_warning(const char * format, ...)
+{
+  static char buf[16000];
+  va_list args;
+  va_start(args, format);
+  vsnprintf(buf, sizeof(buf), format, args);
+  buf[sizeof(buf) - 1] = 0;
+  va_end(args);
+  logger.setState(LOGGER_WARNING);
+  logger << "WARNING: ";
+  logger << buf;
+  if (!ends_with_newline(buf))
+    logger << "\n";
+  logger.setState(LOGGER_NORMAL);
+}
+
 void print_text(const char * format, ...)
 {
   static char buf[16000];
@@ -175,6 +191,7 @@ void Logger::applyStateColor()
   switch (state)
   {
   case LOGGER_ERROR: curColor = ERROR_LINE_COLOR; break;
+  case LOGGER_WARNING: curColor = WARNING_LINE_COLOR; break;
   case LOGGER_NOTE: curColor = NOTE_LINE_COLOR; break;
   default: curColor = NORMAL_LINE_COLOR; break;
   }

@@ -41,6 +41,7 @@ extern std::string scheduled_screenshot_file_name;
 void print_error(const char * format, ...);
 void print_exception(const char * format, ...);
 void print_note(const char * format, ...);
+void print_warning(const char * format, ...);
 void print_text(const char * format, ...);
 void reinterpret_error_as_note(bool is_note);
 void os_debug_break();

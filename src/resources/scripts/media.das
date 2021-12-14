@@ -10,3 +10,36 @@ require daslib/dasbox_graphics_utils public
 require daslib/dasbox_sound_utils public
 require daslib/dasbox_unicode_utils public
 require daslib/live public
+
+require debugapi
+
+
+class DasboxLogAgent__ : DapiDebugAgent
+    def override onLog(level: int; text: string#): bool
+        dasbox_log(level, text)
+        return true
+
+
+[export]
+def dasbox_logger_agent__(ctx : Context)
+    install_new_debug_agent(new DasboxLogAgent__(), "dasbox_debug_agent")
+
+
+[export]
+def intenral_before_initialize
+    fork_debug_agent_context(@@dasbox_logger_agent__)
+
+
+[export]
+def print_error(text: string#)
+    dasbox_log(LOG_ERROR, text)
+
+
+[export]
+def print_note(text: string#)
+    dasbox_log(LOG_SAY, text)
+
+
+[export]
+def print_warning(text: string#)
+    dasbox_log(LOG_WARNING, text)

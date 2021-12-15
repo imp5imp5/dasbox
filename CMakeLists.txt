@@ -51,6 +51,7 @@ add_subdirectory(3rdParty/zstd/build/cmake)
 
 # SFML -------------------------------
 set(SFML_BUILD_EXAMPLES FALSE)
+set(SFML_BUILD_AUDIO FALSE)
 set(BUILD_SHARED_LIBS FALSE)
 set(SFML_USE_STATIC_STD_LIBS TRUE)
 

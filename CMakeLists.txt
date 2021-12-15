@@ -100,7 +100,6 @@ if(WIN32)
     libDaScript
     libzstd_static
     freetype
-    sfml-main
     sfml-graphics
     sfml-network
     sfml-system
@@ -120,7 +119,6 @@ if(UNIX)
     libDaScript
     libUriParser
     libzstd_static
-    sfml-main
     sfml-graphics
     sfml-network
     sfml-system
@@ -138,7 +136,6 @@ endif()
 
 add_dependencies(dasbox
   libzstd_static
-  sfml-main
   sfml-graphics
   sfml-network
   sfml-system

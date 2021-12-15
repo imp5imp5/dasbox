@@ -30,7 +30,11 @@ namespace das {using namespace std;}
 void print_error(const char * format, ...);
 namespace fs { bool is_path_string_valid(const char * path); }
 
-#define DAS_IS_PATH_VALID(path) fs::is_path_string_valid(path)
+#ifdef BUILDING_DASBOX
+#  define DAS_IS_PATH_VALID(path) fs::is_path_string_valid(path)
+#else
+#  define DAS_IS_PATH_VALID(path) !!path
+#endif
 
 #ifndef DAS_STD_HAS_BIND
 #  define DAS_STD_HAS_BIND 1
@@ -52,17 +56,23 @@ namespace fs { bool is_path_string_valid(const char * path); }
 #  define DAS_SANITIZER  0
 #endif
 
-#if !DASCRIPT_STANDALONE
 
 #ifndef DAS_FATAL_LOG
-#  define DAS_FATAL_LOG  print_error
+#  ifdef BUILDING_DASBOX
+#    define DAS_FATAL_LOG  print_error
+#  else
+#    define DAS_FATAL_LOG  printf
+#  endif
 #endif
 
 #ifndef DAS_FATAL_ERROR
-#  define DAS_FATAL_ERROR  do { print_error("FATAL ERROR"); } while (0)
+#  ifdef BUILDING_DASBOX
+#    define DAS_FATAL_ERROR  do { print_error("FATAL ERROR"); } while (0)
+#  else
+#    define DAS_FATAL_ERROR  do { assert(0 && "FATAL ERROR"); exit(-1); } while (0)
+#  endif
 #endif
 
-#endif // DASCRIPT_STANDALONE
 
 #ifndef DAS_BIND_EXTERNAL
   #if defined(_WIN32) && defined(_WIN64)

@@ -33,7 +33,7 @@ set(DAS_STBIMAGE_DISABLED YES)
 set(DAS_STBTRUETYPE_DISABLED YES)
 set(DAS_STDDLG_DISABLED YES)
 set(DAS_XBYAK_DISABLED YES)
-# set(DAS_BUILD_TOOLS NO) # <--- need to build tools to support generation build step in daScript modules
+# set(DAS_BUILD_TOOLS NO) # <--- need to build tools to support AOT generation build step in daScript modules
 set(DAS_CONFIG_INCLUDE_DIR "src")
 
 add_subdirectory(3rdParty/daScript)
@@ -85,6 +85,14 @@ if(MSVC)
   set(SRC ${SRC} src/icon/icon.rc)
   link_directories(3rdParty/SFML/extlibs/libs-msvc/x64)
 endif()
+
+
+# log implementation for standalone executables
+add_library(logStandalone STATIC src/daScript/logStandalone.cpp)
+add_dependencies(daScript logStandalone)
+target_link_libraries(daScript logStandalone)
+target_link_libraries(soundAot logStandalone)
+target_link_libraries(minfftAot logStandalone)
 
 
 if(WIN32)

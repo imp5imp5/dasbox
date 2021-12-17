@@ -58,19 +58,11 @@ namespace fs { bool is_path_string_valid(const char * path); }
 
 
 #ifndef DAS_FATAL_LOG
-#  ifdef BUILDING_DASBOX
-#    define DAS_FATAL_LOG  print_error
-#  else
-#    define DAS_FATAL_LOG  printf
-#  endif
+#  define DAS_FATAL_LOG  print_error
 #endif
 
 #ifndef DAS_FATAL_ERROR
-#  ifdef BUILDING_DASBOX
-#    define DAS_FATAL_ERROR  do { print_error("FATAL ERROR"); } while (0)
-#  else
-#    define DAS_FATAL_ERROR  do { assert(0 && "FATAL ERROR"); exit(-1); } while (0)
-#  endif
+#  define DAS_FATAL_ERROR  do { print_error("FATAL ERROR"); } while (0)
 #endif
 
 

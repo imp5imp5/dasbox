@@ -271,10 +271,12 @@ const char * get_dasbox_exe_path()
 #endif
 }
 
+static das::LogLevel log_verbosity = LogLevel::warning;
+
 void dasbox_log(int level, const char * message)
 {
-  if (level < das::getVerbosityLogLevel() && level < LogLevel::critical)
-    return;
+  if (level < log_verbosity && level < LogLevel::critical)
+   return;
 
   if (!message)
     message = "";

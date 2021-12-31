@@ -62,7 +62,7 @@ namespace fs { bool is_path_string_valid(const char * path); }
 #endif
 
 #ifndef DAS_FATAL_ERROR
-#  define DAS_FATAL_ERROR  do { print_error("FATAL ERROR"); } while (0)
+#  define DAS_FATAL_ERROR  print_error
 #endif
 
 

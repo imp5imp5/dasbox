@@ -99,76 +99,61 @@ target_link_libraries(soundAot logStandalone)
 target_link_libraries(minfftAot logStandalone)
 
 
+# dasbox
+add_executable(dasbox ${SRC})
+target_compile_features(dasbox PRIVATE cxx_std_17)
+
+# library dependencies on all platforms
+target_link_libraries(dasbox
+  libDaScript
+  libUriParser
+  libDasModuleRequests
+  libzstd_static
+  freetype
+  sfml-graphics
+  sfml-network
+  sfml-system
+  sfml-window
+)
+
+add_dependencies(dasbox
+  libzstd_static
+  libDasModuleRequests
+  sfml-graphics
+  sfml-network
+  sfml-system
+  sfml-window
+)
+
+# platform-specific
 if(WIN32)
-  add_executable(dasbox ${SRC})
-  target_compile_features(dasbox PRIVATE cxx_std_17)
   set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT dasbox)
   set(CMAKE_FIND_LIBRARY_SUFFIXES ".lib")
   set(CMAKE_CXX_FLAGS "-DBUILDING_DASBOX=1")
-  target_link_libraries(
-    dasbox
+  target_link_libraries(dasbox
     legacy_stdio_definitions
     winmm
     Opengl32
-    libUriParser
-    libDaScript
-    libDasModuleRequests
-    libzstd_static
-    freetype
     sfml-main
-    sfml-graphics
-    sfml-network
-    sfml-system
-    sfml-window
   )
 
   add_dependencies(dasbox
-    libzstd_static
-    libDasModuleRequests
     sfml-main
-    sfml-graphics
-    sfml-network
-    sfml-system
-    sfml-window
   )
-
 endif()
 
+
 if(UNIX)
-  add_executable(dasbox ${SRC})
-  target_compile_features(dasbox PRIVATE cxx_std_17)
   set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
   set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fno-rtti -fno-exceptions -fomit-frame-pointer -fno-stack-protector -s -DBUILDING_DASBOX=1 -DDAS_FUSION=2 -DDAS_DEBUGGER=1 -DNDEBUG=1")
   set(CMAKE_CXX_FLAGS_DEBUG "-O0 -fno-rtti -fno-exceptions -fomit-frame-pointer -fno-stack-protector -DBUILDING_DASBOX=1")
-  target_link_libraries(
-    dasbox
-    libDaScript
-    libUriParser
-    libDasModuleRequests
-    libzstd_static
-    sfml-graphics
-    sfml-network
-    sfml-system
-    sfml-window
-    X11
+  target_link_libraries(dasbox
     udev
     pthread
-    freetype
     GL
     dl
-    Xrandr
-    Xcursor
+    X11 Xrandr Xcursor
   )
-
-  add_dependencies(dasbox
-    libzstd_static
-    libDasModuleRequests
-    sfml-graphics
-    sfml-network
-    sfml-system
-    sfml-window
-  )
-
 endif()
 
 

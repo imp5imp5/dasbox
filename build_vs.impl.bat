@@ -1,5 +1,5 @@
 @if [%CMAKE_GEN_TARGET: =%] == [] (
-  exit/b
+  exit/b 1
 )
 
 @echo off
@@ -52,7 +52,7 @@ if exist "%programfiles%\Microsoft Visual Studio\%VS_NUMBER%\BuildTools" (
 
 @echo.
 @echo ERROR: Visual Studio %VS_NUMBER% not found
-@exit/b
+@exit/b 1
 
 :on_found
 

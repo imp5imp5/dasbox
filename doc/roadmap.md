@@ -1,5 +1,7 @@
 ## ROADMAP
 
+o AppVeyor CI
+
 * Streaming large audio files
 * Render targets
 * 2D Meshes

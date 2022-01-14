@@ -1,6 +1,6 @@
 # dasbox
 
-## Build for Windows
+## Build for Windows [![Build status](https://ci.appveyor.com/api/projects/status/9bbceuifufc846v0/branch/main?svg=true)](https://ci.appveyor.com/project/imp5imp5/dasbox/branch/main)
 
 Install Visual Studio 2017 or 2019\
 Install CMake https://cmake.org/install/ \
@@ -9,7 +9,7 @@ Install CMake https://cmake.org/install/ \
 `build_windows_vs_*.bat`
 
 
-## Build for Linux (tested only on Ubuntu 20)
+## Build for Linux (tested only on Ubuntu) [![Build status](https://ci.appveyor.com/api/projects/status/pfvxn3u8davbb8rj/branch/main?svg=true)](https://ci.appveyor.com/project/imp5imp5/dasbox-linux/branch/main)
 `sudo apt update`\
 `sudo apt install g++ make`
 

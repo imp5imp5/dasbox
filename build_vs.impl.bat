@@ -2,6 +2,9 @@
   exit/b 1
 )
 
+echo TEST NOTIFICATION IN PULL REQUESTS
+exit/b 1
+
 @echo off
 
 if [%CONFIGURATION%] == [] (

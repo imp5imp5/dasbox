@@ -52,12 +52,12 @@ def init_test_resolution(t: T?)
             t |> equal(h , get_screen_height())
             t |> equal(w, get_screen_width())
 
-   
+
     t |> run("800x800") <| @ ( t : T? )
         let x = 800
         set_resolution(x, x)
         t |> equal(get_screen_width(), get_screen_height())
-    
+
 
 [test]
 def init_test_font_type(t: T?)
@@ -84,7 +84,7 @@ def act_test_make_color32(t: T?)
             t |> equal(construct_color_int(color, 0, 0), make_color32(color, 0, 0))
             t |> equal(construct_color_int(0, color, 0), make_color32(0, color, 0))
             t |> equal(construct_color_int(0, 0, color), make_color32(0, 0, color))
-    
+
     t |> run("rgba_uint") <| @ ( t : T? )
         for color in range(255)
             t |> equal(construct_color_int(color, 0, 0, 0), make_color32(uint(color), 0U, 0U, 0U))
@@ -107,7 +107,7 @@ def approxEqual(a; b; msg = ""; max_diff = 1e-5f; max_rel_diff = FLT_EPSILON): b
     if diff < max_diff
         return true
     return diff < (max(abs(a), abs(b)) * max_rel_diff)
-        
+
 [test]
 def act_test_normalize_angle(t: T?)
     t |> run("-PI:PI") <| @@ ( t : T? )
@@ -119,16 +119,16 @@ def act_test_normalize_angle(t: T?)
         for a in range(-99, 100)
             let angle = float(a) * PI / 100.0
             t |> success(approxEqual(angle, normalize_angle(angle - 2.0 * PI)))
-    
+
     t |> run("PI:3PI") <| @@ ( t : T? )
         for a in range(-99, 100)
-            let angle = float(a) * PI / 100.0 
+            let angle = float(a) * PI / 100.0
             t |> success(approxEqual(angle, normalize_angle(angle + 2.0 * PI)))
-    
+
     t |> run("2 PI N") <| @@ ( t : T? )
         for N in range(-10, 11)
             t |> success(approxEqual(0.0, normalize_angle(2.0 * PI * float(N))))
-    
+
 
 [test]
 def draw_test_img_pixel(t: T?)
@@ -141,7 +141,7 @@ def draw_test_img_pixel(t: T?)
             let color = make_color(float(i) / float(w), float(j) / float(h))
             img |> set_pixel(i, j) <| color
             t |> equal(color, img |> get_pixel(i, j))
-    
+
     delete img
 
 // options debugger

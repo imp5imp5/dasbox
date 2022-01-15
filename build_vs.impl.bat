@@ -56,6 +56,11 @@ if exist "%programfiles%\Microsoft Visual Studio\%VS_NUMBER%\BuildTools" (
 
 :on_found
 
+rem ============ resources =============
+pushd src\resources
+call stringify_resources_fs8.bat
+popd
+
 
 set "INCLUDE=%CD%\src;%INCLUDE%"
 

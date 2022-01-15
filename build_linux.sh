@@ -1,6 +1,11 @@
 #!/bin/bash
 CPU_COUNT=`nproc --all`
 
+# ============ resources =============
+pushd src/resources
+./stringify_resources_fs8.sh
+popd
+
 # ============ dasbox ================
 rm -rf ./cmake_tmp/ 2>/dev/null
 mkdir cmake_tmp

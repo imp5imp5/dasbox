@@ -58,11 +58,6 @@ set(SFML_USE_STATIC_STD_LIBS TRUE)
 
 add_subdirectory(3rdParty/SFML)
 
-# requests
-set(DAS_REQUESTS_DIR ${CMAKE_SOURCE_DIR}/3rdParty/dasRequests)
-add_subdirectory(3rdParty/dasRequests)
-target_include_directories(libDasModuleRequests PRIVATE ${CMAKE_SOURCE_DIR}/3rdParty/daScript/include)
-
 
 file(GLOB SRC
   src/*.cpp
@@ -108,7 +103,6 @@ target_compile_features(dasbox PRIVATE cxx_std_17)
 target_link_libraries(dasbox
   libDaScript
   libUriParser
-  libDasModuleRequests
   libzstd_static
   freetype
   sfml-graphics
@@ -119,7 +113,6 @@ target_link_libraries(dasbox
 
 add_dependencies(dasbox
   libzstd_static
-  libDasModuleRequests
   sfml-graphics
   sfml-network
   sfml-system

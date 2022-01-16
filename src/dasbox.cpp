@@ -1472,7 +1472,6 @@ int main(int argc, char **argv)
   NEED_MODULE(ModuleGraphics);
   NEED_MODULE(ModuleDasbox);
   NEED_MODULE(ModuleSound);
-  NEED_MODULE(Module_Requests);
 
 
   if (run_for_plugin && trust_mode)

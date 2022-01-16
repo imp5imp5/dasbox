@@ -19,6 +19,3 @@
 [submodule "3rdParty/zstd"]
 	path = 3rdParty/zstd
 	url = git@github.com:imp5imp5/zstd.git
-[submodule "3rdParty/dasRequests"]
-	path = 3rdParty/dasRequests
-	url = git@github.com:VasiliyRyabtsev/dasRequests.git

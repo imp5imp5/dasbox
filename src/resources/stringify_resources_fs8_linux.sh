@@ -1,6 +1,6 @@
 if ! [ -f ../../3rdParty/fs8/build/fs8pack ]; then
   pushd ../../3rdParty/fs8
-  ./build.sh
+  ./build_linux.sh
   popd
 fi
 

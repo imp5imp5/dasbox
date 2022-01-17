@@ -3,7 +3,7 @@ CPU_COUNT=`nproc --all`
 
 # ============ resources =============
 pushd src/resources
-./stringify_resources_fs8.sh
+./stringify_resources_fs8_linux.sh
 popd
 
 # ============ dasbox ================

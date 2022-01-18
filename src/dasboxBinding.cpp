@@ -26,6 +26,10 @@
 #include <Windows.h>
 #endif
 
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#endif
+
 
 using namespace das;
 using namespace std;
@@ -254,8 +258,14 @@ const char * get_dasbox_exe_path()
 #if defined(PLATFORM_POSIX) || defined(__linux__)
   std::ifstream("/proc/self/comm") >> path;
   return path.c_str();
+#elif defined(__APPLE__)
+  char buf[512] = { 0 };
+  uint32_t size = sizeof(buf);
+  _NSGetExecutablePath(buf, &size);
+  path = string(buf);
+  return path.c_str();
 #elif defined(_WIN32)
-  char buf[512];
+  char buf[512] = { 0 };
   GetModuleFileNameA(nullptr, buf, sizeof(buf));
   char * p = buf;
   while (*p)

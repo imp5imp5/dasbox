@@ -34,6 +34,10 @@ set(DAS_STBTRUETYPE_DISABLED YES)
 set(DAS_STDDLG_DISABLED YES)
 set(DAS_XBYAK_DISABLED YES)
 set(DAS_SFML_DISABLED YES)
+set(DAS_FLEX_BISON_DISABLED YES)
+set(DAS_HV_DISABLED YES)
+set(DAS_MINFFT_DISABLED YES)
+set(DAS_SOUND_DISABLED YES)
 # set(DAS_BUILD_TOOLS NO) # <--- need to build tools to support AOT generation build step in daScript modules
 set(DAS_CONFIG_INCLUDE_DIR "src")
 
@@ -86,13 +90,15 @@ if(MSVC)
   link_directories(3rdParty/SFML/extlibs/libs-msvc/x64)
 endif()
 
+if(APPLE)
+  link_directories(3rdParty/SFML/extlibs/libs-osx/Frameworks/freetype.framework)
+endif()
+
 
 # log implementation for standalone executables
 add_library(logStandalone STATIC src/daScript/logStandalone.cpp)
 add_dependencies(daScript logStandalone)
 target_link_libraries(daScript logStandalone)
-target_link_libraries(soundAot logStandalone)
-target_link_libraries(minfftAot logStandalone)
 
 
 # dasbox
@@ -104,7 +110,7 @@ target_link_libraries(dasbox
   libDaScript
   libUriParser
   libzstd_static
-  freetype
+#  freetype
   sfml-graphics
   sfml-network
   sfml-system
@@ -134,10 +140,15 @@ if(WIN32)
   add_dependencies(dasbox
     sfml-main
   )
-endif()
-
-
-if(UNIX)
+elseif(APPLE)
+  set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+  set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fno-rtti -fno-exceptions -fomit-frame-pointer -fno-stack-protector -s -DBUILDING_DASBOX=1 -DDAS_FUSION=2 -DDAS_DEBUGGER=1 -DNDEBUG=1")
+  set(CMAKE_CXX_FLAGS_DEBUG "-O0 -fno-rtti -fno-exceptions -fomit-frame-pointer -fno-stack-protector -DBUILDING_DASBOX=1")
+  target_link_libraries(dasbox
+    pthread
+    dl
+  )
+elseif(UNIX)
   set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
   set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fno-rtti -fno-exceptions -fomit-frame-pointer -fno-stack-protector -s -DBUILDING_DASBOX=1 -DDAS_FUSION=2 -DDAS_DEBUGGER=1 -DNDEBUG=1")
   set(CMAKE_CXX_FLAGS_DEBUG "-O0 -fno-rtti -fno-exceptions -fomit-frame-pointer -fno-stack-protector -DBUILDING_DASBOX=1")
@@ -149,7 +160,6 @@ if(UNIX)
     X11 Xrandr Xcursor
   )
 endif()
-
 
 
 set_target_properties(dasbox PROPERTIES

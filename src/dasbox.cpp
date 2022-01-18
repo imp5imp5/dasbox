@@ -830,8 +830,8 @@ void create_window()
 
 
   sf::ContextSettings windowSettings;
-  windowSettings.majorVersion = 3;
-  windowSettings.minorVersion = 0;
+  windowSettings.majorVersion = 2;
+  windowSettings.minorVersion = 1;
 
   windowSettings.antialiasingLevel = 0;
 
@@ -894,6 +894,8 @@ void create_window()
   {
     sf::ContextSettings rtSettings = windowSettings;
     rtSettings.antialiasingLevel = delayed_window_antialiasing.second;
+    rtSettings.majorVersion = 2;
+    rtSettings.minorVersion = 1;
 
     render_texture->create(resolution.x, resolution.y, rtSettings);
     render_texture->setSmooth(false);
@@ -1066,7 +1068,7 @@ void take_window_screenshot(const string & file_name)
 
   if (!fs::is_path_string_valid(file_name.c_str()))
   {
-    print_error("Cannot write to '%s'. Absolute paths or access to the parent directory is prohibited.", file_name);
+    print_error("Cannot write to '%s'. Absolute paths or access to the parent directory is prohibited.", file_name.c_str());
     return;
   }
 

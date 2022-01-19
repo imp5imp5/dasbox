@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh
 
 # ============ resources =============
 pushd src/resources
@@ -12,5 +12,5 @@ pushd cmake_tmp
 #cmake -G "Unix Makefiles" -DDASBOX_USE_STATIC_STD_LIBS:BOOL=TRUE -DCMAKE_OSX_ARCHITECTURES="arm64" ..
 #make all -j 8
 cmake -G Xcode -DDASBOX_USE_STATIC_STD_LIBS:BOOL=TRUE -DCMAKE_OSX_ARCHITECTURES="arm64" ..
-cmake --build . --target dasbox --config Debug
+cmake --build . --target dasbox --config Release
 popd

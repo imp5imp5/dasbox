@@ -849,7 +849,9 @@ void create_window()
 
   if (screen_global_scale <= 0) // auto upscale
   {
-    if (resolution.x < sf::VideoMode::getDesktopMode().width / 2.5f && resolution.y < sf::VideoMode::getDesktopMode().height / 2.5f &&
+    float threshold = get_desktop_dpi() <= 100 ? 2.5f : 2.21f;
+
+    if (resolution.x < get_desktop_width() / threshold && resolution.y < get_desktop_height() / threshold &&
         disable_auto_upscale_arg == false)
     {
       screen_global_scale = 2;

@@ -13,3 +13,7 @@ namespace graphics
   int get_render_primitives_count();
   int get_updated_textures_count();
 }
+
+int get_desktop_width();
+int get_desktop_height();
+int get_desktop_dpi();

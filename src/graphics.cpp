@@ -8,6 +8,22 @@
 #include <daScript/simulate/simulate_visit_op.h>
 #include <string>
 
+#if defined(PLATFORM_POSIX) || defined(__linux__)
+  #include <X11/Xlib.h>
+#elif defined(__APPLE__)
+  //#include <mach-o/dyld.h>
+  #include <CoreGraphics/CGDirectDisplay.h>
+  #include <CoreGraphics/CGDisplayConfiguration.h>
+  //#include <IOKit/graphics/IOGraphicsLib.h>
+#elif defined(_WIN32)
+  #define WIN32_LEAN_AND_MEAN
+  #define NOMINMAX
+  #include <Windows.h>
+#else
+  static_assert(false, "unrecognized platform");
+#endif
+
+
 using namespace das;
 
 #define SWAP_RB(c) (((c) & 0xFF00FF00) | (((c) & 0x000000FF) << 16) | (((c) & 0x00FF0000) >> 16))
@@ -50,6 +66,42 @@ int get_desktop_height()
 {
   return sf::VideoMode::getDesktopMode().height;
 }
+
+int get_desktop_dpi()
+{
+#if defined(PLATFORM_POSIX) || defined(__linux__)
+
+  double xres, yres;
+  Display * dpy;
+  char * displayname = NULL;  // TODO: get from env
+  int scr = 0;
+
+  dpy = XOpenDisplay(displayname);
+  xres = ((((double) DisplayWidth(dpy, scr)) * 25.4) /
+      ((double) DisplayWidthMM(dpy, scr)));
+
+  XCloseDisplay(dpy);
+  return int(xres + 0.5);
+
+#elif defined(__APPLE__)
+
+  CGDirectDisplayID screen = CGMainDisplayID();
+  CGSize screenSizeMM = CGDisplayScreenSize(screen);
+  return int(get_desktop_width() * 25.4 / screenSizeMM.width);
+
+#elif defined(_WIN32)
+
+  HDC hdc = GetDC(0);
+  if (!hdc)
+    return 96;
+  int dpi = GetDeviceCaps(hdc, LOGPIXELSX);
+  ReleaseDC(0, hdc);
+
+#else
+  static_assert(false, "unrecognized platform");
+#endif
+}
+
 
 sf::Color conv_color(uint32_t c)
 {
@@ -1912,6 +1964,7 @@ public:
     addExtern<DAS_BIND_FUN(get_screen_height)>(*this, lib, "get_screen_height", SideEffects::accessExternal, "get_screen_height");
     addExtern<DAS_BIND_FUN(get_desktop_width)>(*this, lib, "get_desktop_width", SideEffects::accessExternal, "get_desktop_width");
     addExtern<DAS_BIND_FUN(get_desktop_height)>(*this, lib, "get_desktop_height", SideEffects::accessExternal, "get_desktop_height");
+    addExtern<DAS_BIND_FUN(get_desktop_dpi)>(*this, lib, "get_desktop_dpi", SideEffects::accessExternal, "get_desktop_dpi");
     addExtern<DAS_BIND_FUN(set_pixel)>(*this, lib, "set_pixel", SideEffects::modifyExternal, "set_pixel")
       ->args({"x", "y", "color"});
 

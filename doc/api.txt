@@ -477,6 +477,7 @@ class SoundHandle
 
   get_desktop_width(): int
   get_desktop_height(): int
+  get_desktop_dpi(): int
 
   get_time_after_start()    // in seconds
   reset_time_after_start()

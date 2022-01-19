@@ -110,7 +110,6 @@ target_link_libraries(dasbox
   libDaScript
   libUriParser
   libzstd_static
-#  freetype
   sfml-graphics
   sfml-network
   sfml-system

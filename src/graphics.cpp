@@ -96,9 +96,11 @@ int get_desktop_dpi()
     return 96;
   int dpi = GetDeviceCaps(hdc, LOGPIXELSX);
   ReleaseDC(0, hdc);
+  return dpi;
 
 #else
   static_assert(false, "unrecognized platform");
+  return 96;
 #endif
 }
 

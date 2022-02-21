@@ -548,7 +548,7 @@ static ma_device miniaudio_device;
 static volatile bool device_initialized = false;
 static ma_log ma_log_struct = { 0 };
 static ma_context context = { 0 };
-
+static ma_context_config context_config = { 0 };
 
 void on_error_log(void * user_data, ma_uint32 level, const char * message)
 {
@@ -580,7 +580,8 @@ void init_sound_lib_internal()
   ma_log_init(nullptr, &ma_log_struct);
   ma_log_register_callback(&ma_log_struct, {on_error_log, nullptr});
 
-  ma_context_init(NULL, 0, NULL, &context);
+  ma_context_init(NULL, 0, &context_config, &context);
+
   context.pLog = &ma_log_struct;
 
   ma_device_config deviceConfig;
@@ -592,13 +593,22 @@ void init_sound_lib_internal()
   deviceConfig.dataCallback = miniaudio_data_callback;
   deviceConfig.pUserData = nullptr;
 
-  if (ma_device_init(&context, &deviceConfig, &miniaudio_device) != MA_SUCCESS)
+#ifdef _WIN32
+  const ma_backend backends[] = { ma_backend_wasapi, ma_backend_dsound, ma_backend_jack, ma_backend_winmm };
+  ma_result res = ma_device_init_ex(backends, countof(backends), &context_config, &deviceConfig, &miniaudio_device);
+#else
+  ma_result res = ma_device_init(&context, &deviceConfig, &miniaudio_device);
+#endif
+
+  if (res != MA_SUCCESS)
   {
-    print_error("SOUND: Failed to open playback device");
+    print_error("SOUND: Failed to open playback device (%d)", res);
     return;
   }
 
   print_note("Sound device name: %s", miniaudio_device.playback.name);
+  if (miniaudio_device.pContext)
+    print_note("Sound backend: %s", ma_get_backend_name(miniaudio_device.pContext->backend));
 
   if (ma_device_start(&miniaudio_device) != MA_SUCCESS)
   {

@@ -2,6 +2,7 @@ require graphics
 require dasbox
 require math
 require strings
+require daslib/archive
 
 def create_image(width, height: int; pixels: string; palette: table<int; uint>&): Image
     var p <- [{for c in pixels; palette?[c] ?? 0u}]
@@ -260,4 +261,11 @@ def flip_image_x(image_handle: ImageHandle)
 
 def flip_image_y(image_handle: ImageHandle)
     images[image_handle.index] |> flip_image_y()
+
+
+def public serialize(var arch: Archive; var value: ImageHandle)
+    arch |> serialize_raw(value)
+
+def public serialize(var arch: Archive; var value: Mesh)
+    arch |> serialize_raw(value)
 

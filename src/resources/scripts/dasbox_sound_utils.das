@@ -2,6 +2,7 @@ require sound
 require dasbox
 require math
 require strings
+require daslib/archive
 
 var private sounds: array<PcmSound>
 var private deleted_sounds: array<int>
@@ -112,4 +113,11 @@ def play_sound_deferred(sound_handle: SoundHandle; volume, pitch, pan): PlayingS
 
 def play_sound_deferred(sound_handle: SoundHandle; volume, pitch, pan, start_time, stop_time): PlayingSoundHandle
     return sounds[sound_handle.index] |> play_sound_deferred(volume, pitch, pan, start_time, stop_time)
+
+
+def public serialize(var arch: Archive; var value: SoundHandle)
+    arch |> serialize_raw(value)
+
+def public serialize(var arch: Archive; var value: PlayingSoundHandle)
+    arch |> serialize_raw(value)
 

@@ -28,6 +28,8 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <Windows.h>
+#else // POSIX
+#include <signal.h>
 #endif
 
 using namespace std;
@@ -50,6 +52,7 @@ bool exec_script_scheduled = false;
 bool trust_mode = false;
 bool run_for_plugin = false;
 bool log_to_console = false;
+bool use_debug_trap = false;
 string plugin_main_function = "main";
 
 const char * exception_pos = "unknown";
@@ -75,7 +78,15 @@ int current_frame = 0;
 
 void os_debug_break()
 {
-//  freopen( stdout);
+  if (use_debug_trap)
+  {
+#ifdef _WIN32
+    __debugbreak();
+#else
+    raise(SIGTRAP);
+#endif
+  }
+
   fetch_cerr();
   print_error("Script break\n");
   longjmp(eval_buf, 1);
@@ -770,6 +781,9 @@ void process_args(int argc, char **argv)
 
       if (arg == "--trust")
         trust_mode = true;
+
+      if (arg == "--use-debug-trap")
+        use_debug_trap = true;
 
       if (arg == "--disable-auto-upscale")
         disable_auto_upscale_arg = true;

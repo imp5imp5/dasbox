@@ -30,7 +30,10 @@ Run your application:
 Optional comand line arguments:
 
   `--dasbox-console - duplicate output to console ('--' is also acceptable)` \
-  `--trust - allow access to any file on this computer`
+  `--trust - allow access to any file on this computer` \
+  `--disable-auto-upscale - disabling automatic zooming, by default the window will be zoomed in 2 times, if the window is 2.5 times less than the desktop resolution` \
+  `--use-debug-trap - cause the native code debugger to break on script breakpoint` \
+  `--disable-gc - disable garbage collection`
 
 Once the application is running, all the sources ('file_name.das' and all the sources requested from it) will be checked for changes and automatically reloaded. \
 The current directory will change to 'path_to_application_folder'. For security reasons access to parent directories from within the script will be forbidden.

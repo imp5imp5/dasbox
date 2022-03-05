@@ -53,6 +53,7 @@ bool trust_mode = false;
 bool run_for_plugin = false;
 bool log_to_console = false;
 bool use_debug_trap = false;
+bool use_garbage_collector = true;
 string plugin_main_function = "main";
 
 const char * exception_pos = "unknown";
@@ -779,6 +780,9 @@ void process_args(int argc, char **argv)
         exit_code_on_error = atoi(arg.c_str() + sizeof("--exit-on-error:") - 1);
       }
 
+      if (arg == "--disable-gc")
+        use_garbage_collector = false;
+
       if (arg == "--trust")
         trust_mode = true;
 
@@ -1354,7 +1358,7 @@ void run_das_for_ui()
 
     check_window_pos_changed();
 
-    if (das_file && das_file->ctx && !has_fatal_errors)
+    if (das_file && das_file->ctx && !has_fatal_errors && use_garbage_collector)
     {
       exec_function(fn_before_gc, nullptr);
       EXCEPTION_POS("ctx->collectHeap");

@@ -13,13 +13,13 @@ def color_to_float4(c: uint): float4
     let g = (c >> 8u) & 0xFF
     let r = (c >> 16u) & 0xFF
     let a = (c >> 24u) & 0xFF
-    return float4(r, g, b, a)
+    return float4(r, g, b, a) / 255.0
 
 def color_to_float3(c: uint): float3
     let b = c & 0xFF
     let g = (c >> 8u) & 0xFF
     let r = (c >> 16u) & 0xFF
-    return float3(r, g, b)
+    return float3(r, g, b) / 255.0
 
 def make_color(brightness: float): uint
     let ib = uint(saturate(brightness) * 255.0 + 0.5)

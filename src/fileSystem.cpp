@@ -424,7 +424,8 @@ string combine_path(const string & path1, const string & path2)
   string res = path1;
   while (!res.empty() && (res.back() == '/' || res.back() == '\\'))
     res.pop_back();
-  res += '/';
+  if (!res.empty())
+    res += '/';
   res += path2;
   return res;
 }

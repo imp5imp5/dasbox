@@ -1,21 +1,21 @@
 [submodule "3rdParty/daScript"]
 	path = 3rdParty/daScript
-	url = git@github.com:imp5imp5/daScript-1.git
+	url = https://github.com/imp5imp5/daScript-1.git
 [submodule "3rdParty/miniaudio"]
 	path = 3rdParty/miniaudio
-	url = git@github.com:mackron/miniaudio.git
+	url = https://github.com/mackron/miniaudio.git
 [submodule "3rdParty/SFML"]
 	path = 3rdParty/SFML
-	url = git@github.com:imp5imp5/SFML.git
+	url = https://github.com/imp5imp5/SFML.git
 [submodule "3rdParty/minfft"]
 	path = 3rdParty/minfft
-	url = git@github.com:aimukhin/minfft.git
+	url = https://github.com/aimukhin/minfft.git
 [submodule "samples/tests/dastest"]
 	path = samples/tests/dastest
-	url = git@github.com:profelis/das-test.git
+	url = https://github.com/profelis/das-test.git
 [submodule "3rdParty/fs8"]
 	path = 3rdParty/fs8
-	url = git@github.com:imp5imp5/fs8.git
+	url = https://github.com/imp5imp5/fs8.git
 [submodule "3rdParty/zstd"]
 	path = 3rdParty/zstd
-	url = git@github.com:imp5imp5/zstd.git
+	url = https://github.com/imp5imp5/zstd.git

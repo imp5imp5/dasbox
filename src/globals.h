@@ -1,6 +1,6 @@
 #pragma once
 
-#define DASBOX_VERSION "0.1.77"
+#define DASBOX_VERSION "0.1.78"
 
 #include <string>
 

@@ -3,6 +3,7 @@
 #include <daScript/simulate/simulate_visit_op.h>
 #include <daScript/das_project_specific.h>
 #include <daScript/misc/performance_time.h>
+#include <daScript/misc/job_que.h>
 #include <SFML/Graphics.hpp>
 #include <SFML/Graphics/BlendMode.hpp>
 #include <SFML/System.hpp>
@@ -31,6 +32,13 @@
 #else // POSIX
 #include <signal.h>
 #endif
+
+namespace das
+{
+  extern mutex g_jobQueMutex;
+  extern shared_ptr<JobQue> g_jobQue;
+};
+
 
 using namespace std;
 using namespace das;
@@ -1494,6 +1502,12 @@ int main(int argc, char **argv)
   NEED_MODULE(ModuleGraphics);
   NEED_MODULE(ModuleDasbox);
   NEED_MODULE(ModuleSound);
+
+  if (!das::g_jobQue)
+  {
+    lock_guard<mutex> guard(das::g_jobQueMutex);
+    das::g_jobQue = make_shared<das::JobQue>();
+  }
 
 
   if (run_for_plugin && trust_mode)

@@ -1,0 +1,31 @@
+{
+   // path to dasbox.exe
+   "dascript.compiler": "D:/dev/dascript/dasbox/dasbox.exe",
+
+   "dascript.server.args": [
+        "${file}",
+        "x",
+        "-main",
+        "main",
+        "--trust",
+        "--dasbox-console",
+        "--",
+        "--port",
+        "${port}",
+        "--project",
+        "plugin.das_project"
+    ],
+    "dascript.project.roots": [
+    ],
+    "dascript.policies.no_global_variables": false,
+    "dascript.policies.fail_on_lack_of_aot_export": false,
+    "dascript.project.scanWorkspace": true,
+ 
+    // additional settings
+    "editor.semanticHighlighting.enabled": true,
+    "editor.semanticTokenColorCustomizations": {
+        "rules": {
+            "modifier": "#58a16f"
+        }
+    },
+}

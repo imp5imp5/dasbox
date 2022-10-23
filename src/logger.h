@@ -20,7 +20,7 @@ enum
 };
 
 
-class Logger : public das::TextWriter
+class DasboxLogger : public das::TextWriter
 {
 public:
   std::stringstream cerrStream;
@@ -54,7 +54,7 @@ protected:
   void applyStateColor();
 };
 
-extern Logger logger;
+extern DasboxLogger dasbox_logger;
 
 void on_switch_to_log_screen();
 void on_return_from_log_screen();

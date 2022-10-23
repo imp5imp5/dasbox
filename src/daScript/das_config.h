@@ -115,3 +115,51 @@ using das_safe_set = std::set<K,C>;
 }
 #endif
 
+
+#ifndef DAS_BIND_EXTERNAL
+  #if defined(_WIN32) && defined(_WIN64)
+    #define DAS_BIND_EXTERNAL 1
+  #elif defined(__APPLE__)
+    #define DAS_BIND_EXTERNAL 1
+  #elif defined(__linux__)
+    #define DAS_BIND_EXTERNAL 1
+  #else
+    #define DAS_BIND_EXTERNAL 0
+  #endif
+#endif
+
+#ifndef DAS_PRINT_VEC_SEPARATROR
+#define DAS_PRINT_VEC_SEPARATROR ","
+#endif
+
+
+#ifndef das_to_stdout
+#define das_to_stdout(...) { fprintf(stdout, __VA_ARGS__); fflush(stdout); }
+#endif
+
+#ifndef das_to_stderr
+#define das_to_stderr(...) { fprintf(stderr, __VA_ARGS__); fflush(stderr); }
+#endif
+
+
+inline int das_soft_popcnt(uint32_t v)
+{
+  v = v - ((v >> 1) & 0x55555555);
+  v = (v & 0x33333333) + ((v >> 2) & 0x33333333);
+  return int(((v + (v >> 4) & 0xF0F0F0F) * 0x1010101) >> 24);
+}
+
+inline int das_soft_popcnt64(uint64_t v)
+{
+  v = v - ((v >> 1) & 0x5555555555555555ULL);
+  v = (v & 0x3333333333333333ULL) + ((v >> 2) & 0x3333333333333333ULL);
+  v = (v + (v >> 4)) & 0x0F0F0F0F0F0F0F0FULL;
+  return int((uint64_t)(v * 0x0101010101010101ULL) >> 56);
+}
+
+
+
+
+
+
+

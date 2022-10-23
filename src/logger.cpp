@@ -23,7 +23,7 @@
 
 using namespace std;
 
-Logger logger;
+DasboxLogger dasbox_logger;
 static bool error_as_note = false;
 static bool saved_relative_mode = false;
 static bool saved_cursor_hidden = false;
@@ -62,21 +62,21 @@ void print_error(const char * format, ...)
 
   if (error_as_note)
   {
-    logger.setState(LOGGER_NOTE);
-    logger << "Note: ";
-    logger << buf;
+    dasbox_logger.setState(LOGGER_NOTE);
+    dasbox_logger << "Note: ";
+    dasbox_logger << buf;
     if (!ends_with_newline(buf))
-      logger << "\n";
-    logger.setState(LOGGER_NORMAL);
+      dasbox_logger << "\n";
+    dasbox_logger.setState(LOGGER_NORMAL);
   }
   else
   {
-    logger.setTopErrorLine();
-    logger.setState(LOGGER_ERROR);
-    logger << "\nERROR: ";
-    logger << buf;
-    logger << "\n";
-    logger.setState(LOGGER_NORMAL);
+    dasbox_logger.setTopErrorLine();
+    dasbox_logger.setState(LOGGER_ERROR);
+    dasbox_logger << "\nERROR: ";
+    dasbox_logger << buf;
+    dasbox_logger << "\n";
+    dasbox_logger.setState(LOGGER_NORMAL);
   }
 
   if (exit_on_error)
@@ -91,12 +91,12 @@ void print_exception(const char * format, ...)
   vsnprintf(buf, sizeof(buf), format, args);
   buf[sizeof(buf) - 1] = 0;
   va_end(args);
-  logger.setTopErrorLine();
-  logger.setState(LOGGER_ERROR);
-  logger << "\nEXCEPTION: ";
-  logger << buf;
-  logger << "\n";
-  logger.setState(LOGGER_NORMAL);
+  dasbox_logger.setTopErrorLine();
+  dasbox_logger.setState(LOGGER_ERROR);
+  dasbox_logger << "\nEXCEPTION: ";
+  dasbox_logger << buf;
+  dasbox_logger << "\n";
+  dasbox_logger.setState(LOGGER_NORMAL);
 }
 
 void print_note(const char * format, ...)
@@ -107,12 +107,12 @@ void print_note(const char * format, ...)
   vsnprintf(buf, sizeof(buf), format, args);
   buf[sizeof(buf) - 1] = 0;
   va_end(args);
-  logger.setState(LOGGER_NOTE);
-  logger << "Note: ";
-  logger << buf;
+  dasbox_logger.setState(LOGGER_NOTE);
+  dasbox_logger << "Note: ";
+  dasbox_logger << buf;
   if (!ends_with_newline(buf))
-    logger << "\n";
-  logger.setState(LOGGER_NORMAL);
+    dasbox_logger << "\n";
+  dasbox_logger.setState(LOGGER_NORMAL);
 }
 
 void print_warning(const char * format, ...)
@@ -123,12 +123,12 @@ void print_warning(const char * format, ...)
   vsnprintf(buf, sizeof(buf), format, args);
   buf[sizeof(buf) - 1] = 0;
   va_end(args);
-  logger.setState(LOGGER_WARNING);
-  logger << "WARNING: ";
-  logger << buf;
+  dasbox_logger.setState(LOGGER_WARNING);
+  dasbox_logger << "WARNING: ";
+  dasbox_logger << buf;
   if (!ends_with_newline(buf))
-    logger << "\n";
-  logger.setState(LOGGER_NORMAL);
+    dasbox_logger << "\n";
+  dasbox_logger.setState(LOGGER_NORMAL);
 }
 
 void print_text(const char * format, ...)
@@ -139,15 +139,15 @@ void print_text(const char * format, ...)
   vsnprintf(buf, sizeof(buf), format, args);
   buf[sizeof(buf) - 1] = 0;
   va_end(args);
-  logger.setState(LOGGER_NORMAL);
-  logger << buf;
+  dasbox_logger.setState(LOGGER_NORMAL);
+  dasbox_logger << buf;
   if (!ends_with_newline(buf))
-    logger << "\n";
-  logger.setState(LOGGER_NORMAL);
+    dasbox_logger << "\n";
+  dasbox_logger.setState(LOGGER_NORMAL);
 }
 
 
-void Logger::clear()
+void DasboxLogger::clear()
 {
   logStrings.clear();
   lineColors.clear();
@@ -157,13 +157,13 @@ void Logger::clear()
   buf.clear();
 }
 
-void Logger::setTopErrorLine()
+void DasboxLogger::setTopErrorLine()
 {
   if (topErrorLine < 0)
-    topErrorLine = int(logger.logStrings.size());
+    topErrorLine = int(dasbox_logger.logStrings.size());
 }
 
-void Logger::output()
+void DasboxLogger::output()
 {
   int newPos = tellp();
   if (newPos != pos)
@@ -173,20 +173,20 @@ void Logger::output()
   }
 }
 
-void Logger::printAllLog()
+void DasboxLogger::printAllLog()
 {
   for (auto & s : logStrings)
     cout << s;
 }
 
-uint32_t Logger::setLogColor(uint32_t color)
+uint32_t DasboxLogger::setLogColor(uint32_t color)
 {
   uint32_t c = curColor;
   curColor = color;
   return c;
 }
 
-void Logger::applyStateColor()
+void DasboxLogger::applyStateColor()
 {
   switch (state)
   {
@@ -198,7 +198,7 @@ void Logger::applyStateColor()
 }
 
 
-void Logger::addString(const string & s)
+void DasboxLogger::addString(const string & s)
 {
 #ifndef NDEBUG
   bool duplicateLog = true;
@@ -296,14 +296,14 @@ static void copy_log_to_clipboard()
 
   if (select_from_line < 0)
   {
-    for (size_t i = 0; i < logger.logStrings.size(); i++)
-      s += logger.logStrings[i];
+    for (size_t i = 0; i < dasbox_logger.logStrings.size(); i++)
+      s += dasbox_logger.logStrings[i];
   }
   else if (select_from_line == select_to_line)
   {
     if (select_from_pos > select_to_pos)
       std::swap(select_from_pos, select_to_pos);
-    s = logger.logStrings[select_from_line];
+    s = dasbox_logger.logStrings[select_from_line];
     s.replace("\t", "    ");
     if (int(s.getSize()) > select_from_pos)
       s = s.substring(select_from_pos, select_to_pos - select_from_pos + 1);
@@ -315,7 +315,7 @@ static void copy_log_to_clipboard()
       std::swap(select_from_line, select_to_line);
     for (int i = select_from_line; i <= select_to_line; i++)
       if (i != ignoreLine)
-        s += logger.logStrings[i];
+        s += dasbox_logger.logStrings[i];
   }
 
   sf::Clipboard::setString(s);
@@ -378,7 +378,7 @@ static das::int2 mouse_pos_to_log_pos(das::float2 mouse_pos, bool allow_negative
   mouse_pos.y -= 2 + FONT_HEIGHT * 3;
   mouse_pos.y /= FONT_HEIGHT;
   das::int2 res = das::int2(int(mouse_pos.x), int(mouse_pos.y));
-  res.y += logger.topLine;
+  res.y += dasbox_logger.topLine;
   if (res.x < 0)
     res.x = 0;
   if (allow_negative_y)
@@ -391,8 +391,8 @@ static das::int2 mouse_pos_to_log_pos(das::float2 mouse_pos, bool allow_negative
     if (res.y < 0)
       res.y = 0;
   }
-  if (res.y >= int(logger.logStrings.size()))
-    res.y = int(logger.logStrings.size()) - 1;
+  if (res.y >= int(dasbox_logger.logStrings.size()))
+    res.y = int(dasbox_logger.logStrings.size()) - 1;
   return res;
 }
 
@@ -403,7 +403,7 @@ void update_log_screen(float dt)
   scroll_accum += input::get_mouse_scroll_delta() * 4.0f;
   if (abs(int(scroll_accum)) >= 1)
   {
-    logger.topLine -= int(scroll_accum);
+    dasbox_logger.topLine -= int(scroll_accum);
     scroll_accum -= int(scroll_accum);
   }
 
@@ -417,36 +417,36 @@ void update_log_screen(float dt)
     time_to_reset_scroll_accum = 2.0f;
 
   if (input::get_key_press(sf::Keyboard::Up))
-    logger.topLine--;
+    dasbox_logger.topLine--;
 
   if (input::get_key_press(sf::Keyboard::Down))
-    logger.topLine++;
+    dasbox_logger.topLine++;
 
   if (input::get_key_press(sf::Keyboard::PageUp))
   {
-    logger.topLine -= LOG_LINES_PER_SCREEN - 2;
+    dasbox_logger.topLine -= LOG_LINES_PER_SCREEN - 2;
     if (input::get_key(sf::Keyboard::LControl) || input::get_key(sf::Keyboard::RControl))
-      logger.topLine = 0;
+      dasbox_logger.topLine = 0;
   }
 
   if (input::get_key_press(sf::Keyboard::PageDown))
   {
-    logger.topLine += LOG_LINES_PER_SCREEN - 2;
+    dasbox_logger.topLine += LOG_LINES_PER_SCREEN - 2;
     if (input::get_key(sf::Keyboard::LControl) || input::get_key(sf::Keyboard::RControl))
-      logger.topLine = INT_MAX;
+      dasbox_logger.topLine = INT_MAX;
   }
 
   if (input::get_key_down(sf::Keyboard::Home))
-    logger.topLine = 0;
+    dasbox_logger.topLine = 0;
 
   if (input::get_key_down(sf::Keyboard::End))
-    logger.topLine = INT_MAX;
+    dasbox_logger.topLine = INT_MAX;
 
-  if (logger.topLine > int(logger.logStrings.size()) - LOG_LINES_PER_SCREEN + 2)
-    logger.topLine = int(logger.logStrings.size()) - LOG_LINES_PER_SCREEN + 2;
+  if (dasbox_logger.topLine > int(dasbox_logger.logStrings.size()) - LOG_LINES_PER_SCREEN + 2)
+    dasbox_logger.topLine = int(dasbox_logger.logStrings.size()) - LOG_LINES_PER_SCREEN + 2;
 
-  if (logger.topLine < 0)
-    logger.topLine = 0;
+  if (dasbox_logger.topLine < 0)
+    dasbox_logger.topLine = 0;
 
 
   if (input::get_key_down(sf::Keyboard::C) &&
@@ -458,7 +458,7 @@ void update_log_screen(float dt)
   if (input::get_mouse_button_down(0))
   {
     das::int2 mp = mouse_pos_to_log_pos(input::get_mouse_position());
-    if (mp.y >= logger.topLine && logger.logStrings.size() > 0)
+    if (mp.y >= dasbox_logger.topLine && dasbox_logger.logStrings.size() > 0)
     {
       mouse_down = true;
       select_from_line = select_to_line = mp.y;
@@ -514,15 +514,15 @@ void draw_log_screen()
     text_out_i(SAFE_AREA, SAFE_AREA, "Press \"Tab\" to switch back to application", 0);
   text_out_i(SAFE_AREA, SAFE_AREA + FONT_HEIGHT, "Up, Down, [Ctrl+] PgUp, [Ctrl+] PgDown - scroll", 0);
 
-  if (logger.logStrings.size() >= LOG_LINES_PER_SCREEN)
+  if (dasbox_logger.logStrings.size() >= LOG_LINES_PER_SCREEN)
   {
-    float relativePos = float(logger.topLine) / max(int(logger.logStrings.size()) - LOG_LINES_PER_SCREEN + 2, 1);
+    float relativePos = float(dasbox_logger.topLine) / max(int(dasbox_logger.logStrings.size()) - LOG_LINES_PER_SCREEN + 2, 1);
     fill_rect_i(screen_width - 4, FONT_HEIGHT * 3 + int(relativePos * (screen_height - FONT_HEIGHT * 4)), 3, FONT_HEIGHT,
       SCROLL_POSITION_COLOR);
   }
 
   int y = 2 + FONT_HEIGHT * 3;
-  for (size_t i = logger.topLine; i < logger.logStrings.size(); i++)
+  for (size_t i = dasbox_logger.topLine; i < dasbox_logger.logStrings.size(); i++)
   {
     if (select_from_line >= 0 &&
       int(i) >= min(select_from_line, select_to_line) && int(i) <= max(select_from_line, select_to_line))
@@ -538,7 +538,7 @@ void draw_log_screen()
       }
     }
 
-    text_out_i(SAFE_AREA, y, logger.logStrings[i].c_str(), logger.lineColors[i]);
+    text_out_i(SAFE_AREA, y, dasbox_logger.logStrings[i].c_str(), dasbox_logger.lineColors[i]);
     y += FONT_HEIGHT;
     if (y > screen_height)
       break;
@@ -569,17 +569,17 @@ void on_switch_to_log_screen()
   scroll_accum = 0.0f;
   time_to_reset_scroll_accum = 2.0f;
 
-  if (logger.topErrorLine >= 0)
+  if (dasbox_logger.topErrorLine >= 0)
   {
-    logger.topLine = logger.topErrorLine;
-    logger.topErrorLine = -1;
+    dasbox_logger.topLine = dasbox_logger.topErrorLine;
+    dasbox_logger.topErrorLine = -1;
   }
   else
-    logger.topLine = INT_MAX;
+    dasbox_logger.topLine = INT_MAX;
 
-  if (logger.topLine < 0)
-    logger.topLine = 0;
+  if (dasbox_logger.topLine < 0)
+    dasbox_logger.topLine = 0;
 
-  if (logger.topLine > int(logger.logStrings.size()) - LOG_LINES_PER_SCREEN + 2)
-    logger.topLine = int(logger.logStrings.size()) - LOG_LINES_PER_SCREEN + 2;
+  if (dasbox_logger.topLine > int(dasbox_logger.logStrings.size()) - LOG_LINES_PER_SCREEN + 2)
+    dasbox_logger.topLine = int(dasbox_logger.logStrings.size()) - LOG_LINES_PER_SCREEN + 2;
 }

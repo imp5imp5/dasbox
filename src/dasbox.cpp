@@ -83,7 +83,7 @@ void set_font_size_i(int);
 
 int current_frame = 0;
 
-//------------------------------- logger ----------------------------------------------
+//------------------------------- dasbox_logger ----------------------------------------------
 
 void os_debug_break()
 {
@@ -311,15 +311,15 @@ struct PlaygroundContext final : das::Context
 
   void to_out(const char * message)
   {
-    logger << message;
+    dasbox_logger << message;
   }
 
   void to_err(const char * message)
   {
-    logger.setTopErrorLine();
-    logger.setState(LOGGER_ERROR);
-    logger << message << "\n";
-    logger.setState(LOGGER_NORMAL);
+    dasbox_logger.setTopErrorLine();
+    dasbox_logger.setState(LOGGER_ERROR);
+    dasbox_logger << message << "\n";
+    dasbox_logger.setState(LOGGER_NORMAL);
   }
 };
 
@@ -521,7 +521,7 @@ DasFile * load_module(const string & file_name, DasFile ** das_file, bool hard_r
   CodeOfPolicies policies;
   policies.ignore_shared_modules = hard_reload;
 
-  (*das_file)->program = compileDaScript(file_name, (*das_file)->fAccess, logger, (*das_file)->dummyLibGroup, false, policies);
+  (*das_file)->program = compileDaScript(file_name, (*das_file)->fAccess, dasbox_logger, (*das_file)->dummyLibGroup, false, policies);
   ProgramPtr program = (*das_file)->program;
   if (program->failed())
   {
@@ -552,7 +552,7 @@ DasFile * load_module(const string & file_name, DasFile ** das_file, bool hard_r
   {
     // create daScript context
     (*das_file)->ctx = make_smart<PlaygroundContext>(program->getContextStackSize());
-    if (!program->simulate(*(*das_file)->ctx, logger))
+    if (!program->simulate(*(*das_file)->ctx, dasbox_logger))
     {
       has_fatal_errors = true;
       string s;
@@ -647,7 +647,7 @@ void das_file_manual_reload(bool hard_reload)
   program_has_unsafe_operations = false;
 
   set_application_screen();
-  logger.clear();
+  dasbox_logger.clear();
   input::reset_input();
   reset_time_after_start();
   is_first_frame = true;
@@ -712,7 +712,7 @@ ScreenMode screen_mode = SM_USER_APPLICATION;
 
 void set_application_screen()
 {
-  logger.topErrorLine = -1;
+  dasbox_logger.topErrorLine = -1;
   screen_mode = SM_USER_APPLICATION;
 }
 
@@ -1018,12 +1018,12 @@ void dasbox_execute(const char * file_name)
 
 void fetch_cerr()
 {
-  string s = logger.cerrStream.str();
+  string s = dasbox_logger.cerrStream.str();
   if (!s.empty())
   {
     print_error("%s", s.c_str());
     stringstream clearStream;
-    logger.cerrStream.swap(clearStream);
+    dasbox_logger.cerrStream.swap(clearStream);
   }
 }
 
@@ -1049,21 +1049,21 @@ void run_das_for_plugin(const string & file_name, const string & main_func_name)
 {
   auto access = make_smart<fs::DasboxFsFileAccess>();
   ModuleGroup dummyGroup;
-  if (auto program = compileDaScript(file_name, access, logger, dummyGroup))
+  if (auto program = compileDaScript(file_name, access, dasbox_logger, dummyGroup))
   {
     if (program->failed())
     {
       for (auto & err : program->errors)
-        logger << reportError(err.at, err.what, err.extra, err.fixme, err.cerr);
+        dasbox_logger << reportError(err.at, err.what, err.extra, err.fixme, err.cerr);
     }
     else
     {
       Context ctx(program->getContextStackSize());
-      if (!program->simulate(ctx, logger))
+      if (!program->simulate(ctx, dasbox_logger))
       {
-        logger << "Failed to simulate\n";
+        dasbox_logger << "Failed to simulate\n";
         for (auto & err : program->errors)
-          logger << reportError(err.at, err.what, err.extra, err.fixme, err.cerr );
+          dasbox_logger << reportError(err.at, err.what, err.extra, err.fixme, err.cerr );
       }
       else
       {
@@ -1076,12 +1076,12 @@ void run_das_for_plugin(const string & file_name, const string & main_func_name)
           }
           else
           {
-            logger << "function '"  << main_func_name << "' call arguments do not match, expecting 'main(): void' or 'main(): bool'\n";
+            dasbox_logger << "function '"  << main_func_name << "' call arguments do not match, expecting 'main(): void' or 'main(): bool'\n";
           }
         }
         else
         {
-          logger << "function '"  << main_func_name << "' not found\n";
+          dasbox_logger << "function '"  << main_func_name << "' not found\n";
         }
       }
     }
@@ -1261,7 +1261,7 @@ void run_das_for_ui()
       profiler.add(profiler.actTime, double(get_time_usec(t0)));
     }
 
-    if (logger.topErrorLine >= 0)
+    if (dasbox_logger.topErrorLine >= 0)
     {
       screen_mode = SM_LOG;
       on_switch_to_log_screen();
@@ -1336,7 +1336,7 @@ void run_das_for_ui()
       if ((input::get_key_down(sf::Keyboard::F1) && altPressed) ||
           (input::get_key_down(sf::Keyboard::P) && altPressed && ctrlPressed))
       {
-        logger.setTopErrorLine();
+        dasbox_logger.setTopErrorLine();
         profiler.print();
         screen_mode = SM_LOG;
         on_switch_to_log_screen();
@@ -1418,7 +1418,7 @@ void run_das_for_ui_with_try_except()
     }
 
     if (!log_to_console)
-      logger.printAllLog();
+      dasbox_logger.printAllLog();
     ShowWindow(::GetConsoleWindow(), SW_SHOW);
     SetForegroundWindow(::GetConsoleWindow());
     printf("\n\nNATIVE EXCEPTION code = 0x%X, at = \"%s\"\nPress any key to exit.\n", exception_code(), exception_pos);
@@ -1434,7 +1434,7 @@ void run_das_for_ui_with_try_except()
 
 int main(int argc, char **argv)
 {
-  sf::err().rdbuf(logger.cerrStream.rdbuf());
+  sf::err().rdbuf(dasbox_logger.cerrStream.rdbuf());
 
   process_args(argc, argv);
   if (!log_to_console && !run_for_plugin)

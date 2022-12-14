@@ -141,6 +141,9 @@ using das_safe_set = std::set<K,C>;
 #define das_to_stderr(...) { fprintf(stderr, __VA_ARGS__); fflush(stderr); }
 #endif
 
+#ifndef DAS_MAX_FUNCTION_ARGUMENTS
+#define DAS_MAX_FUNCTION_ARGUMENTS 32
+#endif
 
 inline int das_soft_popcnt(uint32_t v)
 {

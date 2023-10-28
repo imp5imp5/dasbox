@@ -521,7 +521,7 @@ DasFile * load_module(const string & file_name, DasFile ** das_file, bool hard_r
   CodeOfPolicies policies;
   policies.ignore_shared_modules = hard_reload;
 
-  (*das_file)->program = compileDaScript(file_name, (*das_file)->fAccess, dasbox_logger, (*das_file)->dummyLibGroup, false, policies);
+  (*das_file)->program = compileDaScript(file_name, (*das_file)->fAccess, dasbox_logger, (*das_file)->dummyLibGroup, policies);
   ProgramPtr program = (*das_file)->program;
   if (program->failed())
   {

@@ -40,6 +40,11 @@ set(DAS_MINFFT_DISABLED YES)
 set(DAS_SOUND_DISABLED YES)
 # set(DAS_BUILD_TOOLS NO) # <--- need to build tools to support AOT generation build step in daScript modules
 set(DAS_CONFIG_INCLUDE_DIR "src")
+# FIXME: for no reason dascript examples builds from the root folder, so we need to disable them. 
+# Otherwise cmake fail with "cannot find dasbox/examples/tutorial/"
+set(DAS_TUTORIAL_DISABLED YES)
+set(DAS_TESTS_DISABLED YES)
+set(DAS_PROFILE_DISABLED YES)
 
 add_subdirectory(3rdParty/daScript)
 

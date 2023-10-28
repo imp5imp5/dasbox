@@ -932,7 +932,7 @@ inline minfft_aux * allocate_fft_aux(unordered_map<int, minfft_aux *> & containe
   return it->second;
 }
 
-void fft_real_forward(const das::TArray<float> & real_signal, das::TArray<float2> & complex_frequencies, das::Context * context)
+void fft_real_forward(const das::TArray<float> & real_signal, das::TArray<float2> & complex_frequencies, das::Context * context, LineInfoArg * at)
 {
   if (real_signal.size == 0 || ((real_signal.size + 1) & real_signal.size) == 0)
   {
@@ -943,16 +943,16 @@ void fft_real_forward(const das::TArray<float> & real_signal, das::TArray<float2
   minfft_aux * aux = allocate_fft_aux(fft_real_aux_pointers, real_signal.size, minfft_mkaux_realdft_1d);
   int complexOutSize = real_signal.size / 2 + 1;
   if (complex_frequencies.size != complexOutSize)
-    builtin_array_resize(complex_frequencies, complexOutSize, complex_frequencies.stride, context);
+    builtin_array_resize(complex_frequencies, complexOutSize, complex_frequencies.stride, context, at);
 
   minfft_realdft((minfft_real *)real_signal.data, (minfft_cmpl *)complex_frequencies.data, aux);
 }
 
 
-void fft_calculate_magnitudes(const das::TArray<float2> & complex_frequencies, das::TArray<float> & magnitudes, das::Context * context)
+void fft_calculate_magnitudes(const das::TArray<float2> & complex_frequencies, das::TArray<float> & magnitudes, das::Context * context, LineInfoArg * at)
 {
   if (magnitudes.size != complex_frequencies.size)
-    builtin_array_resize(magnitudes, complex_frequencies.size, magnitudes.stride, context);
+    builtin_array_resize(magnitudes, complex_frequencies.size, magnitudes.stride, context, at);
 
   float2 * __restrict c = (float2 *)complex_frequencies.data;
   float * __restrict m = (float *)magnitudes.data;
@@ -960,10 +960,10 @@ void fft_calculate_magnitudes(const das::TArray<float2> & complex_frequencies, d
     *m = sqrtf(sqr(c->x) + sqr(c->y));
 }
 
-void fft_calculate_normalized_magnitudes(const das::TArray<float2> & complex_frequencies, das::TArray<float> & magnitudes, das::Context * context)
+void fft_calculate_normalized_magnitudes(const das::TArray<float2> & complex_frequencies, das::TArray<float> & magnitudes, das::Context * context, LineInfoArg * at)
 {
   if (magnitudes.size != complex_frequencies.size)
-    builtin_array_resize(magnitudes, complex_frequencies.size, magnitudes.stride, context);
+    builtin_array_resize(magnitudes, complex_frequencies.size, magnitudes.stride, context, at);
 
   if (!complex_frequencies.size)
     return;
@@ -977,10 +977,10 @@ void fft_calculate_normalized_magnitudes(const das::TArray<float2> & complex_fre
     *m = sqrtf(sqr(c->x) + sqr(c->y)) * inv;
 }
 
-void fft_calculate_log_magnitudes(const das::TArray<float2> & complex_frequencies, das::TArray<float> & magnitudes, das::Context * context)
+void fft_calculate_log_magnitudes(const das::TArray<float2> & complex_frequencies, das::TArray<float> & magnitudes, das::Context * context, LineInfoArg * at)
 {
   if (magnitudes.size != complex_frequencies.size)
-    builtin_array_resize(magnitudes, complex_frequencies.size, magnitudes.stride, context);
+    builtin_array_resize(magnitudes, complex_frequencies.size, magnitudes.stride, context, at);
 
   if (!complex_frequencies.size)
     return;
@@ -995,7 +995,7 @@ void fft_calculate_log_magnitudes(const das::TArray<float2> & complex_frequencie
 }
 
 
-void fft_real_inverse(const das::TArray<float2> & complex_frequencies, das::TArray<float> & real_signal, das::Context * context)
+void fft_real_inverse(const das::TArray<float2> & complex_frequencies, das::TArray<float> & real_signal, das::Context * context, LineInfoArg * at)
 {
   int p2 = complex_frequencies.size - 1;
   if (complex_frequencies.size <= 0 || ((p2 + 1) & p2) == 0)
@@ -1007,7 +1007,7 @@ void fft_real_inverse(const das::TArray<float2> & complex_frequencies, das::TArr
   minfft_aux * aux = allocate_fft_aux(fft_real_aux_pointers, p2 * 2, minfft_mkaux_realdft_1d);
   int realOutSize = p2 * 2;
   if (complex_frequencies.size != realOutSize)
-    builtin_array_resize(real_signal, realOutSize, real_signal.stride, context);
+    builtin_array_resize(real_signal, realOutSize, real_signal.stride, context, at);
 
   minfft_invrealdft((minfft_cmpl *)complex_frequencies.data, (minfft_real *)real_signal.data, aux);
 }
@@ -1443,7 +1443,7 @@ MAKE_TYPE_FACTORY(PlayingSoundHandle, sound::PlayingSoundHandle)
 
 struct PlayingSoundHandleAnnotation final: das::ManagedValueAnnotation<sound::PlayingSoundHandle>
 {
-  PlayingSoundHandleAnnotation() : ManagedValueAnnotation("PlayingSoundHandle")
+  PlayingSoundHandleAnnotation(ModuleLibrary & mlib) : ManagedValueAnnotation(mlib, "PlayingSoundHandle", "PlayingSoundHandle")
   {
     cppName = " ::sound::PlayingSoundHandle";
   }
@@ -1472,7 +1472,7 @@ public:
     lib.addModule(this);
     lib.addBuiltInModule();
 
-    addAnnotation(das::make_smart<PlayingSoundHandleAnnotation>());
+    addAnnotation(das::make_smart<PlayingSoundHandleAnnotation>(lib));
     addAnnotation(das::make_smart<PcmSoundAnnotation>(lib));
     addCtorAndUsing<sound::PcmSound>(*this, lib, "PcmSound", "PcmSound");
 

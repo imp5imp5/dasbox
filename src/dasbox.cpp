@@ -85,21 +85,21 @@ int current_frame = 0;
 
 //------------------------------- dasbox_logger ----------------------------------------------
 
-void os_debug_break()
-{
-  if (use_debug_trap)
-  {
-#ifdef _WIN32
-    __debugbreak();
-#else
-    raise(SIGTRAP);
-#endif
-  }
+// void os_debug_break()
+// {
+//   if (use_debug_trap)
+//   {
+// #ifdef _WIN32
+//     __debugbreak();
+// #else
+//     raise(SIGTRAP);
+// #endif
+//   }
 
-  fetch_cerr();
-  print_error("Script break\n");
-  longjmp(eval_buf, 1);
-}
+//   fetch_cerr();
+//   print_error("Script break\n");
+//   longjmp(eval_buf, 1);
+// }
 
 //-------------------------------------------------------------------------------------
 bool is_quit_scheduled = false;

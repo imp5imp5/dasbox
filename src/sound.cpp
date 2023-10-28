@@ -1443,9 +1443,8 @@ MAKE_TYPE_FACTORY(PlayingSoundHandle, sound::PlayingSoundHandle)
 
 struct PlayingSoundHandleAnnotation final: das::ManagedValueAnnotation<sound::PlayingSoundHandle>
 {
-  PlayingSoundHandleAnnotation(ModuleLibrary & mlib) : ManagedValueAnnotation(mlib, "PlayingSoundHandle", "PlayingSoundHandle")
+  PlayingSoundHandleAnnotation(ModuleLibrary & mlib) : ManagedValueAnnotation(mlib, "PlayingSoundHandle", "sound::PlayingSoundHandle")
   {
-    cppName = " ::sound::PlayingSoundHandle";
   }
 
   virtual void walk(das::DataWalker & walker, void * data) override
@@ -1468,11 +1467,11 @@ class ModuleSound : public Module
 public:
   ModuleSound() : Module("sound")
   {
-    ModuleLibrary lib;
-    lib.addModule(this);
+    ModuleLibrary lib{this};
+        
     lib.addBuiltInModule();
 
-    addAnnotation(das::make_smart<PlayingSoundHandleAnnotation>(lib));
+    addAnnotation(make_smart<PlayingSoundHandleAnnotation>(lib));
     addAnnotation(das::make_smart<PcmSoundAnnotation>(lib));
     addCtorAndUsing<sound::PcmSound>(*this, lib, "PcmSound", "PcmSound");
 
@@ -1619,23 +1618,23 @@ public:
 
     addExtern<DAS_BIND_FUN(sound::fft_real_forward)>(*this, lib,
       "fft_real_forward", SideEffects::modifyArgumentAndExternal, "fft_real_forward")
-      ->args({"real_signal", "complex_frequencies", ""});
+      ->args({"real_signal", "complex_frequencies", "", ""});
 
     addExtern<DAS_BIND_FUN(sound::fft_real_inverse)>(*this, lib,
       "fft_real_inverse", SideEffects::modifyArgumentAndExternal, "fft_real_inverse")
-      ->args({"complex_frequencies", "real_signal", ""});
+      ->args({"complex_frequencies", "real_signal", "", ""});
 
     addExtern<DAS_BIND_FUN(sound::fft_calculate_magnitudes)>(*this, lib,
       "fft_calculate_magnitudes", SideEffects::modifyArgumentAndExternal, "fft_calculate_magnitudes")
-      ->args({"complex_frequencies", "magnitudes", ""});
+      ->args({"complex_frequencies", "magnitudes", "", ""});
 
     addExtern<DAS_BIND_FUN(sound::fft_calculate_normalized_magnitudes)>(*this, lib,
       "fft_calculate_normalized_magnitudes", SideEffects::modifyArgumentAndExternal, "fft_calculate_normalized_magnitudes")
-      ->args({"complex_frequencies", "normalized_magnitudes", ""});
+      ->args({"complex_frequencies", "normalized_magnitudes", "", ""});
 
     addExtern<DAS_BIND_FUN(sound::fft_calculate_log_magnitudes)>(*this, lib,
       "fft_calculate_log_magnitudes", SideEffects::modifyArgumentAndExternal, "fft_calculate_log_magnitudes")
-      ->args({"complex_frequencies", "log_magnitudes", ""});
+      ->args({"complex_frequencies", "log_magnitudes", "", ""});
 
     // its AOT ready
     //verifyAotReady();

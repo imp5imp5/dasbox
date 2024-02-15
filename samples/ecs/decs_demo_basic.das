@@ -53,14 +53,18 @@ def initialize(full_restart: bool)
 
 [export]
 def act(dt: float)
+    var quit = false
     if get_key(VK_ESCAPE)
         schedule_quit_game()
+        quit = true
 
     if get_mouse_button_down(MB_LEFT)
         make_particle(get_mouse_position(), float2(-300.0, -300.0), 20.0)
         commit()
 
     decs_stage("update")
+    if quit
+        restart()
 
 
 [export]
@@ -69,8 +73,3 @@ def draw
     text_out(20, 20, "F5 - reload (ECS database will be saved after reload)", 0xFFFFFF)
     text_out(20, 50, "Ctrl+F5 - hard reload", 0xFFFFFF)
     text_out(20, 80, "Click - create new particle", 0xFFFFFF)
-
-
-[finalize]
-def finalize_ecs
-    restart()

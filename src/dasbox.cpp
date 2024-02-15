@@ -59,7 +59,7 @@ bool inside_draw_fn = true;
 bool exec_script_scheduled = false;
 bool trust_mode = false;
 bool run_for_plugin = false;
-bool log_to_console = false;
+bool log_to_console = true;
 bool use_debug_trap = false;
 bool use_garbage_collector = true;
 string plugin_main_function = "main";
@@ -83,25 +83,6 @@ void set_font_size_i(int);
 
 int current_frame = 0;
 
-//------------------------------- dasbox_logger ----------------------------------------------
-
-// void os_debug_break()
-// {
-//   if (use_debug_trap)
-//   {
-// #ifdef _WIN32
-//     __debugbreak();
-// #else
-//     raise(SIGTRAP);
-// #endif
-//   }
-
-//   fetch_cerr();
-//   print_error("Script break\n");
-//   longjmp(eval_buf, 1);
-// }
-
-//-------------------------------------------------------------------------------------
 bool is_quit_scheduled = false;
 bool window_is_active = true;
 bool is_first_frame = true;
@@ -402,6 +383,11 @@ static void set_new_live_context(Context * ctx, bool full_reload)
   }
 }
 
+static void reload_live(DasFile* file, bool bull_reload)
+{
+    
+}
+
 static void find_function(SimFunction ** fn, const char * fn_name, bool required, bool has_float_arg)
 {
   if (!das_file->ctx.get())
@@ -520,6 +506,7 @@ DasFile * load_module(const string & file_name, DasFile ** das_file, bool hard_r
 
   CodeOfPolicies policies;
   policies.ignore_shared_modules = hard_reload;
+  policies.threadlock_context = true;
 
   (*das_file)->program = compileDaScript(file_name, (*das_file)->fAccess, dasbox_logger, (*das_file)->dummyLibGroup, policies);
   ProgramPtr program = (*das_file)->program;
@@ -1488,7 +1475,7 @@ int main(int argc, char **argv)
         print_error("File does not exists '%s'\n", main_das_file_name.c_str());
     }
   }
-
+  
   NEED_MODULE(Module_BuiltIn);
   NEED_MODULE(Module_Math);
   NEED_MODULE(Module_Strings);

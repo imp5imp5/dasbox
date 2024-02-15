@@ -37,13 +37,12 @@ def update_particle(var p: Particle)
 def draw_particle(var p: Particle)
     fill_circle(p.pos.x, p.pos.y, p.radius, 0xFFFFFF)
 
-
-
 [export]
-def initialize(is_hard_reload: bool)
+def initialize(full_restart: bool)
     set_window_title("DECS Demo (Entity Component System)")
 
-    if is_hard_reload
+    if full_restart
+        restart()
         for i in range(4)
             let pos = float2(200.0 + float(i * 100), 200.0 + float(i * 50))
             let vel = float2(120.1, 0.0)
@@ -70,3 +69,8 @@ def draw
     text_out(20, 20, "F5 - reload (ECS database will be saved after reload)", 0xFFFFFF)
     text_out(20, 50, "Ctrl+F5 - hard reload", 0xFFFFFF)
     text_out(20, 80, "Click - create new particle", 0xFFFFFF)
+
+
+[finalize]
+def finalize_ecs
+    restart()

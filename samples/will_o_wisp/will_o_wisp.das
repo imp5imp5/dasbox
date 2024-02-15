@@ -56,7 +56,7 @@ def grass_mesh(var m: GrassMesh &; pos: float2; color_: uint; count: int)
 
 
 [export]
-def initialize
+def initialize(full_restart: bool)
     set_window_title("Will-o'-Wisp")
     set_antialiasing(4)
     grass_leaf_gradient <- create_image(2, 1, [{uint[] 0xFFFFFFFF; 0xFF000000}])

@@ -1,7 +1,7 @@
 require daslib/media
 
 [export]
-def initialize
+def initialize(full_restart: bool)
     set_window_title("Custom Fonts")
 
 [export]

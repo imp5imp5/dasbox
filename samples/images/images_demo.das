@@ -7,7 +7,7 @@ var ball: ImageHandle
 var ball2: ImageHandle
 
 [export]
-def initialize()
+def initialize(full_restart: bool)
     print("initialize\n")
     set_window_title("Images Demo")
 

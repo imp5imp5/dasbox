@@ -586,19 +586,6 @@ public:
       (*this, lib, "angle_diff", SideEffects::accessExternal, "angle_diff")
       ->args({"source", "target"});
 
-
-    addExtern<DAS_BIND_FUN(lerp_vec<das::float2>)>
-      (*this, lib, "lerp", SideEffects::accessExternal, "lerp_vec<das::float2>")
-      ->args({"a", "b", "t"});
-
-    addExtern<DAS_BIND_FUN(lerp_vec<das::float3>)>
-      (*this, lib, "lerp", SideEffects::accessExternal, "lerp_vec<das::float3>")
-      ->args({"a", "b", "t"});
-
-    addExtern<DAS_BIND_FUN(lerp_vec<das::float4>)>
-      (*this, lib, "lerp", SideEffects::accessExternal, "lerp_vec<das::float4>")
-      ->args({"a", "b", "t"});
-
     addExtern<DAS_BIND_FUN(cvt<float>)>
       (*this, lib, "cvt", SideEffects::accessExternal, "cvt")
       ->args({"value", "from_range_1", "from_range_2", "to_range_1", "to_range_2"});

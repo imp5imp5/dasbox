@@ -75,7 +75,7 @@ var
 
 
 [export]
-def initialize()
+def initialize(full_restart: bool)
     set_window_title("Keyboard Input Demo")
 
 

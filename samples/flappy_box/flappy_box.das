@@ -141,7 +141,7 @@ def reset_game()
 
 
 [export]
-def initialize
+def initialize(full_restart: bool)
     set_window_title("Flappy Box")
     randomize_seed(RAND_SEED)
     reset_game()

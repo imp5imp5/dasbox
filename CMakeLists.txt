@@ -40,6 +40,11 @@ set(DAS_MINFFT_DISABLED YES)
 set(DAS_SOUND_DISABLED YES)
 # set(DAS_BUILD_TOOLS NO) # <--- need to build tools to support AOT generation build step in daScript modules
 set(DAS_CONFIG_INCLUDE_DIR "src")
+# FIXME: for no reason dascript examples builds from the root folder, so we need to disable them. 
+# Otherwise cmake fail with "cannot find dasbox/examples/tutorial/"
+set(DAS_TUTORIAL_DISABLED YES)
+set(DAS_TESTS_DISABLED YES)
+set(DAS_PROFILE_DISABLED YES)
 
 add_subdirectory(3rdParty/daScript)
 
@@ -93,12 +98,6 @@ endif()
 if(APPLE)
   link_directories(3rdParty/SFML/extlibs/libs-osx/Frameworks/freetype.framework)
 endif()
-
-
-# log implementation for standalone executables
-add_library(logStandalone STATIC src/daScript/logStandalone.cpp)
-add_dependencies(daScript logStandalone)
-target_link_libraries(daScript logStandalone)
 
 
 # dasbox
@@ -163,6 +162,6 @@ endif()
 
 set_target_properties(dasbox PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/bin"
-  RUNTIME_OUTPUT_DIRECTORY_DEBUG "${PROJECT_SOURCE_DIR}/bin"
-  RUNTIME_OUTPUT_DIRECTORY_RELEASE "${PROJECT_SOURCE_DIR}/bin"
+  RUNTIME_OUTPUT_DIRECTORY_DEBUG "${PROJECT_SOURCE_DIR}/bin/Debug"
+  RUNTIME_OUTPUT_DIRECTORY_RELEASE "${PROJECT_SOURCE_DIR}/bin/"
 )

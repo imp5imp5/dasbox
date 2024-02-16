@@ -83,25 +83,6 @@ void set_font_size_i(int);
 
 int current_frame = 0;
 
-//------------------------------- dasbox_logger ----------------------------------------------
-
-void os_debug_break()
-{
-  if (use_debug_trap)
-  {
-#ifdef _WIN32
-    __debugbreak();
-#else
-    raise(SIGTRAP);
-#endif
-  }
-
-  fetch_cerr();
-  print_error("Script break\n");
-  longjmp(eval_buf, 1);
-}
-
-//-------------------------------------------------------------------------------------
 bool is_quit_scheduled = false;
 bool window_is_active = true;
 bool is_first_frame = true;
@@ -520,8 +501,9 @@ DasFile * load_module(const string & file_name, DasFile ** das_file, bool hard_r
 
   CodeOfPolicies policies;
   policies.ignore_shared_modules = hard_reload;
+  policies.threadlock_context = true;
 
-  (*das_file)->program = compileDaScript(file_name, (*das_file)->fAccess, dasbox_logger, (*das_file)->dummyLibGroup, false, policies);
+  (*das_file)->program = compileDaScript(file_name, (*das_file)->fAccess, dasbox_logger, (*das_file)->dummyLibGroup, policies);
   ProgramPtr program = (*das_file)->program;
   if (program->failed())
   {
@@ -1488,7 +1470,7 @@ int main(int argc, char **argv)
         print_error("File does not exists '%s'\n", main_das_file_name.c_str());
     }
   }
-
+  
   NEED_MODULE(Module_BuiltIn);
   NEED_MODULE(Module_Math);
   NEED_MODULE(Module_Strings);

@@ -84,7 +84,7 @@ var
 
 
 [export]
-def initialize
+def initialize(full_restart: bool)
     set_window_title("Sound Demo")
     gong <- create_managed_sound("gong.wav")
     print("gong.channels = {gong.channels}\n")

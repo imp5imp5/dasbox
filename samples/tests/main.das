@@ -22,7 +22,7 @@ def self_test(step_name: string)
 
 
 [export]
-def initialize
+def initialize(full_restart: bool)
     log::init_log() // initialize dastest log
     startTime = ref_time_ticks()
     self_test("init")

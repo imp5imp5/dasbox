@@ -1,6 +1,7 @@
 include daslib/internal_menu_background.das
 require fio
-
+/* options debugger            // uncomment for debug in VS Code
+require daslib/debug        // uncomment for debug in VS Code */
 let
     SELECT_Y = 328.0
     LIST_LINE_HEIGHT = 60.0
@@ -425,7 +426,7 @@ def recreate_menu()
 
 
 [export]
-def initialize()
+def initialize(full_restart: bool)
     background_initialize()
     recreate_menu()
 

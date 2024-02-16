@@ -3,6 +3,7 @@
 #include <daScript/daScript.h>
 
 
+
 namespace sound
 {
   struct PcmSound;
@@ -63,4 +64,8 @@ namespace sound
   int get_total_sound_count();
   int get_playing_sound_count();
   void print_debug_infos(int from_frame);
+}
+namespace das
+{
+  template <> struct WrapType<sound::PlayingSoundHandle> { enum { value = false }; typedef unsigned type; };
 }

@@ -205,7 +205,7 @@ def reset_game
 
 
 [export]
-def initialize()
+def initialize(full_restart: bool)
     set_antialiasing(4)
     set_window_title("Space, Rocks and Lasers")
     print("Screen size: {get_screen_width()} x {get_screen_height()}\n")

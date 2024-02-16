@@ -37,13 +37,12 @@ def update_particle(var p: Particle)
 def draw_particle(var p: Particle)
     fill_circle(p.pos.x, p.pos.y, p.radius, 0xFFFFFF)
 
-
-
 [export]
-def initialize(is_hard_reload: bool)
+def initialize(full_restart: bool)
     set_window_title("DECS Demo (Entity Component System)")
 
-    if is_hard_reload
+    if full_restart
+        restart()
         for i in range(4)
             let pos = float2(200.0 + float(i * 100), 200.0 + float(i * 50))
             let vel = float2(120.1, 0.0)
@@ -54,14 +53,18 @@ def initialize(is_hard_reload: bool)
 
 [export]
 def act(dt: float)
+    var quit = false
     if get_key(VK_ESCAPE)
         schedule_quit_game()
+        quit = true
 
     if get_mouse_button_down(MB_LEFT)
         make_particle(get_mouse_position(), float2(-300.0, -300.0), 20.0)
         commit()
 
     decs_stage("update")
+    if quit
+        restart()
 
 
 [export]

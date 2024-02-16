@@ -5,7 +5,7 @@ require daslib/media
 
 // 'initialize' runs once when game starts and every hot-reload
 [export]
-def initialize
+def initialize(full_restart: bool)
     return
 
 // this function is called to update game data,

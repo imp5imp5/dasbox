@@ -15,7 +15,7 @@ require debugapi
 
 
 class DasboxLogAgent__ : DapiDebugAgent
-    def override onLog(level: int; text: string#): bool
+    def override onLog(context : Context?; at : LineInfo const?; level:int; text:string# ): bool
         dasbox_log(level, text)
         return true
 

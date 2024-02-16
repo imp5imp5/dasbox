@@ -59,7 +59,7 @@ bool inside_draw_fn = true;
 bool exec_script_scheduled = false;
 bool trust_mode = false;
 bool run_for_plugin = false;
-bool log_to_console = true;
+bool log_to_console = false;
 bool use_debug_trap = false;
 bool use_garbage_collector = true;
 string plugin_main_function = "main";
@@ -381,11 +381,6 @@ static void set_new_live_context(Context * ctx, bool full_reload)
     s += das_live_file->ctx->getStackWalk(nullptr, true, true);
     print_exception("%s", s.c_str());
   }
-}
-
-static void reload_live(DasFile* file, bool bull_reload)
-{
-    
 }
 
 static void find_function(SimFunction ** fn, const char * fn_name, bool required, bool has_float_arg)

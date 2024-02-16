@@ -100,12 +100,6 @@ if(APPLE)
 endif()
 
 
-# log implementation for standalone executables
-add_library(logStandalone STATIC src/daScript/logStandalone.cpp)
-add_dependencies(daScript logStandalone)
-target_link_libraries(daScript logStandalone)
-
-
 # dasbox
 add_executable(dasbox ${SRC})
 target_compile_features(dasbox PRIVATE cxx_std_17)

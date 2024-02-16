@@ -1,2 +1,2 @@
 #pragma once
-#define DASBOX_BUILD_DATE "30.10.2023"
+#define DASBOX_BUILD_DATE "16.2.2024"
